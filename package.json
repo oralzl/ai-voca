@@ -1,0 +1,28 @@
+{
+  "name": "ai-voca-2",
+  "version": "1.0.0",
+  "description": "AI单词查询应用 - 单体仓库架构",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "npm run dev -w @ai-voca/frontend",
+    "dev:backend": "npm run dev -w @ai-voca/backend",
+    "build": "npm run build -w @ai-voca/shared && npm run build -w @ai-voca/backend && npm run build -w @ai-voca/frontend",
+    "build:frontend": "npm run build -w @ai-voca/frontend",
+    "build:backend": "npm run build -w @ai-voca/backend",
+    "test": "npm run test -w @ai-voca/shared && npm run test -w @ai-voca/backend && npm run test -w @ai-voca/frontend",
+    "lint": "npm run lint -w @ai-voca/shared && npm run lint -w @ai-voca/backend && npm run lint -w @ai-voca/frontend",
+    "clean": "rm -rf node_modules packages/*/node_modules packages/*/dist"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0",
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "keywords": ["ai", "vocabulary", "monorepo", "react", "nodejs"],
+  "author": "thiskee",
+  "license": "MIT"
+}

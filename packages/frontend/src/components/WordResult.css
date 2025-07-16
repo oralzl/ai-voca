@@ -1,0 +1,204 @@
+.word-result {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e1e1e1;
+}
+
+.word-result.error {
+  background-color: #fee;
+  border-color: #fcc;
+}
+
+.word-result.error h3 {
+  color: #c33;
+  margin-bottom: 10px;
+}
+
+.word-result.error p {
+  color: #c33;
+  margin-bottom: 20px;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.word-title {
+  font-size: 2rem;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.pronunciation {
+  font-size: 1.2rem;
+  color: #e74c3c;
+  font-style: italic;
+}
+
+.part-of-speech {
+  background-color: #3498db;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.result-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.definition-section,
+.example-section,
+.examples-section,
+.synonyms-section,
+.antonyms-section,
+.etymology-section {
+  border-left: 4px solid #3498db;
+  padding-left: 20px;
+}
+
+.definition-section h3,
+.example-section h3,
+.examples-section h3,
+.synonyms-section h3,
+.antonyms-section h3,
+.etymology-section h3 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.definition-text,
+.example-text,
+.etymology-text {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-wrap;
+}
+
+.synonyms-list,
+.antonyms-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.synonym-item,
+.antonym-item {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.synonym-item:hover,
+.antonym-item:hover {
+  background-color: #e9ecef;
+  cursor: pointer;
+}
+
+.result-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e1e1e1;
+}
+
+.timestamp {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.clear-button {
+  padding: 8px 16px;
+  background-color: #95a5a6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.clear-button:hover {
+  background-color: #7f8c8d;
+}
+
+/* 新的例句样式 */
+.examples-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.example-item {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.example-sentence {
+  font-size: 1.1rem;
+  color: #2c3e50;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.example-translation {
+  font-size: 1rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .word-result {
+    padding: 20px;
+  }
+  
+  .result-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .word-title {
+    font-size: 1.5rem;
+  }
+  
+  .pronunciation {
+    font-size: 1rem;
+  }
+  
+  .result-footer {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+  
+  .clear-button {
+    width: 100%;
+  }
+  
+  .example-item {
+    padding: 12px;
+  }
+  
+  .example-sentence {
+    font-size: 1rem;
+  }
+}
