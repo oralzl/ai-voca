@@ -1,33 +1,7 @@
 {
   "functions": {
     "api/**/*.ts": {
-      "runtime": "nodejs18.x"
+      "runtime": "@vercel/node"
     }
-  },
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/api/words/query",
-      "destination": "/api/words/query"
-    },
-    {
-      "source": "/api/words",
-      "destination": "/api/words/index"
-    },
-    {
-      "source": "/api/user/stats",
-      "destination": "/api/user/stats"
-    },
-    {
-      "source": "/api/health",
-      "destination": "/api/health"
-    }
-  ]
+  }
 }
