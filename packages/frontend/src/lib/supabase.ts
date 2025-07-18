@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 
-// 临时硬编码配置用于测试
+// 完全硬编码配置，忽略环境变量
 console.log('环境变量调试:', {
   VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
   VITE_SUPABASE_ANON_KEY_EXISTS: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
@@ -9,8 +9,20 @@ console.log('环境变量调试:', {
   ENV_DEV: import.meta.env.DEV
 })
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://syryqvbhfvjbctrdxcbv.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cnlxdmJoZnZqYmN0cmR4Y2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTM3NDksImV4cCI6MjA2ODQyOTc0OX0.5E0H1pvs2Pv1XyT04DvDmHQuO-zsv4PdeVLMcYqFRaM'
+// 完全硬编码，不依赖环境变量
+const supabaseUrl = 'https://syryqvbhfvjbctrdxcbv.supabase.co'
+// 确保密钥在一行上，没有空格或换行
+const rawKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cnlxdmJoZnZqYmN0cmR4Y2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTM3NDksImV4cCI6MjA2ODQyOTc0OX0.5E0H1pvs2Pv1XyT04DvDmHQuO-zsv4PdeVLMcYqFRaM'
+// 清理任何可能的空格或换行符
+const supabaseAnonKey = rawKey.replace(/\s/g, '').trim()
+
+console.log('强制使用硬编码配置:', { 
+  supabaseUrl, 
+  supabaseAnonKey: supabaseAnonKey.substring(0, 20) + '...',
+  keyLength: supabaseAnonKey.length,
+  hasWhitespace: supabaseAnonKey !== rawKey,
+  keyParts: supabaseAnonKey.split('.').map(p => p.length)
+})
 
 console.log('Supabase Config:', {
   url: supabaseUrl,
