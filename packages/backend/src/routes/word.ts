@@ -18,7 +18,7 @@ const wordService = new WordService();
  */
 router.get('/query', async (req, res) => {
   try {
-    const { word, language = 'zh', includeExample = 'true' } = req.query;
+    const { word, includeExample = 'true' } = req.query;
     
     // 验证参数
     if (!word || typeof word !== 'string') {
@@ -40,7 +40,6 @@ router.get('/query', async (req, res) => {
     // 构建查询请求
     const queryRequest: WordQueryRequest = {
       word: word.trim(),
-      language: language as 'zh' | 'en',
       includeExample: includeExample === 'true'
     };
     
@@ -65,7 +64,7 @@ router.get('/query', async (req, res) => {
  */
 router.post('/query', async (req, res) => {
   try {
-    const { word, language = 'zh', includeExample = true } = req.body;
+    const { word, includeExample = true } = req.body;
     
     // 验证参数
     if (!word || typeof word !== 'string') {
@@ -87,7 +86,6 @@ router.post('/query', async (req, res) => {
     // 构建查询请求
     const queryRequest: WordQueryRequest = {
       word: word.trim(),
-      language: language as 'zh' | 'en',
       includeExample: Boolean(includeExample)
     };
     
@@ -119,16 +117,14 @@ router.get('/', (req, res) => {
         description: '查询单词解释',
         parameters: {
           word: 'string (required) - 要查询的单词',
-          language: 'string (optional) - 语言，默认为 zh',
           includeExample: 'boolean (optional) - 是否包含例句，默认为 true'
         },
-        example: '/api/words/query?word=hello&language=zh&includeExample=true'
+        example: '/api/words/query?word=hello&includeExample=true'
       },
       'POST /api/words/query': {
         description: '查询单词解释（POST方式）',
         body: {
           word: 'string (required) - 要查询的单词',
-          language: 'string (optional) - 语言，默认为 zh',
           includeExample: 'boolean (optional) - 是否包含例句，默认为 true'
         }
       }

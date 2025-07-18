@@ -1,7 +1,6 @@
 // API 请求和响应类型
 export interface WordQueryRequest {
   word: string;
-  language?: 'zh' | 'en';
   includeExample?: boolean;
 }
 
@@ -13,14 +12,18 @@ export interface WordExample {
 
 export interface WordExplanation {
   word: string;
+  text?: string; // lemma后的单词
+  lemmatizationExplanation?: string; // 对词形还原结果的简要说明
   pronunciation?: string;
   partOfSpeech?: string;
   definition: string;
+  simpleExplanation?: string; // 用常见单词平白介绍的英文注释
   example?: string; // 保留向后兼容性
   examples?: WordExample[]; // 新的多例句支持
   synonyms?: string[];
   antonyms?: string[];
-  etymology?: string;
+  etymology?: string; // 词源信息
+  memoryTips?: string; // 记忆技巧
 }
 
 export interface WordQueryResponse {
@@ -28,6 +31,7 @@ export interface WordQueryResponse {
   data?: WordExplanation;
   error?: string;
   timestamp: number;
+  rawResponse?: string; // AI原始响应内容，用于调试
 }
 
 // AiHubMix API 类型

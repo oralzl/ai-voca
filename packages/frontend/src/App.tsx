@@ -1,4 +1,3 @@
-import React from 'react';
 import { WordQueryForm } from './components/WordQueryForm';
 import { WordResult } from './components/WordResult';
 import { useWordQuery } from './hooks/useWordQuery';

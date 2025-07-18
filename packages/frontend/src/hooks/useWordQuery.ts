@@ -9,7 +9,6 @@ export function useWordQuery() {
 
   const queryWord = useCallback(async (
     word: string,
-    language: 'zh' | 'en' = 'zh',
     includeExample: boolean = true
   ) => {
     setLoading(true);
@@ -19,7 +18,6 @@ export function useWordQuery() {
     try {
       const response = await wordApi.queryWord({
         word,
-        language,
         includeExample
       });
 

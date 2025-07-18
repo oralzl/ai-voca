@@ -6,7 +6,7 @@
 // 模拟环境变量
 process.env.AIHUBMIX_API_KEY = 'test-api-key';
 process.env.AIHUBMIX_API_URL = 'https://aihubmix.com/v1/chat/completions';
-process.env.AIHUBMIX_MODEL = 'gpt-4o-mini';
+process.env.AIHUBMIX_MODEL = 'gemini-2.5-flash-lite-preview-06-17';
 
 // 导入服务类（需要先构建项目）
 const { WordService } = require('../dist/services/WordService.js');
@@ -126,6 +126,7 @@ function configurationExample() {
   console.log(`    API URL: ${process.env.AIHUBMIX_API_URL || '未设置'}`);
   console.log(`    API Model: ${process.env.AIHUBMIX_MODEL || '未设置'}`);
   console.log(`    API Key: ${process.env.AIHUBMIX_API_KEY ? '已设置' : '未设置'}`);
+  console.log(`    Timeout: ${process.env.AIHUBMIX_TIMEOUT || '未设置'}ms`);
   
   // 配置验证
   if (!process.env.AIHUBMIX_API_KEY) {

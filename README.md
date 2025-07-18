@@ -9,7 +9,9 @@
 ### 🌟 主要特性
 
 - 🤖 **AI驱动**: 集成AiHubMix AI模型，提供智能单词解释
+- 🧠 **词形还原**: 支持词形还原（lemmatization）分析，识别单词原形
 - 🏗️ **单体仓库**: 统一管理前端、后端和共享代码
+- 🇨🇳 **中文专精**: 专注于中文解释，提供高质量的中文释义
 - 📱 **响应式设计**: 适配桌面和移动设备
 - 🔧 **类型安全**: 完整的TypeScript支持
 - ⚡ **现代化工具**: Vite、Express、React等现代技术栈
@@ -82,7 +84,7 @@ nano .env
 # AiHubMix API 配置
 AIHUBMIX_API_KEY=your_api_key_here
 AIHUBMIX_API_URL=https://aihubmix.com/v1/chat/completions
-AIHUBMIX_MODEL=gpt-4o-mini
+AIHUBMIX_MODEL=gemini-2.5-flash-lite-preview-06-17
 
 # 服务器配置
 PORT=3001
@@ -209,12 +211,11 @@ npm run clean            # 清理构建文件和依赖
 
 **参数:**
 - `word` (string, required): 要查询的单词
-- `language` (string, optional): 解释语言 ('zh' | 'en')，默认 'zh'
 - `includeExample` (boolean, optional): 是否包含例句，默认 true
 
 **示例:**
 ```bash
-curl \"http://localhost:3001/api/words/query?word=hello&language=zh&includeExample=true\"
+curl \"http://localhost:3001/api/words/query?word=running&includeExample=true\"
 ```
 
 **响应:**
@@ -222,13 +223,23 @@ curl \"http://localhost:3001/api/words/query?word=hello&language=zh&includeExamp
 {
   \"success\": true,
   \"data\": {
-    \"word\": \"hello\",
-    \"pronunciation\": \"həˈləʊ\",
-    \"partOfSpeech\": \"interjection\",
-    \"definition\": \"用于打招呼的感叹词\",
-    \"example\": \"Hello, how are you?\",
-    \"synonyms\": [\"hi\", \"greetings\"],
-    \"antonyms\": [\"goodbye\"]
+    \"word\": \"run\",
+    \"text\": \"run\",
+    \"lemmatizationExplanation\": \"running是run的现在分词形式，表示正在进行的动作\",
+    \"pronunciation\": \"rʌn\",
+    \"partOfSpeech\": \"verb\",
+    \"definition\": \"跑步；运行；管理\",
+    \"simpleExplanation\": \"To move quickly using your legs, or to operate something\",
+    \"examples\": [
+      {
+        \"sentence\": \"She is running in the park.\",
+        \"translation\": \"她正在公园里跑步。\"
+      }
+    ],
+    \"synonyms\": [\"jog\", \"sprint\", \"operate\"],
+    \"antonyms\": [\"walk\", \"stop\"],
+    \"etymology\": \"来自古英语rinnan，意为"流动、跑"，与德语rinnen同源\",
+    \"memoryTips\": \"记住run的多重含义：跑步用腿，运行靠动力\"
   },
   \"timestamp\": 1704099600000
 }
@@ -241,13 +252,37 @@ POST方式查询单词。
 **请求体:**
 ```json
 {
-  \"word\": \"hello\",
-  \"language\": \"zh\",
+  \"word\": \"running\",
   \"includeExample\": true
 }
 ```
 
 更多API详情请参见 [后端文档](./packages/backend/README.md)。
+
+## 🧠 词形还原功能
+
+### 功能说明
+
+系统现在支持词形还原（lemmatization）分析，能够自动识别输入单词的原形并提供详细说明：
+
+- **动词时态**: `running` → `run` (识别现在分词)
+- **名词复数**: `cats` → `cat` (识别复数形式)  
+- **形容词比较级**: `better` → `good` (识别比较级)
+- **同形异义词**: `leaves` → `leaf/leave` (提供多种可能)
+
+### 使用场景
+
+1. **学习词汇变形**: 理解单词的不同形态
+2. **语法分析**: 识别词性和语法功能
+3. **词汇扩展**: 通过原形学习更多相关词汇
+4. **语言理解**: 提升对英语形态学的认知
+
+### 技术实现
+
+- AI模型自动分析词形变化规律
+- 提供中文解释的还原过程
+- 支持复杂词形的多重解释
+- 优雅降级处理未知词形
 
 ## 🔍 使用示例
 
@@ -256,14 +291,15 @@ POST方式查询单词。
 ```typescript
 import { wordApi } from '@ai-voca/frontend/src/utils/api';
 
-// 查询单词
+// 查询单词（支持词形还原）
 const result = await wordApi.queryWord({
-  word: 'hello',
-  language: 'zh',
+  word: 'running',
   includeExample: true
 });
 
 if (result.success) {
+  console.log('原形:', result.data.text); // "run"
+  console.log('词形还原说明:', result.data.lemmatizationExplanation);
   console.log('释义:', result.data.definition);
 }
 ```
@@ -277,7 +313,7 @@ function MyComponent() {
   const { result, loading, error, queryWord } = useWordQuery();
 
   const handleQuery = async () => {
-    await queryWord('hello', 'zh', true);
+    await queryWord('running', true);
   };
 
   return (
@@ -285,7 +321,15 @@ function MyComponent() {
       <button onClick={handleQuery} disabled={loading}>
         {loading ? '查询中...' : '查询'}
       </button>
-      {result && <div>{result.data?.definition}</div>}
+      {result && (
+        <div>
+          <h3>{result.data?.word}</h3>
+          {result.data?.lemmatizationExplanation && (
+            <p>词形还原: {result.data.lemmatizationExplanation}</p>
+          )}
+          <p>释义: {result.data?.definition}</p>
+        </div>
+      )}
       {error && <div>错误: {error}</div>}
     </div>
   );
@@ -428,8 +472,27 @@ MIT License - 详见 [LICENSE](./LICENSE) 文件
 
 ---
 
+## 📋 版本更新
+
+### v1.1.0 (最新) - 词形还原功能
+- ✨ 新增词形还原（lemmatization）分析功能
+- 🇨🇳 专注中文解释，移除多语言支持
+- 🎯 优化AI提示词，采用新的XML格式
+- 🔧 API简化，移除language参数
+- 🎨 前端UI优化，新增词形还原信息显示
+- 📚 多word响应处理，智能显示第一个结果
+
+### v1.0.0 - 基础版本
+- 🚀 初始发布，基本单词查询功能
+- 🏗️ 单体仓库架构搭建
+- 🤖 AiHubMix AI集成
+- 💻 React前端 + Express后端
+- 📱 响应式设计
+
+---
+
 **项目维护者:** thiskee  
 **创建时间:** 2024年1月  
-**最后更新:** 2024年1月
+**最后更新:** 2024年7月
 
 如有问题或建议，请创建[Issue](https://github.com/your-repo/issues)或提交[Pull Request](https://github.com/your-repo/pulls)。

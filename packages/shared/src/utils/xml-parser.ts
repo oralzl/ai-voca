@@ -10,13 +10,17 @@ export interface Example {
 
 export interface ParsedWordExplanation {
   word?: string;
+  text?: string;
+  lemmatizationExplanation?: string;
   pronunciation?: string;
   partOfSpeech?: string;
   definition?: string;
+  simpleExplanation?: string;
   examples?: Example[];
   synonyms?: string[];
   antonyms?: string[];
   etymology?: string;
+  memoryTips?: string;
 }
 
 /**
@@ -87,29 +91,52 @@ function cleanXml(xml: string): string {
 }
 
 /**
+ * 提取多个 word 标签内容
+ * @param xml XML字符串
+ * @returns word标签内容数组
+ */
+function extractWordBlocks(xml: string): string[] {
+  const regex = /<word>(.*?)<\/word>/gs;
+  const matches = [];
+  let match;
+  
+  while ((match = regex.exec(xml)) !== null) {
+    matches.push(match[1].trim());
+  }
+  
+  return matches;
+}
+
+/**
  * 解析AI返回的XML格式单词解释
  * @param xmlContent AI返回的XML内容
- * @returns 解析后的单词解释对象
+ * @returns 解析后的单词解释对象（只返回第一个word的解析结果）
  */
 export function parseWordExplanationXml(xmlContent: string): ParsedWordExplanation {
   try {
     // 清理XML内容
     const cleanedXml = cleanXml(xmlContent);
     
-    // 提取主要的word_explanation内容
-    const mainContent = extractTagContent(cleanedXml, 'word_explanation');
-    if (!mainContent) {
-      throw new Error('未找到word_explanation标签');
+    // 提取所有的word内容块
+    const wordBlocks = extractWordBlocks(cleanedXml);
+    if (wordBlocks.length === 0) {
+      throw new Error('未找到word标签');
     }
     
+    // 只解析第一个word块
+    const mainContent = wordBlocks[0];
     const result: ParsedWordExplanation = {};
     
     // 提取基本信息
-    result.word = extractTagContent(mainContent, 'word');
+    result.text = extractTagContent(mainContent, 'text');
+    result.word = result.text; // 将text字段的值作为word字段的值
+    result.lemmatizationExplanation = extractTagContent(mainContent, 'lemmatization_explanation');
     result.pronunciation = extractTagContent(mainContent, 'pronunciation');
     result.partOfSpeech = extractTagContent(mainContent, 'part_of_speech');
     result.definition = extractTagContent(mainContent, 'definition');
+    result.simpleExplanation = extractTagContent(mainContent, 'simple_explanation');
     result.etymology = extractTagContent(mainContent, 'etymology');
+    result.memoryTips = extractTagContent(mainContent, 'memory_tips');
     
     // 提取例句
     const examplesContent = extractTagContent(mainContent, 'examples');
@@ -151,9 +178,9 @@ export function isValidXml(xml: string): boolean {
   try {
     const cleanedXml = cleanXml(xml);
     
-    // 检查是否有word_explanation标签
-    const hasMainTag = cleanedXml.includes('<word_explanation>') && 
-                       cleanedXml.includes('</word_explanation>');
+    // 检查是否有word标签
+    const hasMainTag = cleanedXml.includes('<word>') && 
+                       cleanedXml.includes('</word>');
     
     if (!hasMainTag) {
       return false;

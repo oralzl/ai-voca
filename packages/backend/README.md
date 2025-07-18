@@ -6,6 +6,8 @@ AI单词查询后端API服务，基于Express.js构建，提供RESTful API接口
 
 - 🚀 **RESTful API**: 标准的REST API设计
 - 🔐 **AI集成**: 集成AiHubMix AI模型API
+- 🧠 **词形还原**: 支持lemmatization分析，识别单词原形
+- 🇨🇳 **中文专精**: 专注提供高质量中文解释
 - 📝 **类型安全**: 完整的TypeScript支持
 - 🛡️ **安全防护**: 集成Helmet、CORS等安全中间件
 - 📊 **日志记录**: 完整的请求/响应日志
@@ -27,7 +29,7 @@ npm install @ai-voca/backend
 # AiHubMix API 配置
 AIHUBMIX_API_KEY=your_api_key_here
 AIHUBMIX_API_URL=https://aihubmix.com/v1/chat/completions
-AIHUBMIX_MODEL=gpt-4o-mini
+AIHUBMIX_MODEL=gemini-2.5-flash-lite-preview-06-17
 
 # 服务器配置
 PORT=3001
@@ -79,12 +81,11 @@ GET /health
 #### 2. 单词查询 (GET)
 
 ```
-GET /api/words/query?word=hello&language=zh&includeExample=true
+GET /api/words/query?word=running&includeExample=true
 ```
 
 **参数**:
 - `word` (string, required): 要查询的单词
-- `language` (string, optional): 解释语言，默认为 'zh'
 - `includeExample` (boolean, optional): 是否包含例句，默认为 true
 
 **响应**:
@@ -92,14 +93,23 @@ GET /api/words/query?word=hello&language=zh&includeExample=true
 {
   \"success\": true,
   \"data\": {
-    \"word\": \"hello\",
-    \"pronunciation\": \"həˈləʊ\",
-    \"partOfSpeech\": \"interjection\",
-    \"definition\": \"用于打招呼的感叹词\",
-    \"example\": \"Hello, how are you?\",
-    \"synonyms\": [\"hi\", \"greetings\"],
-    \"antonyms\": [\"goodbye\"],
-    \"etymology\": \"来自古英语...\"
+    \"word\": \"run\",
+    \"text\": \"run\",
+    \"lemmatizationExplanation\": \"running是run的现在分词形式，表示正在进行的动作\",
+    \"pronunciation\": \"rʌn\",
+    \"partOfSpeech\": \"verb\",
+    \"definition\": \"跑步；运行；管理\",
+    \"simpleExplanation\": \"To move quickly using your legs, or to operate something\",
+    \"examples\": [
+      {
+        \"sentence\": \"She is running in the park.\",
+        \"translation\": \"她正在公园里跑步。\"
+      }
+    ],
+    \"synonyms\": [\"jog\", \"sprint\", \"operate\"],
+    \"antonyms\": [\"walk\", \"stop\"],
+    \"etymology\": \"来自古英语rinnan，意为"流动、跑"，与德语rinnen同源\",
+    \"memoryTips\": \"记住run的多重含义：跑步用腿，运行靠动力\"
   },
   \"timestamp\": 1704099600000
 }
@@ -112,8 +122,7 @@ POST /api/words/query
 Content-Type: application/json
 
 {
-  \"word\": \"hello\",
-  \"language\": \"zh\",
+  \"word\": \"running\",
   \"includeExample\": true
 }
 ```
@@ -122,12 +131,32 @@ Content-Type: application/json
 ```typescript
 interface WordQueryRequest {
   word: string;
-  language?: 'zh' | 'en';
   includeExample?: boolean;
 }
 ```
 
 **响应**: 同GET方法
+
+### 词形还原功能
+
+API现在支持自动词形还原分析：
+
+- **识别动词变化**: `running` → `run` (现在分词)
+- **识别名词复数**: `cats` → `cat` (复数形式)
+- **识别形容词比较级**: `better` → `good` (比较级)
+- **处理同形异义词**: `leaves` → `leaf/leave` (多重含义)
+
+**响应字段说明**:
+- `text`: lemma后的单词原形
+- `lemmatizationExplanation`: 词形还原过程的中文说明
+- `word`: 实际显示的单词（通常等于text）
+
+### 多word响应处理
+
+当AI返回多个 `<word>` 块时，API会：
+- 解析第一个word块作为主要结果
+- 在`rawResponse`字段保留完整的AI响应
+- 确保重要信息不丢失
 
 #### 4. API信息
 
@@ -179,10 +208,9 @@ import { WordService } from './services/WordService';
 
 const wordService = new WordService();
 
-// 查询单词
+// 查询单词（支持词形还原）
 const result = await wordService.queryWord({
-  word: 'hello',
-  language: 'zh',
+  word: 'running',
   includeExample: true
 });
 ```
@@ -245,7 +273,7 @@ CMD [\"node\", \"dist/index.js\"]
 ```env
 AIHUBMIX_API_KEY=your_production_api_key
 AIHUBMIX_API_URL=https://aihubmix.com/v1/chat/completions
-AIHUBMIX_MODEL=gpt-4o-mini
+AIHUBMIX_MODEL=gemini-2.5-flash-lite-preview-06-17
 PORT=3001
 NODE_ENV=production
 FRONTEND_URL=https://your-frontend-domain.com

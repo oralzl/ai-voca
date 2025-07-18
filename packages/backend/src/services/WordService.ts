@@ -1,26 +1,23 @@
-import axios from 'axios';
 import type { 
   WordQueryRequest, 
   WordQueryResponse, 
   WordExplanation,
-  AiHubMixRequest,
-  AiHubMixResponse
+  AiHubMixMessage
 } from '@ai-voca/shared';
-import { createAiMessages, formatWord, parseWordExplanationXml, isValidXml } from '@ai-voca/shared';
+import { 
+  createAiMessages, 
+  formatWord, 
+  parseWordExplanationXml, 
+  isValidXml,
+  createAiHubMixClientFromEnv,
+  AiHubMixClient
+} from '@ai-voca/shared';
 
 export class WordService {
-  private readonly apiUrl: string;
-  private readonly apiKey: string;
-  private readonly model: string;
+  private readonly aiClient: AiHubMixClient;
   
   constructor() {
-    this.apiUrl = process.env.AIHUBMIX_API_URL || 'https://aihubmix.com/v1/chat/completions';
-    this.apiKey = process.env.AIHUBMIX_API_KEY || '';
-    this.model = process.env.AIHUBMIX_MODEL || 'gemini-2.0-flash';
-    
-    if (!this.apiKey) {
-      throw new Error('AIHUBMIX_API_KEY is required');
-    }
+    this.aiClient = createAiHubMixClientFromEnv();
   }
   
   /**
@@ -38,73 +35,31 @@ export class WordService {
       // 构建AI消息
       const messages = createAiMessages(
         formattedWord,
-        request.language || 'zh',
         request.includeExample !== false
       );
       
-      // 构建API请求
-      const aiRequest: AiHubMixRequest = {
-        model: this.model,
-        messages,
-        temperature: 0.1, // 降低温度以获得更一致的结果
-        max_tokens: 2000 // 增加token限制以支持更完整的XML响应
-      };
-      
       // 调用AI API
-      console.log('发送AI请求:', {
-        url: this.apiUrl,
-        model: this.model,
-        messageCount: messages.length
+      const aiResponse = await this.aiClient.chatCompletion(messages, {
+        temperature: 0.1, // 降低温度以获得更一致的结果
+        maxTokens: 2000 // 增加token限制以支持更完整的XML响应
       });
       
-      const response = await axios.post<AiHubMixResponse>(
-        this.apiUrl,
-        aiRequest,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json'
-          },
-          timeout: 30000 // 30秒超时
-        }
-      );
-      
-      // 解析AI响应
-      const aiResponse = response.data;
-      if (!aiResponse.choices || aiResponse.choices.length === 0) {
-        throw new Error('AI API返回空响应');
-      }
-      
-      const explanation = this.parseAiResponse(formattedWord, aiResponse.choices[0].message.content);
+      const rawAiResponse = aiResponse.choices[0].message.content;
+      const explanation = this.parseAiResponse(formattedWord, rawAiResponse);
       
       return {
         success: true,
         data: explanation,
+        rawResponse: rawAiResponse, // 保存原始响应用于调试
         timestamp
       };
       
     } catch (error: any) {
       console.error('Word query failed:', error);
       
-      let errorMessage = '查询失败';
-      
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          errorMessage = 'API密钥无效';
-        } else if (error.response?.status === 429) {
-          errorMessage = 'API调用频率超限';
-        } else if (error.code === 'ECONNABORTED') {
-          errorMessage = '请求超时';
-        } else {
-          errorMessage = `API错误: ${error.response?.data?.error?.message || error.message}`;
-        }
-      } else {
-        errorMessage = error.message || '未知错误';
-      }
-      
       return {
         success: false,
-        error: errorMessage,
+        error: error.message || '查询失败',
         timestamp
       };
     }
@@ -125,12 +80,16 @@ export class WordService {
         
         const explanation: WordExplanation = {
           word: parsed.word || word,
+          text: parsed.text,
+          lemmatizationExplanation: parsed.lemmatizationExplanation,
           pronunciation: parsed.pronunciation,
           partOfSpeech: parsed.partOfSpeech,
           definition: parsed.definition || content,
+          simpleExplanation: parsed.simpleExplanation,
           synonyms: parsed.synonyms,
           antonyms: parsed.antonyms,
-          etymology: parsed.etymology
+          etymology: parsed.etymology,
+          memoryTips: parsed.memoryTips
         };
         
         // 处理例句数据
@@ -156,10 +115,12 @@ export class WordService {
         definition: content,
         pronunciation: undefined,
         partOfSpeech: undefined,
+        simpleExplanation: undefined,
         example: undefined,
         synonyms: undefined,
         antonyms: undefined,
-        etymology: undefined
+        etymology: undefined,
+        memoryTips: undefined
       };
     }
   }

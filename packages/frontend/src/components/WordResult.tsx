@@ -1,18 +1,15 @@
-import React from 'react';
-import { WordExplanation, WordExample, formatTimestamp } from '@ai-voca/shared';
+import { useState } from 'react';
+import { WordQueryResponse, formatTimestamp } from '@ai-voca/shared';
 import './WordResult.css';
 
 interface WordResultProps {
-  result: {
-    success: boolean;
-    data?: WordExplanation;
-    error?: string;
-    timestamp: number;
-  };
+  result: WordQueryResponse;
   onClear: () => void;
 }
 
 export function WordResult({ result, onClear }: WordResultProps) {
+  const [showRawResponse, setShowRawResponse] = useState(false);
+  
   if (!result.success || !result.data) {
     return (
       <div className="word-result error">
@@ -31,6 +28,12 @@ export function WordResult({ result, onClear }: WordResultProps) {
     <div className="word-result">
       <div className="result-header">
         <h2 className="word-title">{data.word}</h2>
+        {data.lemmatizationExplanation && (
+          <div className="lemmatization-explanation">
+            <span className="lemma-label">词形还原:</span>
+            <span className="lemma-text">{data.lemmatizationExplanation}</span>
+          </div>
+        )}
         {data.pronunciation && (
           <span className="pronunciation">/{data.pronunciation}/</span>
         )}
@@ -46,6 +49,15 @@ export function WordResult({ result, onClear }: WordResultProps) {
             {data.definition}
           </div>
         </div>
+        
+        {data.simpleExplanation && (
+          <div className="simple-explanation-section">
+            <h3>简单解释</h3>
+            <div className="simple-explanation-text">
+              {data.simpleExplanation}
+            </div>
+          </div>
+        )}
         
         {(data.examples && data.examples.length > 0) ? (
           <div className="examples-section">
@@ -104,16 +116,50 @@ export function WordResult({ result, onClear }: WordResultProps) {
             </div>
           </div>
         )}
+        
+        {data.memoryTips && (
+          <div className="memory-tips-section">
+            <h3>记忆技巧</h3>
+            <div className="memory-tips-text">
+              {data.memoryTips}
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="result-footer">
         <div className="timestamp">
           查询时间: {formatTimestamp(result.timestamp)}
         </div>
-        <button onClick={onClear} className="clear-button">
-          清空结果
-        </button>
+        <div className="footer-buttons">
+          {result.rawResponse && (
+            <button 
+              onClick={() => setShowRawResponse(!showRawResponse)} 
+              className="raw-response-button"
+            >
+              {showRawResponse ? '隐藏原始响应' : '查看原始响应'}
+            </button>
+          )}
+          <button onClick={onClear} className="clear-button">
+            清空结果
+          </button>
+        </div>
       </div>
+      
+      {showRawResponse && result.rawResponse && (
+        <div className="raw-response-section">
+          <h3>AI原始响应</h3>
+          <div className="raw-response-content">
+            <pre>{result.rawResponse}</pre>
+          </div>
+          <button 
+            onClick={() => navigator.clipboard.writeText(result.rawResponse!)}
+            className="copy-button"
+          >
+            复制到剪贴板
+          </button>
+        </div>
+      )}
     </div>
   );
 }

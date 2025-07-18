@@ -1,16 +1,15 @@
-import React, { useState, FormEvent } from 'react';
+import { useState, FormEvent } from 'react';
 import { isValidWord } from '@ai-voca/shared';
 import './WordQueryForm.css';
 
 interface WordQueryFormProps {
-  onQuery: (word: string, language: 'zh' | 'en', includeExample: boolean) => void;
+  onQuery: (word: string, includeExample: boolean) => void;
   loading: boolean;
   onClear: () => void;
 }
 
 export function WordQueryForm({ onQuery, loading, onClear }: WordQueryFormProps) {
   const [word, setWord] = useState('');
-  const [language, setLanguage] = useState<'zh' | 'en'>('zh');
   const [includeExample, setIncludeExample] = useState(true);
   const [error, setError] = useState('');
 
@@ -28,7 +27,7 @@ export function WordQueryForm({ onQuery, loading, onClear }: WordQueryFormProps)
     }
     
     setError('');
-    onQuery(word.trim(), language, includeExample);
+    onQuery(word.trim(), includeExample);
   };
 
   const handleClear = () => {
@@ -53,20 +52,6 @@ export function WordQueryForm({ onQuery, loading, onClear }: WordQueryFormProps)
       </div>
       
       <div className="form-options">
-        <div className="form-group">
-          <label htmlFor="language-select">解释语言：</label>
-          <select
-            id="language-select"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value as 'zh' | 'en')}
-            className="language-select"
-            disabled={loading}
-          >
-            <option value="zh">中文</option>
-            <option value="en">English</option>
-          </select>
-        </div>
-        
         <div className="form-group">
           <label className="checkbox-label">
             <input
