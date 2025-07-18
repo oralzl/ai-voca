@@ -116,6 +116,28 @@
   white-space: pre-wrap;
 }
 
+/* 无序列表样式 */
+.definition-text ul,
+.simple-explanation-text ul,
+.memory-tips-text ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  list-style-type: disc;
+}
+
+.definition-text li,
+.simple-explanation-text li,
+.memory-tips-text li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.definition-text li:last-child,
+.simple-explanation-text li:last-child,
+.memory-tips-text li:last-child {
+  margin-bottom: 0;
+}
+
 .synonyms-list,
 .antonyms-list {
   display: flex;
@@ -157,6 +179,26 @@
 .timestamp {
   color: #7f8c8d;
   font-size: 0.9rem;
+}
+
+.retry-button {
+  padding: 8px 16px;
+  background-color: #f39c12;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.retry-button:hover:not(:disabled) {
+  background-color: #e67e22;
+}
+
+.retry-button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
 }
 
 .clear-button {
@@ -325,6 +367,7 @@
     gap: 10px;
   }
   
+  .retry-button,
   .clear-button,
   .raw-response-button {
     width: 100%;

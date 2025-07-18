@@ -32,6 +32,11 @@ export interface WordQueryResponse {
   error?: string;
   timestamp: number;
   rawResponse?: string; // AI原始响应内容，用于调试
+  inputParams?: {      // 查询参数，用于重试功能
+    word: string;
+    includeExample: boolean;
+    timestamp: number;
+  };
 }
 
 // AiHubMix API 类型

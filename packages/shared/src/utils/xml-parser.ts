@@ -36,6 +36,67 @@ function extractTagContent(xml: string, tagName: string): string | undefined {
 }
 
 /**
+ * 安全的HTML内容清理，只允许特定的HTML标签
+ * @param html HTML字符串
+ * @returns 清理后的HTML字符串
+ */
+function sanitizeHtml(html: string): string {
+  // 简单的标签清理：只允许 ul, li, br, strong, em, b, i 标签
+  const sanitized = html.replace(/<(?!\/?(?:ul|li|br|strong|em|b|i)\b)[^>]*>/gi, '');
+  
+  return sanitized;
+}
+
+/**
+ * 处理包含item标签的内容，将其转换为HTML格式
+ * @param content 包含item标签的XML内容
+ * @returns 处理后的HTML内容
+ */
+function processItemTags(content: string): string {
+  if (!content) return content;
+  
+  // 检查是否包含 <item> 标签
+  const hasItems = content.includes('<item>') && content.includes('</item>');
+  
+  if (hasItems) {
+    // 提取所有 item 内容
+    const items = extractMultipleTagContents(content, 'item');
+    if (items.length > 0) {
+      // 如果有多个项目，转换为无序列表
+      if (items.length > 1) {
+        const listHtml = '<ul>' + items.map(item => `<li>${item.trim()}</li>`).join('') + '</ul>';
+        return sanitizeHtml(listHtml);
+      } else {
+        // 如果只有一个项目，直接返回内容
+        return sanitizeHtml(items[0].trim());
+      }
+    }
+  }
+  
+  // 如果没有item标签，检查是否有其他需要清理的HTML标签
+  const hasHtmlTags = /<[^>]+>/.test(content);
+  if (hasHtmlTags) {
+    return sanitizeHtml(content);
+  }
+  
+  // 如果没有任何标签，直接返回原内容
+  return content;
+}
+
+/**
+ * 提取并处理可能包含item标签的字段内容
+ * @param xml XML字符串
+ * @param tagName 标签名
+ * @returns 处理后的内容
+ */
+function extractAndProcessTagContent(xml: string, tagName: string): string | undefined {
+  const content = extractTagContent(xml, tagName);
+  if (!content) return undefined;
+  
+  return processItemTags(content);
+}
+
+/**
  * 提取多个同名标签的内容
  * @param xml XML字符串
  * @param tagName 标签名
@@ -133,10 +194,12 @@ export function parseWordExplanationXml(xmlContent: string): ParsedWordExplanati
     result.lemmatizationExplanation = extractTagContent(mainContent, 'lemmatization_explanation');
     result.pronunciation = extractTagContent(mainContent, 'pronunciation');
     result.partOfSpeech = extractTagContent(mainContent, 'part_of_speech');
-    result.definition = extractTagContent(mainContent, 'definition');
-    result.simpleExplanation = extractTagContent(mainContent, 'simple_explanation');
     result.etymology = extractTagContent(mainContent, 'etymology');
-    result.memoryTips = extractTagContent(mainContent, 'memory_tips');
+    
+    // 处理可能包含item标签的字段
+    result.definition = extractAndProcessTagContent(mainContent, 'definition');
+    result.simpleExplanation = extractAndProcessTagContent(mainContent, 'simple_explanation');
+    result.memoryTips = extractAndProcessTagContent(mainContent, 'memory_tips');
     
     // 提取例句
     const examplesContent = extractTagContent(mainContent, 'examples');
@@ -204,4 +267,38 @@ export function isValidXml(xml: string): boolean {
  */
 export function extractPlainText(xml: string): string {
   return xml.replace(/<[^>]*>/g, '').trim();
+}
+
+/**
+ * 从rawResponse中提取查询参数
+ * @param rawResponse 包含input标签的完整响应
+ * @returns 查询参数对象，如果解析失败则返回null
+ */
+export function extractInputParams(rawResponse: string): {
+  word: string;
+  includeExample: boolean;
+  timestamp: number;
+} | null {
+  try {
+    if (!rawResponse) return null;
+    
+    const inputContent = extractTagContent(rawResponse, 'input');
+    if (!inputContent) return null;
+    
+    const word = extractTagContent(inputContent, 'word');
+    const includeExampleStr = extractTagContent(inputContent, 'includeExample');
+    const timestampStr = extractTagContent(inputContent, 'timestamp');
+    
+    if (!word || !includeExampleStr || !timestampStr) return null;
+    
+    const includeExample = includeExampleStr === 'true';
+    const timestamp = parseInt(timestampStr, 10);
+    
+    if (isNaN(timestamp)) return null;
+    
+    return { word, includeExample, timestamp };
+  } catch (error) {
+    console.error('提取查询参数失败:', error);
+    return null;
+  }
 }

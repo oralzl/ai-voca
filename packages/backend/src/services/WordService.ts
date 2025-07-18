@@ -9,6 +9,7 @@ import {
   formatWord, 
   parseWordExplanationXml, 
   isValidXml,
+  extractInputParams,
   createAiHubMixClientFromEnv,
   AiHubMixClient
 } from '@ai-voca/shared';
@@ -45,12 +46,26 @@ export class WordService {
       });
       
       const rawAiResponse = aiResponse.choices[0].message.content;
+      
+      // 在AI响应前插入查询参数
+      const enrichedResponse = `<input>
+  <word>${formattedWord}</word>
+  <includeExample>${request.includeExample !== false}</includeExample>
+  <timestamp>${timestamp}</timestamp>
+</input>
+
+${rawAiResponse}`;
+      
       const explanation = this.parseAiResponse(formattedWord, rawAiResponse);
+      
+      // 从增强的响应中提取查询参数
+      const inputParams = extractInputParams(enrichedResponse);
       
       return {
         success: true,
         data: explanation,
-        rawResponse: rawAiResponse, // 保存原始响应用于调试
+        rawResponse: enrichedResponse, // 包含查询参数的完整响应
+        inputParams: inputParams || undefined,
         timestamp
       };
       

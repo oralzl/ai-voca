@@ -44,11 +44,22 @@ export function useWordQuery() {
     setError(null);
   }, []);
 
+  const retryQuery = useCallback(async () => {
+    if (!result?.inputParams) {
+      console.warn('无法重试：缺少查询参数');
+      return;
+    }
+    
+    const { word, includeExample } = result.inputParams;
+    await queryWord(word, includeExample);
+  }, [result, queryWord]);
+
   return {
     result,
     loading,
     error,
     queryWord,
-    clearResult
+    clearResult,
+    retryQuery
   };
 }

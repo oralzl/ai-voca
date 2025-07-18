@@ -9,7 +9,8 @@ function App() {
     loading, 
     error, 
     queryWord, 
-    clearResult 
+    clearResult,
+    retryQuery 
   } = useWordQuery();
 
   return (
@@ -38,6 +39,8 @@ function App() {
             <WordResult 
               result={result}
               onClear={clearResult}
+              onRetry={retryQuery}
+              loading={loading}
             />
           )}
         </main>

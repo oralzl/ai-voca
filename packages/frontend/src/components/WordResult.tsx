@@ -5,9 +5,11 @@ import './WordResult.css';
 interface WordResultProps {
   result: WordQueryResponse;
   onClear: () => void;
+  onRetry: () => void;
+  loading?: boolean;
 }
 
-export function WordResult({ result, onClear }: WordResultProps) {
+export function WordResult({ result, onClear, onRetry, loading = false }: WordResultProps) {
   const [showRawResponse, setShowRawResponse] = useState(false);
   
   if (!result.success || !result.data) {
@@ -45,17 +47,19 @@ export function WordResult({ result, onClear }: WordResultProps) {
       <div className="result-content">
         <div className="definition-section">
           <h3>释义</h3>
-          <div className="definition-text">
-            {data.definition}
-          </div>
+          <div 
+            className="definition-text"
+            dangerouslySetInnerHTML={{ __html: data.definition }}
+          />
         </div>
         
         {data.simpleExplanation && (
           <div className="simple-explanation-section">
             <h3>简单解释</h3>
-            <div className="simple-explanation-text">
-              {data.simpleExplanation}
-            </div>
+            <div 
+              className="simple-explanation-text"
+              dangerouslySetInnerHTML={{ __html: data.simpleExplanation }}
+            />
           </div>
         )}
         
@@ -120,9 +124,10 @@ export function WordResult({ result, onClear }: WordResultProps) {
         {data.memoryTips && (
           <div className="memory-tips-section">
             <h3>记忆技巧</h3>
-            <div className="memory-tips-text">
-              {data.memoryTips}
-            </div>
+            <div 
+              className="memory-tips-text"
+              dangerouslySetInnerHTML={{ __html: data.memoryTips }}
+            />
           </div>
         )}
       </div>
@@ -132,6 +137,15 @@ export function WordResult({ result, onClear }: WordResultProps) {
           查询时间: {formatTimestamp(result.timestamp)}
         </div>
         <div className="footer-buttons">
+          {result.inputParams && (
+            <button 
+              onClick={onRetry}
+              disabled={loading}
+              className="retry-button"
+            >
+              {loading ? '重试中...' : '重试'}
+            </button>
+          )}
           {result.rawResponse && (
             <button 
               onClick={() => setShowRawResponse(!showRawResponse)} 
