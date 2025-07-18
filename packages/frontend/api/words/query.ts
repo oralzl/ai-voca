@@ -10,13 +10,21 @@ import {
 // 直接在这里实现AI查询逻辑
 async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> {
   try {
-    const apiKey = process.env.AIHUBMIX_API_KEY;
+    // 暂时硬编码API配置
+    const apiKey = process.env.AIHUBMIX_API_KEY || 'sk-qMWbiOmv6BhwydD4858197B955D94d189e451aC4C5Ac26E1';
     const apiUrl = process.env.AIHUBMIX_API_URL || 'https://aihubmix.com/v1';
     const model = process.env.AIHUBMIX_MODEL || 'gemini-2.5-flash-lite-preview-06-17';
     
     if (!apiKey) {
       throw new Error('AIHUBMIX_API_KEY environment variable is not set');
     }
+    
+    console.log('Query Word API Config:', { 
+      hasKey: !!apiKey, 
+      keyPrefix: apiKey.substring(0, 10) + '...',
+      apiUrl,
+      model 
+    });
 
     const formattedWord = request.word.trim().toLowerCase();
     const timestamp = Date.now();
@@ -100,9 +108,10 @@ ${rawAiResponse}`;
     };
   } catch (error: any) {
     console.error('Word query error:', error);
+    const errorMessage = error.message || '查询失败，请稍后重试';
     return {
       success: false,
-      error: '查询失败，请稍后重试',
+      error: errorMessage,
       timestamp: Date.now()
     };
   }
@@ -200,9 +209,10 @@ export default async function handler(
     
   } catch (error: any) {
     console.error('Word query error:', error);
+    const errorMessage = error.message || '服务器内部错误';
     res.status(500).json({
       success: false,
-      error: '服务器内部错误',
+      error: errorMessage,
       timestamp: Date.now()
     } as WordQueryResponse);
   }

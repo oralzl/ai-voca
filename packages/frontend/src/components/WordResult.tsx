@@ -16,7 +16,7 @@ export function WordResult({ result, onClear, onRetry, loading = false }: WordRe
     return (
       <div className="word-result error">
         <h3>查询失败</h3>
-        <p>{result.error || '未知错误'}</p>
+        <p>{typeof result.error === 'string' ? result.error : (result.error?.message || '未知错误')}</p>
         <button onClick={onClear} className="clear-button">
           重新查询
         </button>
