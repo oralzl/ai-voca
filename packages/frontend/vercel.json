@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "functions": {
+    "api/words/query.ts": {
+      "maxDuration": 30
+    }
+  }
+}
