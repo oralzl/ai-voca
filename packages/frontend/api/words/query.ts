@@ -121,6 +121,8 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
+  console.log('Word query handler started', { method: req.method, headers: req.headers });
+  
   // 设置 CORS 头
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -134,7 +136,11 @@ export default async function handler(
   
   // 只允许 GET 和 POST 请求
   if (req.method !== 'GET' && req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
+    res.status(405).json({ 
+      success: false,
+      error: 'Method not allowed',
+      timestamp: Date.now()
+    });
     return;
   }
   
@@ -208,7 +214,13 @@ export default async function handler(
     res.json(result);
     
   } catch (error: any) {
-    console.error('Word query error:', error);
+    console.error('Word query handler error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
+    // 确保返回正确的错误格式
     const errorMessage = error.message || '服务器内部错误';
     res.status(500).json({
       success: false,
