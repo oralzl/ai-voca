@@ -1,0 +1,203 @@
+/* 用户资料组件样式 */
+.user-profile {
+  position: relative;
+  display: inline-block;
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #f8f9fa;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.user-avatar:hover {
+  background: #e9ecef;
+}
+
+.user-avatar img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.user-name {
+  font-weight: 500;
+  color: #333;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-arrow {
+  font-size: 0.8rem;
+  color: #666;
+  transition: transform 0.2s ease;
+}
+
+.user-avatar:hover .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  min-width: 280px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.user-info {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.user-info h4 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.user-info p {
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.user-stats {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.stat-item:last-child {
+  margin-bottom: 0;
+}
+
+.stat-label {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.stat-value {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.dropdown-actions {
+  padding: 1rem 1.5rem;
+}
+
+.sign-out-btn {
+  width: 100%;
+  padding: 0.75rem;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.sign-out-btn:hover {
+  background: #c82333;
+}
+
+.dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: transparent;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .user-dropdown {
+    right: -1rem;
+    left: -1rem;
+    min-width: unset;
+  }
+  
+  .user-name {
+    max-width: 100px;
+  }
+}
+
+/* 动画效果 */
+.user-dropdown {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 加载状态 */
+.user-stats.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.user-stats.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  margin-left: -10px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

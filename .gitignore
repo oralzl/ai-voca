@@ -39,3 +39,18 @@ coverage/
 # 运行时
 .cache/
 .parcel-cache/
+
+# Vercel 部署文件
+.vercel
+
+# 包管理器缓存
+.pnpm-debug.log*
+.yarn-integrity
+
+# 备份文件
+*.backup
+*.bak
+
+# 其他
+.eslintcache
+.stylelintcache

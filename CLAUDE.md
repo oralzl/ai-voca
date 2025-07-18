@@ -29,7 +29,9 @@ Monolithic Repository
 
 **AI集成**: 后端的`WordService`类通过统一的`AiHubMixClient`封装类处理所有AI API调用。它使用共享工具函数来格式化单词和生成AI提示，然后将AI响应解析回结构化数据。系统现在专注于中文词汇解释，并支持词形还原（lemmatization）分析。
 
-**数据流**: 前端 → 后端API → AiHubMix AI → 后端处理 → 前端显示。`useWordQuery` hook管理整个前端状态生命周期。
+**重试机制**: 系统支持智能重试功能，通过在AI响应中嵌入`<input>`标签保存查询参数，实现自包含的重试机制。每次重试都是独立的AI会话，不会继承上下文。
+
+**数据流**: 前端 → 后端API → AiHubMix AI → 后端处理 → 前端显示。`useWordQuery` hook管理整个前端状态生命周期，包括重试功能。
 
 **模块解析**: 单体仓库使用TypeScript路径映射(`@ai-voca/shared`)和npm工作区进行包管理。
 
@@ -135,7 +137,7 @@ interface WordExplanation {
 
 **错误处理**: `WordService`类处理所有AI API错误并将其转换为用户友好的消息。前端组件应该处理网络错误和API错误响应。
 
-**状态管理**: `useWordQuery` hook集中管理所有查询状态（加载、错误、结果）并为组件提供清晰的API。
+**状态管理**: `useWordQuery` hook集中管理所有查询状态（加载、错误、结果）并为组件提供清晰的API。包括新增的`retryQuery`功能，支持使用原始参数重新查询。
 
 ## 开发工作流
 
@@ -147,77 +149,6 @@ interface WordExplanation {
 
 当修改共享类型或工具时，在测试前重新构建共享包。
 
-## AI提示词系统
-
-### 当前提示词格式
-系统使用专门设计的中文提示词，要求AI返回严格的XML格式：
-
-```xml
-<word>
-  <text>lemma后的单词</text>
-  <lemmatization_explanation>对词形还原结果的简要说明（如有）</lemmatization_explanation>
-  <pronunciation>音标（如果适用）</pronunciation>
-  <part_of_speech>词性（兼容多词性）</part_of_speech>
-  <definition>中文释义</definition>
-  <simple_explanation>用常见单词平白地介绍这个单词的英文注释</simple_explanation>
-  <examples>
-    <example>
-      <sentence>英文例句</sentence>
-      <translation>中文翻译</translation>
-    </example>
-  </examples>
-  <synonyms>
-    <synonym>同义词1</synonym>
-  </synonyms>
-  <antonyms>
-    <antonym>反义词1</antonym>
-  </antonyms>
-  <etymology>用中文介绍词源信息</etymology>
-  <memory_tips>用中文介绍记忆技巧</memory_tips>
-</word>
-```
-
-### 词形还原分析
-系统现在支持词形还原（lemmatization）分析，能够：
-- 识别动词时态变化（如 "running" → "run", "went" → "go"）
-- 识别名词复数形式（如 "cats" → "cat", "children" → "child"）
-- 识别形容词比较级（如 "better" → "good", "fastest" → "fast"）
-- 处理同形异义词（如 "leaves" → "leaf"和"leave"）
-
-### 多word响应处理
-当AI返回多个 `<word>` 块时：
-- 前端只解析和显示第一个word的结构化信息
-- 原始响应保持完整，用户可以查看所有AI返回的内容
-- 这确保了重要信息不会丢失，同时保持UI的简洁性
-
-### 灵活的XML标签处理
-系统现在能够智能处理AI可能返回的额外XML标签：
-
-- **`<item>` 标签处理**: 自动将多个 `<item>` 转换为HTML无序列表
-- **单项目优化**: 单个 `<item>` 直接显示内容，不创建列表
-- **HTML安全**: 自动清理危险标签，只保留安全的HTML元素
-- **优雅降级**: 不识别的标签被安全移除，保留文本内容
-
-**支持的字段**:
-- `definition` - 定义可包含多个条目
-- `simple_explanation` - 简单解释可包含多个条目
-- `memory_tips` - 记忆技巧可包含多个条目
-
-**示例转换**:
-```xml
-<definition>
-  <item>名词：一个标准或参考点</item>
-  <item>动词：将某物与标准进行比较</item>
-</definition>
-```
-
-转换为前端HTML显示：
-```html
-<ul>
-  <li>名词：一个标准或参考点</li>
-  <li>动词：将某物与标准进行比较</li>
-</ul>
-```
 
 ## 重要更新记录
 
@@ -227,6 +158,15 @@ interface WordExplanation {
 - **优化提示词**: 采用新的XML格式提示词，提升AI响应质量
 - **多word处理**: 支持AI返回多个单词解释，前端智能显示第一个
 - **API简化**: 移除了language参数，简化了API接口
+
+### v1.2.0 - 智能重试功能
+- **重试机制**: 新增智能重试功能，支持一键重新查询
+- **参数嵌入**: 在AI响应中使用`<input>`标签保存查询参数
+- **参数提取**: 前端通过`extractInputParams`函数提取查询参数
+- **状态管理**: 完善的重试状态管理，包括加载状态显示
+- **独立会话**: 每次重试都是独立的AI会话，不继承上下文
+- **类型扩展**: 扩展`WordQueryResponse`接口添加`inputParams`字段
+- **UI优化**: 重试按钮仅在有参数时显示，支持加载状态
 
 ### v1.1.1 - 灵活XML标签处理
 - **智能标签解析**: 支持AI返回的额外XML标签（如 `<item>`）

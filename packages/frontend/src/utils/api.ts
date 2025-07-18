@@ -1,7 +1,8 @@
 import axios from 'axios';
 import type { WordQueryRequest, WordQueryResponse } from '@ai-voca/shared';
+import { supabase } from '../lib/supabase';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -11,16 +12,30 @@ const apiClient = axios.create({
   },
 });
 
-// 请求拦截器
+// 请求拦截器 - 添加认证token
 apiClient.interceptors.request.use(
-  (config) => {
-    console.log('API Request:', {
-      url: config.url,
-      method: config.method,
-      data: config.data,
-      params: config.params
-    });
-    return config;
+  async (config) => {
+    try {
+      // 获取当前用户的session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.access_token) {
+        config.headers.Authorization = `Bearer ${session.access_token}`;
+      }
+      
+      console.log('API Request:', {
+        url: config.url,
+        method: config.method,
+        data: config.data,
+        params: config.params,
+        hasAuth: !!session?.access_token
+      });
+      
+      return config;
+    } catch (error) {
+      console.error('Error adding auth token:', error);
+      return config;
+    }
   },
   (error) => {
     console.error('API Request Error:', error);
@@ -64,10 +79,18 @@ export const wordApi = {
   },
 
   /**
+   * 获取用户统计信息
+   */
+  async getUserStats(): Promise<any> {
+    const response = await apiClient.get('/api/user/stats');
+    return response.data;
+  },
+
+  /**
    * 获取API状态
    */
   async getApiStatus(): Promise<any> {
-    const response = await apiClient.get('/health');
+    const response = await apiClient.get('/api/health');
     return response.data;
   },
 

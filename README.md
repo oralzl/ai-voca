@@ -10,6 +10,8 @@
 
 - 🤖 **AI驱动**: 集成AiHubMix AI模型，提供智能单词解释
 - 🧠 **词形还原**: 支持词形还原（lemmatization）分析，识别单词原形
+- 🔄 **重试功能**: 智能重试机制，可重新查询相同单词
+- 🏷️ **XML兼容**: 智能处理AI返回的复杂XML标签
 - 🏗️ **单体仓库**: 统一管理前端、后端和共享代码
 - 🇨🇳 **中文专精**: 专注于中文解释，提供高质量的中文释义
 - 📱 **响应式设计**: 适配桌面和移动设备
@@ -120,6 +122,8 @@ React前端应用，提供用户界面和交互体验。
 **主要功能:**
 - 单词输入和查询表单
 - AI解释结果展示
+- 智能重试功能
+- 原始响应查看
 - 响应式设计
 - 错误处理和加载状态
 
@@ -151,6 +155,8 @@ Node.js后端API服务，处理单词查询请求。
 - TypeScript类型定义
 - 验证和格式化工具
 - AI提示词生成
+- XML解析和处理
+- 查询参数提取
 - 零依赖设计
 
 ## 🔧 开发指南
@@ -241,6 +247,11 @@ curl \"http://localhost:3001/api/words/query?word=running&includeExample=true\"
     \"etymology\": \"来自古英语rinnan，意为"流动、跑"，与德语rinnen同源\",
     \"memoryTips\": \"记住run的多重含义：跑步用腿，运行靠动力\"
   },
+  \"inputParams\": {
+    \"word\": \"run\",
+    \"includeExample\": true,
+    \"timestamp\": 1704099600000
+  },
   \"timestamp\": 1704099600000
 }
 ```
@@ -284,6 +295,31 @@ POST方式查询单词。
 - 支持复杂词形的多重解释
 - 优雅降级处理未知词形
 
+## 🔄 重试功能
+
+### 功能说明
+
+系统支持智能重试机制，允许用户对已查询的单词重新发起查询：
+
+- **自动参数保存**: 每次查询的参数（单词、选项等）自动保存在响应中
+- **一键重试**: 点击重试按钮即可使用原始参数重新查询
+- **状态管理**: 重试过程中显示加载状态，避免重复点击
+- **独立会话**: 每次重试都是独立的AI会话，不会继承上下文
+
+### 技术实现
+
+1. **参数嵌入**: 后端在AI响应中插入`<input>`标签保存查询参数
+2. **参数提取**: 前端解析响应中的参数信息
+3. **状态保持**: 使用React hooks管理重试状态
+4. **自包含设计**: 每个查询结果包含完整的重试所需信息
+
+### 使用场景
+
+- **网络重试**: 网络不稳定时重新查询
+- **结果刷新**: 获取新的AI解释结果
+- **对比分析**: 比较不同时间的AI响应
+- **教学演示**: 展示AI的一致性和差异性
+
 ## 🔍 使用示例
 
 ### 基本用法
@@ -310,10 +346,14 @@ if (result.success) {
 import { useWordQuery } from '@ai-voca/frontend/src/hooks/useWordQuery';
 
 function MyComponent() {
-  const { result, loading, error, queryWord } = useWordQuery();
+  const { result, loading, error, queryWord, retryQuery } = useWordQuery();
 
   const handleQuery = async () => {
     await queryWord('running', true);
+  };
+
+  const handleRetry = async () => {
+    await retryQuery(); // 使用原始参数重试
   };
 
   return (
@@ -328,6 +368,13 @@ function MyComponent() {
             <p>词形还原: {result.data.lemmatizationExplanation}</p>
           )}
           <p>释义: {result.data?.definition}</p>
+          
+          {/* 重试按钮 */}
+          {result.inputParams && (
+            <button onClick={handleRetry} disabled={loading}>
+              {loading ? '重试中...' : '重试'}
+            </button>
+          )}
         </div>
       )}
       {error && <div>错误: {error}</div>}
@@ -474,7 +521,14 @@ MIT License - 详见 [LICENSE](./LICENSE) 文件
 
 ## 📋 版本更新
 
-### v1.1.1 (最新) - 灵活XML标签处理
+### v1.2.0 (最新) - 智能重试功能
+- 🔄 新增智能重试机制，支持一键重新查询
+- 🎯 自动参数保存，使用`<input>`标签嵌入查询参数
+- 📊 独立会话设计，每次重试都是全新的AI对话
+- 🔧 完善的状态管理，避免重复操作
+- 🛡️ 前端安全处理，自动提取和验证参数
+
+### v1.1.1 - 灵活XML标签处理
 - 🏷️ 智能处理AI返回的额外XML标签（如 `<item>`）
 - 📋 自动将多个 `<item>` 转换为HTML无序列表
 - 🛡️ HTML安全处理，自动清理危险标签
@@ -500,6 +554,7 @@ MIT License - 详见 [LICENSE](./LICENSE) 文件
 
 **项目维护者:** thiskee  
 **创建时间:** 2024年1月  
-**最后更新:** 2024年7月
+**最后更新:** 2024年7月  
+**v1.2.0 更新:** 智能重试功能
 
 如有问题或建议，请创建[Issue](https://github.com/your-repo/issues)或提交[Pull Request](https://github.com/your-repo/pulls)。
