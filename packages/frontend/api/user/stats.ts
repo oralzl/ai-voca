@@ -31,45 +31,61 @@ export default async function handler(
       return;
     }
     
-    // 获取用户统计信息
-    const { data: stats, error } = await supabase
-      .rpc('get_user_query_stats', { user_id: user.id });
-      
-    if (error) {
-      console.error('Error fetching user stats:', error);
-      res.status(500).json({
-        success: false,
-        error: '获取统计信息失败',
-        timestamp: Date.now()
-      });
-      return;
+    // 获取用户查询限制信息
+    const { data: limitData, error: limitError } = await supabase
+      .from('user_query_limits')
+      .select('daily_queries, max_daily_queries, last_reset_date')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (limitError && limitError.code !== 'PGRST116') { // PGRST116 是记录不存在的错误
+      throw limitError;
     }
     
-    const userStats = stats && stats.length > 0 ? stats[0] : {
-      total_queries: 0,
-      today_queries: 0,
-      remaining_queries: 100,
-      last_query_date: null
-    };
+    // 获取用户总查询数
+    const { count: totalQueries, error: countError } = await supabase
+      .from('word_queries')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    
+    if (countError) {
+      throw countError;
+    }
+    
+    // 获取最后查询日期
+    const { data: lastQueryData, error: lastQueryError } = await supabase
+      .from('word_queries')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    
+    if (lastQueryError && lastQueryError.code !== 'PGRST116') {
+      throw lastQueryError;
+    }
+    
+    // 计算今日剩余查询次数
+    const todayQueries = limitData?.daily_queries || 0;
+    const maxDailyQueries = limitData?.max_daily_queries || 100;
+    const remainingQueries = Math.max(0, maxDailyQueries - todayQueries);
     
     res.json({
       success: true,
       data: {
-        totalQueries: userStats.total_queries || 0,
-        todayQueries: userStats.today_queries || 0,
-        remainingQueries: userStats.remaining_queries || 100,
-        lastQueryDate: userStats.last_query_date,
-        maxDailyQueries: 100
-      },
-      timestamp: Date.now()
+        totalQueries: totalQueries || 0,
+        todayQueries: todayQueries,
+        remainingQueries: remainingQueries,
+        maxDailyQueries: maxDailyQueries,
+        lastQueryDate: lastQueryData?.created_at || null
+      }
     });
     
   } catch (error: any) {
     console.error('User stats error:', error);
     res.status(500).json({
       success: false,
-      error: '服务器内部错误',
-      timestamp: Date.now()
+      error: '获取用户统计信息失败'
     });
   }
 }
