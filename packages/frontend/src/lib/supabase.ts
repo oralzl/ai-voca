@@ -9,7 +9,11 @@ console.log('Supabase Config:', {
   hasKey: !!supabaseAnonKey,
   keyPrefix: supabaseAnonKey?.substring(0, 20) + '...',
   envUrl: import.meta.env.VITE_SUPABASE_URL,
-  envKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'present' : 'missing'
+  envKey: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'present' : 'missing',
+  mode: import.meta.env.MODE,
+  prod: import.meta.env.PROD,
+  dev: import.meta.env.DEV,
+  allEnvKeys: Object.keys(import.meta.env).filter(key => key.startsWith('VITE_'))
 })
 
 if (!supabaseUrl || !supabaseAnonKey) {

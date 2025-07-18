@@ -34,10 +34,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     // 获取初始会话
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      console.log('AuthContext: 尝试获取会话')
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        console.log('AuthContext: 获取会话结果', { session, error })
+        if (error) {
+          console.error('AuthContext: 获取会话失败', error)
+        }
+        setSession(session)
+        setUser(session?.user ?? null)
+        setLoading(false)
+      } catch (error) {
+        console.error('AuthContext: 获取会话异常', error)
+        setLoading(false)
+      }
     }
 
     getSession()
@@ -45,7 +55,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // 监听认证状态变化
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('AuthContext: 认证状态变化', { event, session })
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
@@ -55,11 +66,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { error }
+    console.log('AuthContext: 尝试登录', { email })
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      console.log('AuthContext: 登录结果', { error })
+      return { error }
+    } catch (error) {
+      console.error('AuthContext: 登录异常', error)
+      return { error }
+    }
   }
 
   const signUp = async (email: string, password: string, displayName?: string) => {
