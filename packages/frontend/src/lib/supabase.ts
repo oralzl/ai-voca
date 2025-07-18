@@ -34,6 +34,15 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 console.log('创建Supabase客户端:', { supabaseUrl, supabaseAnonKey: supabaseAnonKey.substring(0, 20) + '...' })
 
+// 清理旧的本地存储会话数据
+if (typeof window !== 'undefined') {
+  const oldKeys = Object.keys(localStorage).filter(key => 
+    key.startsWith('sb-') && key.includes('aibdxsebwhalbnugsqel')
+  )
+  console.log('清理旧的localStorage项:', oldKeys)
+  oldKeys.forEach(key => localStorage.removeItem(key))
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
