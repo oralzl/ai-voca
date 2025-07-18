@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../lib/supabase'
 import './UserProfile.css'
 
 interface UserStats {
@@ -80,7 +79,7 @@ export function UserProfile() {
     const name = getDisplayName()
     return name
       .split(' ')
-      .map((word) => word[0])
+      .map((word: string) => word[0])
       .join('')
       .toUpperCase()
       .substring(0, 2)
