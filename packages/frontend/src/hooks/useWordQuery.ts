@@ -27,7 +27,19 @@ export function useWordQuery() {
         setError(response.error || '查询失败');
       }
     } catch (err: any) {
-      const errorMessage = err.response?.data?.error || err.message || '网络错误';
+      // 确保错误消息是字符串
+      let errorMessage = '网络错误';
+      if (err.response?.data?.error) {
+        // 如果error是对象，提取message属性
+        if (typeof err.response.data.error === 'object' && err.response.data.error.message) {
+          errorMessage = err.response.data.error.message;
+        } else if (typeof err.response.data.error === 'string') {
+          errorMessage = err.response.data.error;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
       setError(errorMessage);
       setResult({
         success: false,
