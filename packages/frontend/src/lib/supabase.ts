@@ -51,7 +51,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   }
 })
 
-console.log('Supabase客户端创建完成，URL:', supabase.supabaseUrl)
+console.log('Supabase客户端创建完成，URL:', supabaseUrl)
 
 export type Database = {
   public: {
