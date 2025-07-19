@@ -1,6 +1,59 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { authenticateUser, createAuthError } from '../../lib/api/auth';
-import { supabase } from '../../lib/api/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// 内联的Supabase配置
+const supabaseUrl = 'https://syryqvbhfvjbctrdxcbv.supabase.co';
+const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cnlxdmJoZnZqYmN0cmR4Y2J2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Mjg1Mzc0OSwiZXhwIjoyMDY4NDI5NzQ5fQ.QUiT7tWhJJYQi2t0zV45HKBKjOhmQ2QJF3R8E5TdYa0';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cnlxdmJoZnZqYmN0cmR4Y2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTM3NDksImV4cCI6MjA2ODQyOTc0OX0.5E0H1pvs2Pv1XyT04DvDmHQuO-zsv4PdeVLMcYqFRaM';
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { autoRefreshToken: false, persistSession: false }
+});
+
+const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { autoRefreshToken: false, persistSession: false }
+});
+
+// 内联的认证函数
+interface AuthUser {
+  id: string;
+  email: string;
+  user_metadata: any;
+}
+
+async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+    
+    const token = authHeader.substring(7);
+    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+    
+    if (error || !user) {
+      console.error('Auth error:', error);
+      return null;
+    }
+    
+    return {
+      id: user.id,
+      email: user.email || '',
+      user_metadata: user.user_metadata || {}
+    };
+  } catch (error) {
+    console.error('Authentication failed:', error);
+    return null;
+  }
+}
+
+function createAuthError(message: string = 'Unauthorized') {
+  return {
+    success: false,
+    error: message,
+    timestamp: Date.now()
+  };
+}
 
 export default async function handler(
   req: VercelRequest,

@@ -1,11 +1,168 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { authenticateUser, createAuthError } from '../../lib/api/auth';
-import { checkQueryLimits, incrementQueryCount, saveQueryRecord } from '../../lib/api/queryLimits';
+import { createClient } from '@supabase/supabase-js';
 import { 
   isValidWord,
   type WordQueryRequest,
   type WordQueryResponse 
 } from '@ai-voca/shared';
+
+// 内联的Supabase配置
+const supabaseUrl = 'https://syryqvbhfvjbctrdxcbv.supabase.co';
+const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cnlxdmJoZnZqYmN0cmR4Y2J2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Mjg1Mzc0OSwiZXhwIjoyMDY4NDI5NzQ5fQ.QUiT7tWhJJYQi2t0zV45HKBKjOhmQ2QJF3R8E5TdYa0';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cnlxdmJoZnZqYmN0cmR4Y2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTM3NDksImV4cCI6MjA2ODQyOTc0OX0.5E0H1pvs2Pv1XyT04DvDmHQuO-zsv4PdeVLMcYqFRaM';
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: { autoRefreshToken: false, persistSession: false }
+});
+
+const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: { autoRefreshToken: false, persistSession: false }
+});
+
+// 内联的认证函数
+interface AuthUser {
+  id: string;
+  email: string;
+  user_metadata: any;
+}
+
+async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+    
+    const token = authHeader.substring(7);
+    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+    
+    if (error || !user) {
+      console.error('Auth error:', error);
+      return null;
+    }
+    
+    return {
+      id: user.id,
+      email: user.email || '',
+      user_metadata: user.user_metadata || {}
+    };
+  } catch (error) {
+    console.error('Authentication failed:', error);
+    return null;
+  }
+}
+
+function createAuthError(message: string = 'Unauthorized') {
+  return {
+    success: false,
+    error: message,
+    timestamp: Date.now()
+  };
+}
+
+// 内联的查询限制函数
+interface QueryLimits {
+  dailyQueries: number;
+  maxDailyQueries: number;
+  remainingQueries: number;
+  canQuery: boolean;
+}
+
+async function checkQueryLimits(userId: string): Promise<QueryLimits> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    
+    let { data: limits, error } = await supabase
+      .from('user_query_limits')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    
+    if (error && error.code === 'PGRST116') {
+      const { data: newLimits, error: createError } = await supabase
+        .from('user_query_limits')
+        .insert({
+          user_id: userId,
+          daily_queries: 0,
+          last_reset_date: today,
+          max_daily_queries: 100
+        })
+        .select()
+        .single();
+        
+      if (createError) throw createError;
+      limits = newLimits;
+    } else if (error) {
+      throw error;
+    }
+    
+    if (!limits) throw new Error('Failed to get query limits');
+    
+    if (limits.last_reset_date !== today) {
+      const { data: updatedLimits, error: updateError } = await supabase
+        .from('user_query_limits')
+        .update({
+          daily_queries: 0,
+          last_reset_date: today
+        })
+        .eq('user_id', userId)
+        .select()
+        .single();
+        
+      if (updateError) throw updateError;
+      limits = updatedLimits;
+    }
+    
+    const remainingQueries = Math.max(0, limits.max_daily_queries - limits.daily_queries);
+    return {
+      dailyQueries: limits.daily_queries,
+      maxDailyQueries: limits.max_daily_queries,
+      remainingQueries,
+      canQuery: remainingQueries > 0
+    };
+  } catch (error) {
+    console.error('Error checking query limits:', error);
+    return {
+      dailyQueries: 0,
+      maxDailyQueries: 100,
+      remainingQueries: 100,
+      canQuery: true
+    };
+  }
+}
+
+async function incrementQueryCount(userId: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .rpc('increment_daily_queries', { user_id: userId });
+      
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error incrementing query count:', error);
+  }
+}
+
+async function saveQueryRecord(
+  userId: string,
+  word: string,
+  queryParams: any,
+  responseData: any
+): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('word_queries')
+      .insert({
+        user_id: userId,
+        word,
+        query_params: queryParams,
+        response_data: responseData
+      });
+      
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error saving query record:', error);
+  }
+}
 
 // 直接在这里实现AI查询逻辑
 async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> {
