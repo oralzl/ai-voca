@@ -1,10 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
-// 内联的Supabase配置
-const supabaseUrl = 'https://syryqvbhfvjbctrdxcbv.supabase.co';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cnlxdmJoZnZqYmN0cmR4Y2J2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Mjg1Mzc0OSwiZXhwIjoyMDY4NDI5NzQ5fQ.k0Hlshvo95jXmrsWEKYJCW3tETqz4fHLd1VAz0G8vns';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cnlxdmJoZnZqYmN0cmR4Y2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTM3NDksImV4cCI6MjA2ODQyOTc0OX0.5E0H1pvs2Pv1XyT04DvDmHQuO-zsv4PdeVLMcYqFRaM';
+// Supabase配置（使用环境变量）
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { autoRefreshToken: false, persistSession: false }
@@ -63,9 +67,7 @@ export default async function handler(
   console.log('Supabase config:', {
     url: supabaseUrl,
     hasServiceKey: !!supabaseServiceKey,
-    hasAnonKey: !!supabaseAnonKey,
-    serviceKeyPrefix: supabaseServiceKey.substring(0, 20) + '...',
-    anonKeyPrefix: supabaseAnonKey.substring(0, 20) + '...'
+    hasAnonKey: !!supabaseAnonKey
   });
   
   // 设置 CORS 头

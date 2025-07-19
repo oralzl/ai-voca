@@ -57,10 +57,14 @@ function isValidWord(word: string): boolean {
   return validPattern.test(trimmed);
 }
 
-// 内联的Supabase配置
-const supabaseUrl = 'https://syryqvbhfvjbctrdxcbv.supabase.co';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cnlxdmJoZnZqYmN0cmR4Y2J2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Mjg1Mzc0OSwiZXhwIjoyMDY4NDI5NzQ5fQ.k0Hlshvo95jXmrsWEKYJCW3tETqz4fHLd1VAz0G8vns';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN5cnlxdmJoZnZqYmN0cmR4Y2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI4NTM3NDksImV4cCI6MjA2ODQyOTc0OX0.5E0H1pvs2Pv1XyT04DvDmHQuO-zsv4PdeVLMcYqFRaM';
+// Supabase配置（使用环境变量）
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { autoRefreshToken: false, persistSession: false }
@@ -378,13 +382,13 @@ function parseWordExplanationXml(xmlContent: string): WordExplanation | null {
 // 直接在这里实现AI查询逻辑
 async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> {
   try {
-    // 暂时硬编码API配置
-    const apiKey = process.env.AIHUBMIX_API_KEY || 'sk-qMWbiOmv6BhwydD4858197B955D94d189e451aC4C5Ac26E1';
+    // AiHubMix API配置（使用环境变量）
+    const apiKey = process.env.AIHUBMIX_API_KEY;
     const apiUrl = process.env.AIHUBMIX_API_URL || 'https://aihubmix.com/v1';
     const model = process.env.AIHUBMIX_MODEL || 'gemini-2.5-flash-lite-preview-06-17';
     
     if (!apiKey) {
-      throw new Error('AIHUBMIX_API_KEY environment variable is not set');
+      throw new Error('AIHUBMIX_API_KEY environment variable is required');
     }
     
     console.log('Query Word API Config:', { 
