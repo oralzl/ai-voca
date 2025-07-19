@@ -185,7 +185,7 @@ async function checkQueryLimits(userId: string): Promise<QueryLimits> {
 async function incrementQueryCount(userId: string): Promise<void> {
   try {
     const { error } = await supabase
-      .rpc('increment_daily_queries', { user_id: userId });
+      .rpc('increment_daily_queries', { p_user_id: userId });
       
     if (error) throw error;
   } catch (error) {
