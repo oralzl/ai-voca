@@ -6,104 +6,119 @@
 请保持用中文与我沟通。
 
 ## 编程哲学
-Monolithic Repository
+云原生架构
 
-- 精简小巧：每一行“代码”都需要消耗能量，因此必须高效。
-- 模块化：基因被组织成可互换的“操纵子”单元（operons）。
-- 自包含性强：非常容易被“复制-粘贴”——这正是水平基因转移的基础。
-- 可读性强：清晰注释、readme.md 、 example
-
-
+- 精简高效：每一行代码都需要消耗云资源，必须高效实用
+- 无服务器优先：使用Vercel API Routes替代传统后端服务
+- 安全配置：完全使用环境变量，杜绝硬编码
+- 用户中心：以用户体验为核心，提供稳定可靠的服务
 
 ## 项目架构
 
-这是一个单体仓库的AI词汇查询应用，包含三个主要包：
+这是一个云原生部署的AI词汇查询应用，已完整部署到生产环境：
 
-- **@ai-voca/shared**: 前端和后端共享的TypeScript类型和工具函数
-- **@ai-voca/backend**: 与AiHubMix AI服务集成的Express.js REST API
-- **@ai-voca/frontend**: 使用Vite构建的React前端应用
+- **前端 (Vercel)**: React + TypeScript + Vite前端应用
+- **API Routes (Vercel)**: 无服务器函数替代传统后端
+- **数据库 (Supabase)**: PostgreSQL + 内置用户认证系统
+- **AI服务 (AiHubMix)**: 智能单词解释API
+- **@ai-voca/shared**: 类型定义和工具函数（已内联到前端）
 
 ### 关键架构模式
 
-**类型安全**: 所有包都使用TypeScript，在`@ai-voca/shared/src/types/index.ts`中定义共享类型。核心类型包括`WordQueryRequest`、`WordQueryResponse`和`WordExplanation`。
+**无服务器架构**: 完全基于Vercel API Routes，无需维护传统服务器。所有后端逻辑通过`packages/frontend/api/`目录下的函数实现。
 
-**AI集成**: 后端的`WordService`类通过统一的`AiHubMixClient`封装类处理所有AI API调用。它使用共享工具函数来格式化单词和生成AI提示，然后将AI响应解析回结构化数据。系统现在专注于中文词汇解释，并支持词形还原（lemmatization）分析。
+**用户认证**: 集成Supabase认证系统，支持用户注册、登录、JWT token验证。所有API调用都需要认证。
 
-**重试机制**: 系统支持智能重试功能，通过在AI响应中嵌入`<input>`标签保存查询参数，实现自包含的重试机制。每次重试都是独立的AI会话，不会继承上下文。
+**类型安全**: 虽然移除了workspace依赖，但在API Routes中内联了所有类型定义，确保类型安全。
 
-**数据流**: 前端 → 后端API → AiHubMix AI → 后端处理 → 前端显示。`useWordQuery` hook管理整个前端状态生命周期，包括重试功能。
+**AI集成**: 通过无服务器函数直接调用AiHubMix API，包含完整的XML解析和错误处理逻辑。
 
-**模块解析**: 单体仓库使用TypeScript路径映射(`@ai-voca/shared`)和npm工作区进行包管理。
+**重试机制**: 系统支持智能重试功能，通过在AI响应中嵌入`<input>`标签保存查询参数，实现自包含的重试机制。
+
+**无限查询**: 移除了查询次数限制，用户可以无限制地查询单词，但仍然保存查询记录用于统计。
+
+**数据流**: 前端 → Vercel API Routes → AiHubMix AI / Supabase → 前端显示。`useWordQuery` hook管理整个前端状态生命周期。
+
+## 生产环境
+
+### 🌐 在线访问
+**生产环境**: https://ai-voca-frontend.vercel.app
+
+### 🔧 环境变量配置
+生产环境在Vercel中配置以下环境变量：
+
+```env
+# 前端环境变量
+VITE_SUPABASE_URL=https://syryqvbhfvjbctrdxcbv.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# API Routes环境变量  
+SUPABASE_URL=https://syryqvbhfvjbctrdxcbv.supabase.co
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# AI服务配置
+AIHUBMIX_API_KEY=sk-qMWbiOmv6BhwydD4858197B955D94d189e451aC4C5Ac26E1
+AIHUBMIX_API_URL=https://aihubmix.com/v1
+AIHUBMIX_MODEL=gemini-2.5-flash-lite-preview-06-17
+```
 
 ## 核心命令
 
 ### 开发
 ```bash
-# 在开发模式下启动前端和后端
+# 启动开发服务器（仅前端）
 npm run dev
 
-# 单独启动服务
-npm run dev:frontend  # React开发服务器在3000端口
-npm run dev:backend   # Express服务器在3001端口
+# 前端开发服务器在3000端口
+npm run dev:frontend
 
-# 构建所有包（必须先构建shared包）
-npm run build
-
-# 构建单个包
+# 构建前端（生产部署会自动构建）
 npm run build:frontend
-npm run build:backend
 ```
 
 ### 测试和质量检查
 ```bash
-# 运行所有包的测试
+# 运行测试
 npm run test
 
-# 运行所有包的代码检查
+# 代码检查
 npm run lint
 
-# 清理所有构建产物和node_modules
+# 清理构建产物
 npm run clean
-```
-
-### 包特定命令
-```bash
-# 使用npm工作区处理特定包
-npm run dev -w @ai-voca/frontend
-npm run build -w @ai-voca/shared
-npm run test -w @ai-voca/backend
-```
-
-## 环境配置
-
-复制`.env.example`到`.env`并配置：
-
-```env
-AIHUBMIX_API_KEY=your_api_key_here
-AIHUBMIX_API_URL=https://aihubmix.com/v1
-AIHUBMIX_MODEL=gemini-2.5-flash-lite-preview-06-17  # 或 gpt-4o-mini
-AIHUBMIX_TIMEOUT=30000
-PORT=3001
-NODE_ENV=development
-REACT_APP_API_URL=http://localhost:3001
 ```
 
 ## API架构
 
-后端提供两个主要端点：
+无服务器API提供以下端点：
+
+### 用户认证相关
+- 通过Supabase SDK自动处理注册、登录
+- JWT token自动管理
+- 行级安全(RLS)保护用户数据
+
+### 单词查询API
 - `GET /api/words/query` - 使用URL参数查询单词
 - `POST /api/words/query` - 使用JSON body查询单词
-- `GET /health` - 健康检查端点
+- `GET /api/user/stats` - 获取用户查询统计
+
+### API特性
+- **认证保护**: 所有API都需要JWT token认证
+- **无限查询**: 移除了查询次数限制
+- **查询记录**: 自动保存查询历史到数据库
+- **错误处理**: 完善的错误处理和用户反馈
+- **XML解析**: 内联的XML解析逻辑处理AI响应
 
 ### API参数说明
 ```typescript
-// 查询请求参数（简化版本，移除了language参数）
+// 查询请求参数
 interface WordQueryRequest {
   word: string;              // 要查询的单词
   includeExample?: boolean;  // 是否包含例句，默认true
 }
 
-// 响应数据结构（新增词形还原字段）
+// 响应数据结构（支持词形还原）
 interface WordExplanation {
   word: string;                        // 原始单词
   text?: string;                       // lemma后的单词
@@ -118,59 +133,179 @@ interface WordExplanation {
   etymology?: string;                 // 词源信息
   memoryTips?: string;                // 记忆技巧
 }
+
+// 查询响应（包含重试参数）
+interface WordQueryResponse {
+  success: boolean;
+  data?: WordExplanation | null;
+  error?: string;
+  rawResponse?: string;
+  timestamp: number;
+  queryCount?: number;
+  inputParams?: {               // 重试机制参数
+    word: string;
+    includeExample: boolean;
+    timestamp: number;
+  };
+}
 ```
 
-前端在`vite.config.ts`中使用代理配置，在开发期间将`/api`请求路由到后端。
+## 数据库架构
 
-## 共享模块系统
+### Supabase表结构
 
-`@ai-voca/shared`包包含：
-- **类型**: API请求/响应和AI集成的核心接口
-- **工具**: 验证函数(`isValidWord`)、格式化函数(`formatWord`, `formatTimestamp`)和提示生成工具
-- **零依赖**: 共享包没有外部依赖，避免冲突
+**user_profiles**: 用户扩展信息
+- id (UUID, 关联auth.users)
+- display_name (VARCHAR)
+- subscription_tier (VARCHAR, 默认'free')
+- created_at, updated_at (TIMESTAMP)
 
-## 关键开发注意事项
+**word_queries**: 查询历史记录
+- id (UUID)
+- user_id (UUID, 关联auth.users)
+- word (VARCHAR)
+- query_params (JSONB)
+- response_data (JSONB)
+- created_at (TIMESTAMP)
 
-**构建顺序**: 必须先构建共享包再构建后端，因为后端导入编译后的共享代码。
+**user_query_limits**: 查询限制表（目前不使用）
+- 保留表结构，但查询功能已移除限制
 
-**类型导入**: 对于仅类型导入，使用`import type`从共享包中导入以避免运行时依赖。
-
-**错误处理**: `WordService`类处理所有AI API错误并将其转换为用户友好的消息。前端组件应该处理网络错误和API错误响应。
-
-**状态管理**: `useWordQuery` hook集中管理所有查询状态（加载、错误、结果）并为组件提供清晰的API。包括新增的`retryQuery`功能，支持使用原始参数重新查询。
+### 安全机制
+- **行级安全(RLS)**: 用户只能访问自己的数据
+- **JWT认证**: 所有API调用都需要有效token
+- **环境变量**: 所有敏感配置通过环境变量管理
 
 ## 开发工作流
 
-1. 启动开发服务器: `npm run dev`
-2. 前端运行在 http://localhost:3000 并配置API代理
-3. 后端运行在 http://localhost:3001 并启用CORS
-4. 访问API文档: http://localhost:3001/api/words
-5. 健康检查: http://localhost:3001/health
+### 本地开发
+1. 配置环境变量: 复制`.env.example`到`.env`
+2. 启动开发服务器: `npm run dev`
+3. 前端运行在 http://localhost:3000
+4. API调用会路由到Vercel API Routes（本地模拟）
 
-当修改共享类型或工具时，在测试前重新构建共享包。
+### 生产部署
+1. 推送代码到GitHub仓库
+2. Vercel自动构建和部署
+3. 环境变量在Vercel控制台配置
+4. 数据库和认证通过Supabase管理
 
+## AI提示词系统
+
+### 当前提示词格式
+系统使用专门设计的中文提示词，要求AI返回严格的XML格式：
+
+```xml
+<word>
+  <text>lemma后的单词</text>
+  <lemmatization_explanation>对词形还原结果的简要说明（如有）</lemmatization_explanation>
+  <pronunciation>音标（如果适用）</pronunciation>
+  <part_of_speech>词性（兼容多词性）</part_of_speech>
+  <definition>中文释义</definition>
+  <simple_explanation>用常见单词平白地介绍这个单词的英文注释</simple_explanation>
+  <examples>
+    <example>
+      <sentence>英文例句</sentence>
+      <translation>中文翻译</translation>
+    </example>
+  </examples>
+  <synonyms>
+    <synonym>同义词1</synonym>
+  </synonyms>
+  <antonyms>
+    <antonym>反义词1</antonym>
+  </antonyms>
+  <etymology>用中文介绍词源信息</etymology>
+  <memory_tips>用中文介绍记忆技巧</memory_tips>
+</word>
+```
+
+### 智能XML处理
+- 支持AI返回的额外标签（如`<item>`, `<tip>`, `<entry>`）
+- 自动将多项目转换为HTML列表
+- HTML安全处理，防止XSS攻击
+- 优雅降级处理未知标签
+
+## 重试功能实现
+
+### 技术方案
+1. **参数嵌入**: 后端在AI响应前插入查询参数
+```typescript
+const enrichedResponse = `<input>
+  <word>${formattedWord}</word>
+  <includeExample>${request.includeExample !== false}</includeExample>
+  <timestamp>${timestamp}</timestamp>
+</input>
+
+${rawAiResponse}`;
+```
+
+2. **参数提取**: 前端解析`<input>`标签提取参数
+3. **状态管理**: React hook管理重试状态
+4. **独立会话**: 每次重试都是新的AI对话
 
 ## 重要更新记录
 
-### v1.1.0 - 词形还原功能更新
-- **移除语言选择**: 系统现在专注于中文解释，移除了英文版本支持
-- **新增词形还原**: 添加词形还原分析和显示功能
-- **优化提示词**: 采用新的XML格式提示词，提升AI响应质量
-- **多word处理**: 支持AI返回多个单词解释，前端智能显示第一个
-- **API简化**: 移除了language参数，简化了API接口
+### v2.0.0 (当前) - 云原生部署版本
+- **完整云部署**: 迁移到Vercel + Supabase云架构
+- **用户认证系统**: 新增注册、登录、JWT认证
+- **移除查询限制**: 用户可无限制查询单词
+- **环境变量安全**: 移除所有硬编码，完全使用环境变量
+- **无服务器架构**: 使用Vercel API Routes替代Express后端
+- **生产环境优化**: 完整的错误处理、安全配置和性能优化
 
 ### v1.2.0 - 智能重试功能
 - **重试机制**: 新增智能重试功能，支持一键重新查询
 - **参数嵌入**: 在AI响应中使用`<input>`标签保存查询参数
-- **参数提取**: 前端通过`extractInputParams`函数提取查询参数
-- **状态管理**: 完善的重试状态管理，包括加载状态显示
 - **独立会话**: 每次重试都是独立的AI会话，不继承上下文
-- **类型扩展**: 扩展`WordQueryResponse`接口添加`inputParams`字段
-- **UI优化**: 重试按钮仅在有参数时显示，支持加载状态
 
 ### v1.1.1 - 灵活XML标签处理
 - **智能标签解析**: 支持AI返回的额外XML标签（如 `<item>`）
 - **列表自动转换**: 多个 `<item>` 自动转换为HTML无序列表
 - **HTML安全处理**: 自动清理危险标签，保留安全元素
-- **优雅降级**: 未知标签被安全移除，保留文本内容
-- **前端HTML渲染**: 支持在定义、解释、记忆技巧中显示格式化内容
+
+### v1.1.0 - 词形还原功能更新
+- **新增词形还原**: 添加词形还原分析和显示功能
+- **专注中文解释**: 移除多语言支持，专注中文释义
+- **优化提示词**: 采用新的XML格式提示词
+
+### v1.0.0 - 基础版本
+- **初始发布**: 基本单词查询功能
+- **单体仓库架构**: 传统的前后端分离架构
+- **AiHubMix集成**: AI模型API集成
+
+## 关键开发注意事项
+
+**无服务器限制**: API Routes有执行时间和内存限制，需要优化代码性能。
+
+**环境变量**: 前端环境变量必须以`VITE_`开头，API Routes使用标准环境变量。
+
+**认证机制**: 所有API调用都需要在请求头中包含`Authorization: Bearer <token>`。
+
+**错误处理**: 必须处理网络错误、认证错误、AI API错误等各种异常情况。
+
+**类型安全**: 虽然内联了类型定义，但仍要保持严格的TypeScript类型检查。
+
+**JWT Token清理**: 环境变量中的JWT token需要清理换行符和空格，避免header无效。
+
+## 故障排除
+
+### 常见问题
+
+1. **认证失败**: 检查JWT token格式，确保没有换行符
+2. **环境变量问题**: 确认Vercel中的环境变量配置正确
+3. **API调用失败**: 检查CORS配置和请求格式
+4. **数据库连接问题**: 验证Supabase配置和权限设置
+
+### 调试方法
+
+- 查看Vercel函数日志
+- 使用浏览器开发者工具检查网络请求
+- 检查Supabase仪表板中的实时日志
+- 验证环境变量配置
+
+---
+
+**项目状态**: ✅ 已完成部署，功能正常运行
+**生产环境**: https://ai-voca-frontend.vercel.app
+**维护模式**: 云原生架构，自动扩展，无需手动维护

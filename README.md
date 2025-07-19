@@ -1,349 +1,274 @@
-# AI单词查询应用 - 单体仓库
+# AI词汇查询应用
 
-基于AI的智能单词查询应用，采用单体仓库(Monorepo)架构，提供前端、后端和共享模块的统一开发环境。
+基于AI的智能英文单词查询应用，提供详细的中文解释、音标、例句等信息。现已部署在Vercel，支持用户注册和无限制查询。
+
+## 🌐 在线访问
+
+**生产环境**: https://ai-voca-frontend.vercel.app
+
+立即访问，注册账号开始使用！
 
 ## 📋 项目概述
 
-这是一个现代化的单词查询应用，用户可以输入单词并获得详细的AI生成解释，包括释义、例句、同义词等信息。项目采用单体仓库架构，便于代码复用和统一管理。
+这是一个现代化的英文单词查询应用，用户可以注册登录后无限制地查询英文单词，获得AI生成的详细中文解释。项目采用无服务器架构，完全部署在云端。
 
 ### 🌟 主要特性
 
 - 🤖 **AI驱动**: 集成AiHubMix AI模型，提供智能单词解释
+- 👤 **用户系统**: 完整的注册、登录、认证功能
+- ♾️ **无限查询**: 移除查询次数限制，用户可自由使用
 - 🧠 **词形还原**: 支持词形还原（lemmatization）分析，识别单词原形
 - 🔄 **重试功能**: 智能重试机制，可重新查询相同单词
-- 🏷️ **XML兼容**: 智能处理AI返回的复杂XML标签
-- 🏗️ **单体仓库**: 统一管理前端、后端和共享代码
+- 🏷️ **XML智能解析**: 处理AI返回的复杂XML标签格式
 - 🇨🇳 **中文专精**: 专注于中文解释，提供高质量的中文释义
 - 📱 **响应式设计**: 适配桌面和移动设备
 - 🔧 **类型安全**: 完整的TypeScript支持
-- ⚡ **现代化工具**: Vite、Express、React等现代技术栈
-- 🛡️ **错误处理**: 完善的错误处理和用户反馈
-- 📖 **完整文档**: 详细的API文档和使用示例
+- ☁️ **无服务器架构**: 基于Vercel + Supabase的现代云架构
+- 🛡️ **安全认证**: JWT token认证，环境变量配置
+- 📖 **查询历史**: 保存用户查询记录
 
-## 🏗️ 项目架构
+## 🏗️ 技术架构
 
+### 部署架构
+```
+├── 前端 (Vercel)           # React + TypeScript + Vite
+│   ├── 用户界面             # 注册、登录、单词查询
+│   ├── API Routes          # 无服务器函数
+│   └── 静态资源            
+├── 数据库 (Supabase)       # PostgreSQL + 认证
+│   ├── 用户管理            # 注册、登录、JWT
+│   ├── 查询记录            # 历史查询存储
+│   └── 数据安全            # RLS行级安全
+└── AI服务 (AiHubMix)       # AI单词解释API
+```
+
+### 代码结构
 ```
 ai-voca-2/
 ├── packages/
-│   ├── frontend/          # React前端应用
-│   │   ├── src/
-│   │   │   ├── components/    # React组件
-│   │   │   ├── hooks/        # 自定义Hooks
-│   │   │   └── utils/        # 工具函数
-│   │   ├── examples/         # 使用示例
-│   │   └── README.md
-│   ├── backend/           # Node.js后端API
-│   │   ├── src/
-│   │   │   ├── routes/       # API路由
-│   │   │   ├── services/     # 业务逻辑
-│   │   │   └── middleware/   # 中间件
-│   │   ├── examples/         # API使用示例
-│   │   └── README.md
-│   └── shared/            # 共享代码
-│       ├── types/            # TypeScript类型定义
-│       ├── utils/            # 共享工具函数
-│       ├── examples/         # 使用示例
-│       └── README.md
+│   ├── frontend/           # React前端应用 (Vercel部署)
+│   │   ├── src/           # React组件、hooks、utils
+│   │   ├── api/           # Vercel API Routes (后端功能)
+│   │   └── lib/           # Supabase客户端配置
+│   └── shared/            # 共享类型定义和工具
 ├── docs/                  # 项目文档
 ├── package.json          # 根目录配置
-├── tsconfig.json         # TypeScript配置
-├── .env.example          # 环境变量模板
 └── README.md             # 项目说明
 ```
 
-## 🚀 快速开始
+## 🚀 功能特性
 
-### 1. 环境要求
+### 🔐 用户认证系统
+- **注册功能**: 邮箱注册，自动创建用户档案
+- **登录登出**: 安全的JWT token认证
+- **会话管理**: 自动保持登录状态
+- **权限控制**: 只有登录用户可以查询单词
 
-- Node.js 18+ 
+### 🔍 智能单词查询
+- **AI解释**: 基于AiHubMix AI的智能单词解释
+- **词形还原**: 自动识别单词原形（如running → run）
+- **全面信息**: 包含音标、词性、定义、例句、同义词等
+- **中文专精**: 提供准确的中文释义和解释
+
+### 🔄 重试功能
+- **智能重试**: 一键重新查询，获取新的AI响应
+- **参数保存**: 自动保存查询参数，无需重新输入
+- **独立会话**: 每次重试都是全新的AI对话
+
+### 📊 数据管理
+- **查询历史**: 自动保存所有查询记录
+- **无限制**: 移除了查询次数限制
+- **数据安全**: 行级安全保护用户数据
+
+## 🛠 本地开发
+
+### 环境要求
+- Node.js 18+
 - npm 9+
-- 现代浏览器支持
 
-### 2. 安装依赖
+### 快速开始
 
 ```bash
 # 克隆项目
 git clone <repository-url>
 cd ai-voca-2
 
-# 安装所有依赖
+# 安装依赖
 npm install
-```
 
-### 3. 环境配置
-
-```bash
-# 复制环境变量模板
+# 配置环境变量
 cp .env.example .env
+# 编辑 .env 文件，填入相应的API密钥
 
-# 编辑环境变量
-nano .env
+# 启动开发服务器
+npm run dev
 ```
 
-配置以下环境变量：
+### 环境变量配置
+
+开发环境需要配置以下环境变量：
 
 ```env
 # AiHubMix API 配置
 AIHUBMIX_API_KEY=your_api_key_here
-AIHUBMIX_API_URL=https://aihubmix.com/v1/chat/completions
+AIHUBMIX_API_URL=https://aihubmix.com/v1
 AIHUBMIX_MODEL=gemini-2.5-flash-lite-preview-06-17
 
-# 服务器配置
-PORT=3001
-NODE_ENV=development
-
-# 前端配置
-REACT_APP_API_URL=http://localhost:3001
+# Supabase配置（开发环境）
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### 4. 启动开发服务器
-
-```bash
-# 启动前端和后端（推荐）
-npm run dev
-
-# 或者单独启动
-npm run dev:frontend    # 前端 (http://localhost:3000)
-npm run dev:backend     # 后端 (http://localhost:3001)
-```
-
-### 5. 访问应用
-
-- 前端应用: http://localhost:3000
-- 后端API: http://localhost:3001
-- API文档: http://localhost:3001/api/words
-- 健康检查: http://localhost:3001/health
-
-## 📦 包说明
-
-### @ai-voca/frontend
-React前端应用，提供用户界面和交互体验。
-
-**主要功能:**
-- 单词输入和查询表单
-- AI解释结果展示
-- 智能重试功能
-- 原始响应查看
-- 响应式设计
-- 错误处理和加载状态
-
-**技术栈:**
-- React 18
-- TypeScript
-- Vite
-- CSS3
-
-### @ai-voca/backend
-Node.js后端API服务，处理单词查询请求。
-
-**主要功能:**
-- RESTful API接口
-- AiHubMix AI集成
-- 请求验证和错误处理
-- 安全中间件
-
-**技术栈:**
-- Node.js
-- Express
-- TypeScript
-- Axios
-
-### @ai-voca/shared
-共享类型定义和工具函数。
-
-**主要功能:**
-- TypeScript类型定义
-- 验证和格式化工具
-- AI提示词生成
-- XML解析和处理
-- 查询参数提取
-- 零依赖设计
-
-## 🔧 开发指南
-
-### 常用命令
+### 开发命令
 
 ```bash
 # 开发
 npm run dev              # 启动前后端开发服务器
-npm run dev:frontend     # 仅启动前端
-npm run dev:backend      # 仅启动后端
+npm run dev:frontend     # 仅启动前端 (localhost:3000)
 
 # 构建
 npm run build            # 构建所有包
 npm run build:frontend   # 构建前端
-npm run build:backend    # 构建后端
 
-# 测试
-npm run test             # 运行所有测试
+# 测试和检查
+npm run test             # 运行测试
 npm run lint             # 代码检查
-
-# 清理
-npm run clean            # 清理构建文件和依赖
 ```
-
-### 开发流程
-
-1. **创建新功能**
-   - 在相应的包中创建代码
-   - 更新共享类型定义（如需要）
-   - 添加测试用例
-
-2. **测试验证**
-   - 运行单元测试
-   - 手动测试功能
-   - 检查类型安全
-
-3. **文档更新**
-   - 更新组件文档
-   - 添加使用示例
-   - 更新API文档
-
-### 代码规范
-
-- 使用TypeScript进行类型安全开发
-- 遵循ESLint规则
-- 组件采用函数式设计
-- API遵循RESTful规范
-- 错误处理要完整
 
 ## 📖 API文档
 
 ### 单词查询接口
 
 #### GET /api/words/query
-
-查询单词解释。
+查询单词解释（需要登录）
 
 **参数:**
 - `word` (string, required): 要查询的单词
 - `includeExample` (boolean, optional): 是否包含例句，默认 true
 
-**示例:**
-```bash
-curl \"http://localhost:3001/api/words/query?word=running&includeExample=true\"
+**请求头:**
+```
+Authorization: Bearer <jwt_token>
 ```
 
-**响应:**
+**响应示例:**
 ```json
 {
-  \"success\": true,
-  \"data\": {
-    \"word\": \"run\",
-    \"text\": \"run\",
-    \"lemmatizationExplanation\": \"running是run的现在分词形式，表示正在进行的动作\",
-    \"pronunciation\": \"rʌn\",
-    \"partOfSpeech\": \"verb\",
-    \"definition\": \"跑步；运行；管理\",
-    \"simpleExplanation\": \"To move quickly using your legs, or to operate something\",
-    \"examples\": [
+  "success": true,
+  "data": {
+    "word": "run",
+    "text": "run",
+    "lemmatizationExplanation": "running是run的现在分词形式",
+    "pronunciation": "rʌn",
+    "partOfSpeech": "verb",
+    "definition": "跑步；运行；管理",
+    "simpleExplanation": "To move quickly using your legs",
+    "examples": [
       {
-        \"sentence\": \"She is running in the park.\",
-        \"translation\": \"她正在公园里跑步。\"
+        "sentence": "She is running in the park.",
+        "translation": "她正在公园里跑步。"
       }
     ],
-    \"synonyms\": [\"jog\", \"sprint\", \"operate\"],
-    \"antonyms\": [\"walk\", \"stop\"],
-    \"etymology\": \"来自古英语rinnan，意为"流动、跑"，与德语rinnen同源\",
-    \"memoryTips\": \"记住run的多重含义：跑步用腿，运行靠动力\"
+    "synonyms": ["jog", "sprint"],
+    "antonyms": ["walk", "stop"],
+    "etymology": "来自古英语rinnan",
+    "memoryTips": "记住run的多重含义"
   },
-  \"inputParams\": {
-    \"word\": \"run\",
-    \"includeExample\": true,
-    \"timestamp\": 1704099600000
+  "inputParams": {
+    "word": "run",
+    "includeExample": true,
+    "timestamp": 1704099600000
   },
-  \"timestamp\": 1704099600000
+  "timestamp": 1704099600000
 }
 ```
 
 #### POST /api/words/query
-
-POST方式查询单词。
+POST方式查询单词
 
 **请求体:**
 ```json
 {
-  \"word\": \"running\",
-  \"includeExample\": true
+  "word": "running",
+  "includeExample": true
 }
 ```
 
-更多API详情请参见 [后端文档](./packages/backend/README.md)。
+### 用户统计接口
 
-## 🧠 词形还原功能
+#### GET /api/user/stats
+获取用户查询统计信息
 
-### 功能说明
+**响应:**
+```json
+{
+  "success": true,
+  "data": {
+    "totalQueries": 0,
+    "todayQueries": 0,
+    "remainingQueries": "unlimited",
+    "maxDailyQueries": "unlimited"
+  }
+}
+```
 
-系统现在支持词形还原（lemmatization）分析，能够自动识别输入单词的原形并提供详细说明：
+## 🔧 词形还原功能
+
+系统支持智能词形还原分析：
 
 - **动词时态**: `running` → `run` (识别现在分词)
 - **名词复数**: `cats` → `cat` (识别复数形式)  
 - **形容词比较级**: `better` → `good` (识别比较级)
-- **同形异义词**: `leaves` → `leaf/leave` (提供多种可能)
+- **复杂变形**: 处理不规则变化
 
-### 使用场景
+## 🔄 重试机制
 
-1. **学习词汇变形**: 理解单词的不同形态
-2. **语法分析**: 识别词性和语法功能
-3. **词汇扩展**: 通过原形学习更多相关词汇
-4. **语言理解**: 提升对英语形态学的认知
-
-### 技术实现
-
-- AI模型自动分析词形变化规律
-- 提供中文解释的还原过程
-- 支持复杂词形的多重解释
-- 优雅降级处理未知词形
-
-## 🔄 重试功能
-
-### 功能说明
-
-系统支持智能重试机制，允许用户对已查询的单词重新发起查询：
-
-- **自动参数保存**: 每次查询的参数（单词、选项等）自动保存在响应中
-- **一键重试**: 点击重试按钮即可使用原始参数重新查询
-- **状态管理**: 重试过程中显示加载状态，避免重复点击
-- **独立会话**: 每次重试都是独立的AI会话，不会继承上下文
-
-### 技术实现
+智能重试功能的技术实现：
 
 1. **参数嵌入**: 后端在AI响应中插入`<input>`标签保存查询参数
 2. **参数提取**: 前端解析响应中的参数信息
-3. **状态保持**: 使用React hooks管理重试状态
-4. **自包含设计**: 每个查询结果包含完整的重试所需信息
+3. **状态管理**: React hooks管理重试状态
+4. **独立会话**: 每次重试都是全新的AI对话
 
-### 使用场景
+## 🚢 部署架构
 
-- **网络重试**: 网络不稳定时重新查询
-- **结果刷新**: 获取新的AI解释结果
-- **对比分析**: 比较不同时间的AI响应
-- **教学演示**: 展示AI的一致性和差异性
+### 生产环境部署
+
+**前端部署**: Vercel
+- 自动构建和部署
+- 全球CDN加速
+- 无服务器函数支持
+
+**数据库**: Supabase
+- PostgreSQL数据库
+- 内置用户认证
+- 实时API支持
+
+**AI服务**: AiHubMix
+- 高性能AI模型
+- 稳定的API服务
+
+### 环境变量配置
+
+生产环境在Vercel中配置以下变量：
+
+```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_KEY=your_service_key
+SUPABASE_ANON_KEY=your_anon_key
+AIHUBMIX_API_KEY=your_api_key
+AIHUBMIX_API_URL=https://aihubmix.com/v1
+AIHUBMIX_MODEL=gemini-2.5-flash-lite-preview-06-17
+```
 
 ## 🔍 使用示例
 
-### 基本用法
-
-```typescript
-import { wordApi } from '@ai-voca/frontend/src/utils/api';
-
-// 查询单词（支持词形还原）
-const result = await wordApi.queryWord({
-  word: 'running',
-  includeExample: true
-});
-
-if (result.success) {
-  console.log('原形:', result.data.text); // "run"
-  console.log('词形还原说明:', result.data.lemmatizationExplanation);
-  console.log('释义:', result.data.definition);
-}
-```
-
-### React组件使用
+### React Hook使用
 
 ```jsx
-import { useWordQuery } from '@ai-voca/frontend/src/hooks/useWordQuery';
+import { useWordQuery } from './hooks/useWordQuery';
 
 function MyComponent() {
   const { result, loading, error, queryWord, retryQuery } = useWordQuery();
@@ -383,126 +308,75 @@ function MyComponent() {
 }
 ```
 
-更多示例请参见各包的 `examples/` 目录。
-
-## 🚢 部署指南
-
-### 本地部署
-
-```bash
-# 构建所有包
-npm run build
-
-# 启动生产服务器
-npm start
-```
-
-### Docker部署
-
-```dockerfile
-# 使用官方Node.js镜像
-FROM node:18-alpine
-
-# 设置工作目录
-WORKDIR /app
-
-# 复制package文件
-COPY package*.json ./
-COPY packages/backend/package*.json ./packages/backend/
-COPY packages/frontend/package*.json ./packages/frontend/
-COPY packages/shared/package*.json ./packages/shared/
-
-# 安装依赖
-RUN npm ci --only=production
-
-# 复制构建文件
-COPY packages/backend/dist ./packages/backend/dist
-COPY packages/frontend/dist ./packages/frontend/dist
-COPY packages/shared/dist ./packages/shared/dist
-
-# 暴露端口
-EXPOSE 3001
-
-# 启动应用
-CMD [\"node\", \"packages/backend/dist/index.js\"]
-```
-
-### 云部署
-
-推荐部署平台：
-- **前端**: Vercel、Netlify、GitHub Pages
-- **后端**: Railway、Render、Heroku
-- **全栈**: AWS、Azure、Google Cloud
-
 ## 🔧 故障排除
 
 ### 常见问题
 
-1. **API密钥问题**
-   ```bash
-   # 检查环境变量
-   echo $AIHUBMIX_API_KEY
-   
-   # 重新设置
-   export AIHUBMIX_API_KEY=your_key_here
-   ```
+1. **登录问题**
+   - 检查网络连接
+   - 确认邮箱和密码
+   - 尝试注册新账号
 
-2. **端口冲突**
-   ```bash
-   # 查看端口占用
-   lsof -i :3001
-   
-   # 修改端口
-   export PORT=3002
-   ```
+2. **查询失败**
+   - 检查是否已登录
+   - 验证单词拼写
+   - 尝试重试功能
 
-3. **依赖问题**
+3. **开发环境问题**
    ```bash
    # 清理并重新安装
    npm run clean
    npm install
+   
+   # 检查环境变量
+   cat .env
    ```
 
-4. **TypeScript错误**
-   ```bash
-   # 重新构建共享包
-   npm run build -w @ai-voca/shared
-   ```
+## 📋 版本历史
 
-### 获取帮助
+### v2.0.0 (当前) - 云原生部署版本
+- ☁️ 完整迁移到Vercel + Supabase云架构
+- 👤 新增用户注册和认证系统
+- ♾️ 移除查询次数限制，支持无限查询
+- 🔒 环境变量安全配置，移除所有硬编码
+- 📊 查询历史记录和用户统计
+- 🚀 生产环境部署和优化
 
-- 查看各包的README文档
-- 检查examples目录中的示例
-- 开启开发者工具查看网络请求
-- 查看服务器日志
+### v1.2.0 - 智能重试功能
+- 🔄 新增智能重试机制
+- 📊 独立会话设计
+- 🔧 完善的状态管理
+
+### v1.1.0 - 词形还原功能  
+- ✨ 新增词形还原分析功能
+- 🇨🇳 专注中文解释
+- 🎯 优化AI提示词
+
+### v1.0.0 - 基础版本
+- 🚀 初始发布
+- 🤖 AiHubMix AI集成
+- 💻 React前端 + Express后端
 
 ## 🤝 贡献指南
 
-### 开发环境设置
+欢迎贡献代码！请遵循以下步骤：
 
 1. Fork项目
-2. 创建功能分支
-3. 提交代码
-4. 创建Pull Request
+2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交代码 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送分支 (`git push origin feature/AmazingFeature`)
+5. 创建Pull Request
 
-### 贡献类型
+### 提交规范
 
-- 🐛 Bug修复
-- ✨ 新功能开发
-- 📝 文档改进
-- 🎨 UI/UX优化
-- ⚡ 性能优化
-
-### 代码提交规范
-
-```bash
-feat: 添加新功能
-fix: 修复bug
-docs: 更新文档
-style: 代码格式调整
-refactor: 代码重构
-test: 添加测试
-chore: 构建过程或辅助工具的变动
+```
+✨ feat: 添加新功能
+🐛 fix: 修复bug
+📝 docs: 更新文档
+🎨 style: 代码格式调整
+♻️ refactor: 代码重构
+✅ test: 添加测试
+🔧 chore: 构建过程或辅助工具的变动
 ```
 
 ## 📄 许可证
@@ -512,49 +386,15 @@ MIT License - 详见 [LICENSE](./LICENSE) 文件
 ## 🙏 致谢
 
 - [AiHubMix](https://aihubmix.com) - 提供AI模型API
+- [Vercel](https://vercel.com) - 前端托管和无服务器函数
+- [Supabase](https://supabase.com) - 数据库和认证服务
 - [React](https://react.dev) - 前端框架
-- [Express](https://expressjs.com) - 后端框架
 - [TypeScript](https://www.typescriptlang.org) - 类型安全
-- [Vite](https://vitejs.dev) - 构建工具
 
 ---
 
-## 📋 版本更新
+**🌐 在线体验**: https://ai-voca-frontend.vercel.app  
+**📧 问题反馈**: [GitHub Issues](https://github.com/oralzl/ai-voca/issues)  
+**🔄 最后更新**: 2024年7月
 
-### v1.2.0 (最新) - 智能重试功能
-- 🔄 新增智能重试机制，支持一键重新查询
-- 🎯 自动参数保存，使用`<input>`标签嵌入查询参数
-- 📊 独立会话设计，每次重试都是全新的AI对话
-- 🔧 完善的状态管理，避免重复操作
-- 🛡️ 前端安全处理，自动提取和验证参数
-
-### v1.1.1 - 灵活XML标签处理
-- 🏷️ 智能处理AI返回的额外XML标签（如 `<item>`）
-- 📋 自动将多个 `<item>` 转换为HTML无序列表
-- 🛡️ HTML安全处理，自动清理危险标签
-- 📱 前端支持格式化内容显示（定义、解释、记忆技巧）
-- 🎯 优雅降级，未知标签被安全移除
-
-### v1.1.0 - 词形还原功能  
-- ✨ 新增词形还原（lemmatization）分析功能
-- 🇨🇳 专注中文解释，移除多语言支持
-- 🎯 优化AI提示词，采用新的XML格式
-- 🔧 API简化，移除language参数
-- 🎨 前端UI优化，新增词形还原信息显示
-- 📚 多word响应处理，智能显示第一个结果
-
-### v1.0.0 - 基础版本
-- 🚀 初始发布，基本单词查询功能
-- 🏗️ 单体仓库架构搭建
-- 🤖 AiHubMix AI集成
-- 💻 React前端 + Express后端
-- 📱 响应式设计
-
----
-
-**项目维护者:** thiskee  
-**创建时间:** 2024年1月  
-**最后更新:** 2024年7月  
-**v1.2.0 更新:** 智能重试功能
-
-如有问题或建议，请创建[Issue](https://github.com/your-repo/issues)或提交[Pull Request](https://github.com/your-repo/pulls)。
+立即访问开始使用，无限制查询英文单词！
