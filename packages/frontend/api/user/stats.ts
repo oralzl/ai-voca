@@ -59,6 +59,15 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
+  console.log('User stats handler started');
+  console.log('Supabase config:', {
+    url: supabaseUrl,
+    hasServiceKey: !!supabaseServiceKey,
+    hasAnonKey: !!supabaseAnonKey,
+    serviceKeyPrefix: supabaseServiceKey.substring(0, 20) + '...',
+    anonKeyPrefix: supabaseAnonKey.substring(0, 20) + '...'
+  });
+  
   // 设置 CORS 头
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
