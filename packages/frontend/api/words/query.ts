@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { authenticateUser, createAuthError } from '../_lib/auth';
-import { checkQueryLimits, incrementQueryCount, saveQueryRecord } from '../_lib/queryLimits';
+import { authenticateUser, createAuthError } from '../../lib/api/auth';
+import { checkQueryLimits, incrementQueryCount, saveQueryRecord } from '../../lib/api/queryLimits';
 import { 
   isValidWord,
   type WordQueryRequest,

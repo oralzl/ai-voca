@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { authenticateUser, createAuthError } from '../_lib/auth';
-import { supabase } from '../_lib/supabase';
+import { authenticateUser, createAuthError } from '../../lib/api/auth';
+import { supabase } from '../../lib/api/supabase';
 
 export default async function handler(
   req: VercelRequest,
