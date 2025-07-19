@@ -2,7 +2,9 @@ import { createClient } from '@supabase/supabase-js'
 
 // 使用环境变量配置
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// 清理JWT token中的无效字符（换行符、空格等）
+const rawAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey
 
 console.log('Supabase Config:', {
   url: supabaseUrl,

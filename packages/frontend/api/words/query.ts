@@ -59,8 +59,11 @@ function isValidWord(word: string): boolean {
 
 // Supabase配置（使用环境变量）
 const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+// 清理JWT token中的无效字符（换行符、空格等）
+const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const rawAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
+const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
 
 if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
