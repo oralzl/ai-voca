@@ -48,32 +48,55 @@ function sanitizeHtml(html: string): string {
 }
 
 /**
- * 处理包含item标签的内容，将其转换为HTML格式
- * @param content 包含item标签的XML内容
+ * 处理包含各种列表标签的内容，将其转换为HTML格式
+ * @param content 包含列表标签的XML内容
  * @returns 处理后的HTML内容
  */
 function processItemTags(content: string): string {
   if (!content) return content;
   
-  // 检查是否包含 <item> 标签
+  // 检查不同的列表标签类型
   const hasItems = content.includes('<item>') && content.includes('</item>');
+  const hasTips = content.includes('<tip>') && content.includes('</tip>');
+  const hasEntries = content.includes('<entry>') && content.includes('</entry>');
   
   if (hasItems) {
     // 提取所有 item 内容
     const items = extractMultipleTagContents(content, 'item');
     if (items.length > 0) {
-      // 如果有多个项目，转换为无序列表
-      if (items.length > 1) {
-        const listHtml = '<ul>' + items.map(item => `<li>${item.trim()}</li>`).join('') + '</ul>';
-        return sanitizeHtml(listHtml);
-      } else {
-        // 如果只有一个项目，直接返回内容
-        return sanitizeHtml(items[0].trim());
-      }
+      return formatItemsList(items);
     }
   }
   
-  // 如果没有item标签，检查是否有其他需要清理的HTML标签
+  if (hasTips) {
+    // 提取所有 tip 内容
+    const tips = extractMultipleTagContents(content, 'tip');
+    if (tips.length > 0) {
+      return formatItemsList(tips);
+    }
+  }
+  
+  if (hasEntries) {
+    // 提取所有 entry 内容并格式化
+    const entries = extractMultipleTagContents(content, 'entry');
+    if (entries.length > 0) {
+      const formattedEntries = entries.map(entry => {
+        const partOfSpeech = extractTagContent(entry, 'part_of_speech');
+        const definitionText = extractTagContent(entry, 'definition_text');
+        
+        if (partOfSpeech && definitionText) {
+          return `${partOfSpeech}：${definitionText}`;
+        } else if (definitionText) {
+          return definitionText;
+        } else {
+          return entry.trim();
+        }
+      });
+      return formatItemsList(formattedEntries);
+    }
+  }
+  
+  // 如果没有特殊标签，检查是否有其他需要清理的HTML标签
   const hasHtmlTags = /<[^>]+>/.test(content);
   if (hasHtmlTags) {
     return sanitizeHtml(content);
@@ -81,6 +104,22 @@ function processItemTags(content: string): string {
   
   // 如果没有任何标签，直接返回原内容
   return content;
+}
+
+/**
+ * 将项目列表格式化为HTML
+ * @param items 项目数组
+ * @returns 格式化后的HTML
+ */
+function formatItemsList(items: string[]): string {
+  if (items.length > 1) {
+    // 如果有多个项目，转换为无序列表
+    const listHtml = '<ul>' + items.map(item => `<li>${item.trim()}</li>`).join('') + '</ul>';
+    return sanitizeHtml(listHtml);
+  } else {
+    // 如果只有一个项目，直接返回内容
+    return sanitizeHtml(items[0].trim());
+  }
 }
 
 /**

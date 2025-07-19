@@ -215,6 +215,166 @@ async function saveQueryRecord(
   }
 }
 
+// 内联的XML解析函数
+function extractTagContent(xml: string, tagName: string): string | undefined {
+  const regex = new RegExp(`<${tagName}>(.*?)</${tagName}>`, 's');
+  const match = xml.match(regex);
+  return match ? match[1].trim() : undefined;
+}
+
+function extractMultipleTagContents(xml: string, tagName: string): string[] {
+  const regex = new RegExp(`<${tagName}>(.*?)</${tagName}>`, 'gs');
+  const matches = [];
+  let match;
+  
+  while ((match = regex.exec(xml)) !== null) {
+    matches.push(match[1].trim());
+  }
+  
+  return matches;
+}
+
+function sanitizeHtml(html: string): string {
+  const sanitized = html.replace(/<(?!\/?(?:ul|li|br|strong|em|b|i)\b)[^>]*>/gi, '');
+  return sanitized;
+}
+
+function formatItemsList(items: string[]): string {
+  if (items.length > 1) {
+    const listHtml = '<ul>' + items.map(item => `<li>${item.trim()}</li>`).join('') + '</ul>';
+    return sanitizeHtml(listHtml);
+  } else {
+    return sanitizeHtml(items[0].trim());
+  }
+}
+
+function processItemTags(content: string): string {
+  if (!content) return content;
+  
+  const hasItems = content.includes('<item>') && content.includes('</item>');
+  const hasTips = content.includes('<tip>') && content.includes('</tip>');
+  const hasEntries = content.includes('<entry>') && content.includes('</entry>');
+  
+  if (hasItems) {
+    const items = extractMultipleTagContents(content, 'item');
+    if (items.length > 0) {
+      return formatItemsList(items);
+    }
+  }
+  
+  if (hasTips) {
+    const tips = extractMultipleTagContents(content, 'tip');
+    if (tips.length > 0) {
+      return formatItemsList(tips);
+    }
+  }
+  
+  if (hasEntries) {
+    const entries = extractMultipleTagContents(content, 'entry');
+    if (entries.length > 0) {
+      const formattedEntries = entries.map(entry => {
+        const partOfSpeech = extractTagContent(entry, 'part_of_speech');
+        const definitionText = extractTagContent(entry, 'definition_text');
+        
+        if (partOfSpeech && definitionText) {
+          return `${partOfSpeech}：${definitionText}`;
+        } else if (definitionText) {
+          return definitionText;
+        } else {
+          return entry.trim();
+        }
+      });
+      return formatItemsList(formattedEntries);
+    }
+  }
+  
+  const hasHtmlTags = /<[^>]+>/.test(content);
+  if (hasHtmlTags) {
+    return sanitizeHtml(content);
+  }
+  
+  return content;
+}
+
+function extractAndProcessTagContent(xml: string, tagName: string): string | undefined {
+  const content = extractTagContent(xml, tagName);
+  if (!content) return undefined;
+  
+  return processItemTags(content);
+}
+
+function parseExamples(examplesXml: string): WordExample[] {
+  const examples: WordExample[] = [];
+  const exampleBlocks = extractMultipleTagContents(examplesXml, 'example');
+  
+  for (const block of exampleBlocks) {
+    const sentence = extractTagContent(block, 'sentence');
+    const translation = extractTagContent(block, 'translation');
+    
+    if (sentence) {
+      examples.push({
+        sentence,
+        translation
+      });
+    }
+  }
+  
+  return examples;
+}
+
+function parseWordExplanationXml(xmlContent: string): WordExplanation | null {
+  try {
+    const regex = /<word>(.*?)<\/word>/gs;
+    const match = regex.exec(xmlContent);
+    if (!match) {
+      throw new Error('未找到word标签');
+    }
+    
+    const mainContent = match[1].trim();
+    const result: WordExplanation = {
+      word: '',
+      definition: ''
+    };
+    
+    // 提取基本信息
+    result.text = extractTagContent(mainContent, 'text');
+    result.word = result.text || '';
+    result.lemmatizationExplanation = extractTagContent(mainContent, 'lemmatization_explanation');
+    result.pronunciation = extractTagContent(mainContent, 'pronunciation');
+    result.partOfSpeech = extractTagContent(mainContent, 'part_of_speech');
+    result.etymology = extractTagContent(mainContent, 'etymology');
+    
+    // 处理定义、解释和记忆技巧
+    result.definition = extractAndProcessTagContent(mainContent, 'definition') || '';
+    result.simpleExplanation = extractAndProcessTagContent(mainContent, 'simple_explanation');
+    result.memoryTips = extractAndProcessTagContent(mainContent, 'memory_tips');
+    
+    // 提取例句
+    const examplesContent = extractTagContent(mainContent, 'examples');
+    if (examplesContent) {
+      result.examples = parseExamples(examplesContent);
+    }
+    
+    // 提取同义词
+    const synonymsContent = extractTagContent(mainContent, 'synonyms');
+    if (synonymsContent) {
+      result.synonyms = extractMultipleTagContents(synonymsContent, 'synonym');
+    }
+    
+    // 提取反义词
+    const antonymsContent = extractTagContent(mainContent, 'antonyms');
+    if (antonymsContent) {
+      result.antonyms = extractMultipleTagContents(antonymsContent, 'antonym');
+    }
+    
+    return result;
+    
+  } catch (error) {
+    console.error('XML解析失败:', error);
+    return null;
+  }
+}
+
 // 直接在这里实现AI查询逻辑
 async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> {
   try {
@@ -307,12 +467,23 @@ async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> 
 
 ${rawAiResponse}`;
 
+    // 解析XML响应
+    const parsedData = parseWordExplanationXml(rawAiResponse);
+    
+    // 提取查询参数
+    const inputParams = {
+      word: formattedWord,
+      includeExample: request.includeExample !== false,
+      timestamp
+    };
+    
     return {
       success: true,
-      data: null, // 前端会解析rawResponse
+      data: parsedData,
       rawResponse: enrichedResponse,
       timestamp,
-      queryCount: 1
+      queryCount: 1,
+      inputParams
     };
   } catch (error: any) {
     console.error('Word query error:', error);
