@@ -93,6 +93,8 @@ export default async function handler(
       return;
     }
     
+    console.log('Fetching user query limits for user:', user.id);
+    
     // 获取用户查询限制信息
     const { data: limitData, error: limitError } = await supabase
       .from('user_query_limits')
@@ -100,15 +102,21 @@ export default async function handler(
       .eq('user_id', user.id)
       .single();
     
+    console.log('Query limits result:', { limitData, limitError });
+    
     if (limitError && limitError.code !== 'PGRST116') { // PGRST116 是记录不存在的错误
       throw limitError;
     }
+    
+    console.log('Fetching total queries count for user:', user.id);
     
     // 获取用户总查询数
     const { count: totalQueries, error: countError } = await supabase
       .from('word_queries')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
+    
+    console.log('Total queries result:', { totalQueries, countError });
     
     if (countError) {
       throw countError;
@@ -144,10 +152,23 @@ export default async function handler(
     });
     
   } catch (error: any) {
-    console.error('User stats error:', error);
+    console.error('User stats error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code,
+      details: error.details,
+      hint: error.hint
+    });
+    
+    const errorMessage = error.message || '获取用户统计信息失败';
     res.status(500).json({
       success: false,
-      error: '获取用户统计信息失败'
+      error: errorMessage,
+      debug: {
+        code: error.code,
+        hint: error.hint
+      }
     });
   }
 }
