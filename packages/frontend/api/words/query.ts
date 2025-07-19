@@ -118,87 +118,7 @@ function createAuthError(message: string = 'Unauthorized') {
   };
 }
 
-// 内联的查询限制函数
-interface QueryLimits {
-  dailyQueries: number;
-  maxDailyQueries: number;
-  remainingQueries: number;
-  canQuery: boolean;
-}
-
-async function checkQueryLimits(userId: string): Promise<QueryLimits> {
-  try {
-    const today = new Date().toISOString().split('T')[0];
-    
-    let { data: limits, error } = await supabase
-      .from('user_query_limits')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-    
-    if (error && error.code === 'PGRST116') {
-      const { data: newLimits, error: createError } = await supabase
-        .from('user_query_limits')
-        .insert({
-          user_id: userId,
-          daily_queries: 0,
-          last_reset_date: today,
-          max_daily_queries: 100
-        })
-        .select()
-        .single();
-        
-      if (createError) throw createError;
-      limits = newLimits;
-    } else if (error) {
-      throw error;
-    }
-    
-    if (!limits) throw new Error('Failed to get query limits');
-    
-    if (limits.last_reset_date !== today) {
-      const { data: updatedLimits, error: updateError } = await supabase
-        .from('user_query_limits')
-        .update({
-          daily_queries: 0,
-          last_reset_date: today
-        })
-        .eq('user_id', userId)
-        .select()
-        .single();
-        
-      if (updateError) throw updateError;
-      limits = updatedLimits;
-    }
-    
-    const remainingQueries = Math.max(0, limits.max_daily_queries - limits.daily_queries);
-    return {
-      dailyQueries: limits.daily_queries,
-      maxDailyQueries: limits.max_daily_queries,
-      remainingQueries,
-      canQuery: remainingQueries > 0
-    };
-  } catch (error) {
-    console.error('Error checking query limits:', error);
-    return {
-      dailyQueries: 0,
-      maxDailyQueries: 100,
-      remainingQueries: 100,
-      canQuery: true
-    };
-  }
-}
-
-async function incrementQueryCount(userId: string): Promise<void> {
-  try {
-    const { error } = await supabase
-      .rpc('increment_daily_queries', { p_user_id: userId });
-      
-    if (error) throw error;
-  } catch (error) {
-    console.error('Error incrementing query count:', error);
-  }
-}
+// 移除了查询限制相关函数 - 现在允许无限查询
 
 async function saveQueryRecord(
   userId: string,
@@ -569,16 +489,7 @@ export default async function handler(
       return;
     }
     
-    // 检查查询限制
-    const limits = await checkQueryLimits(user.id);
-    if (!limits.canQuery) {
-      res.status(429).json({
-        success: false,
-        error: `今日查询次数已达上限 (${limits.maxDailyQueries}次)，请明天再试`,
-        timestamp: Date.now()
-      } as WordQueryResponse);
-      return;
-    }
+    // 移除查询限制 - 允许无限查询
     
     // 构建查询请求
     const queryRequest: WordQueryRequest = {
@@ -589,12 +500,9 @@ export default async function handler(
     // 调用服务获取单词解释
     const result = await queryWord(queryRequest);
     
-    // 如果查询成功，增加计数并保存记录
+    // 如果查询成功，保存查询记录（不限制次数）
     if (result.success) {
-      await Promise.all([
-        incrementQueryCount(user.id),
-        saveQueryRecord(user.id, queryRequest.word, queryRequest, result.data)
-      ]);
+      await saveQueryRecord(user.id, queryRequest.word, queryRequest, result.data);
     }
     
     res.json(result);
