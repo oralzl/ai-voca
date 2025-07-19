@@ -1,10 +1,61 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { 
-  isValidWord,
-  type WordQueryRequest,
-  type WordQueryResponse 
-} from '@ai-voca/shared';
+
+// 内联的类型定义（从 @ai-voca/shared 复制）
+export interface WordQueryRequest {
+  word: string;
+  includeExample?: boolean;
+}
+
+export interface WordExample {
+  sentence: string;
+  translation?: string;
+}
+
+export interface WordExplanation {
+  word: string;
+  text?: string;
+  lemmatizationExplanation?: string;
+  pronunciation?: string;
+  partOfSpeech?: string;
+  definition: string;
+  simpleExplanation?: string;
+  examples?: WordExample[];
+  synonyms?: string[];
+  antonyms?: string[];
+  etymology?: string;
+  memoryTips?: string;
+}
+
+export interface WordQueryResponse {
+  success: boolean;
+  data?: WordExplanation | null;
+  error?: string;
+  rawResponse?: string;
+  timestamp: number;
+  queryCount?: number;
+  inputParams?: {
+    word: string;
+    includeExample: boolean;
+    timestamp: number;
+  };
+}
+
+// 内联的工具函数（从 @ai-voca/shared 复制）
+function isValidWord(word: string): boolean {
+  if (!word || typeof word !== 'string') {
+    return false;
+  }
+  
+  const trimmed = word.trim();
+  if (trimmed.length === 0 || trimmed.length > 100) {
+    return false;
+  }
+  
+  // 只允许字母、数字、连字符、撇号和空格
+  const validPattern = /^[a-zA-Z0-9\s\-']+$/;
+  return validPattern.test(trimmed);
+}
 
 // 内联的Supabase配置
 const supabaseUrl = 'https://syryqvbhfvjbctrdxcbv.supabase.co';
