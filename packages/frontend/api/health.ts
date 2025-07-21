@@ -1,3 +1,9 @@
+/**
+ * @fileoverview API健康检查无服务器函数
+ * @module api/health
+ * @description 提供API服务状态检查，显示环境变量配置状态
+ */
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(

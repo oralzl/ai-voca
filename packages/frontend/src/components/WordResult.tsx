@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 单词查询结果展示组件
+ * @module WordResult
+ * @description 展示AI返回的单词释义、例句、同义词、反义词、词源和记忆技巧等信息
+ */
+
 import { useState } from 'react';
 import { WordQueryResponse, formatTimestamp } from '@ai-voca/shared';
 import './WordResult.css';

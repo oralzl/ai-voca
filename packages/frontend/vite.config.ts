@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Vite构建配置
+ * @module vite.config
+ * @description 前端应用的Vite构建工具配置，包括React插件、路径别名和开发服务器设置
+ */
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';

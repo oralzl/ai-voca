@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 认证模态框组件
+ * @module AuthModal
+ * @description 包装登录和注册表单的模态框组件，支持表单切换
+ */
+
 import { useState } from 'react'
 import { LoginForm } from './LoginForm'
 import { SignupForm } from './SignupForm'

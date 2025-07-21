@@ -1,4 +1,10 @@
 /**
+ * @fileoverview 验证工具函数
+ * @module utils/validation
+ * @description 提供单词、API密钥和URL等输入的验证函数
+ */
+
+/**
  * 验证单词格式
  * @param word 待验证的单词
  * @returns 是否为有效单词

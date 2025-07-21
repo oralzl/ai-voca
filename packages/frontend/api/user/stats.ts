@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 用户统计信息API无服务器函数
+ * @module api/user/stats
+ * @description 获取用户查询统计信息，包括总查询数、今日查询数和剩余次数
+ */
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 

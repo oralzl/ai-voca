@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 单词查询表单组件
+ * @module WordQueryForm
+ * @description 提供单词输入、验证和查询提交功能的表单组件
+ */
+
 import { useState, FormEvent } from 'react';
 import { isValidWord } from '@ai-voca/shared';
 import './WordQueryForm.css';

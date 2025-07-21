@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 用户个人资料组件
+ * @module UserProfile
+ * @description 显示用户信息、查询统计和管理用户会话的下拉菜单组件
+ */
+
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import './UserProfile.css'

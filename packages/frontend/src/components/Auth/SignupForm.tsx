@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 用户注册表单组件
+ * @module SignupForm
+ * @description 处理新用户注册、邮箱验证和密码强度检查的表单组件
+ */
+
 import React, { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import './LoginForm.css'

@@ -1,3 +1,9 @@
+/**
+ * @fileoverview AI提示词生成器
+ * @module utils/prompt
+ * @description 生成AI单词查询的系统提示词和用户消息
+ */
+
 import { AiHubMixMessage } from '../types';
 
 /**

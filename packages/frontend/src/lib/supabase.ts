@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Supabase客户端配置
+ * @module supabase
+ * @description 初始化和配置Supabase客户端，管理数据库连接和认证
+ */
+
 import { createClient } from '@supabase/supabase-js'
 
 // 使用环境变量配置

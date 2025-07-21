@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 类型定义文件
+ * @module types
+ * @description 定义API请求响应、单词解释、AI服务和配置等接口类型
+ */
+
 // API 请求和响应类型
 export interface WordQueryRequest {
   word: string;

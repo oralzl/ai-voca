@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 用户认证上下文
+ * @module AuthContext
+ * @description 提供全局用户认证状态管理，包括登录、注册、登出和密码重置功能
+ */
+
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'

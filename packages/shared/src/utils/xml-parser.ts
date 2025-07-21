@@ -1,6 +1,7 @@
 /**
- * XML解析工具函数
- * 用于解析AI返回的结构化XML响应
+ * @fileoverview XML解析工具
+ * @module utils/xml-parser
+ * @description 解析AI返回的结构化XML响应，支持多种标签格式和HTML转换
  */
 
 export interface Example {

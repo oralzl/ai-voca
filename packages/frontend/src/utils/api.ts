@@ -1,3 +1,9 @@
+/**
+ * @fileoverview API客户端封装
+ * @module api
+ * @description 封装所有API请求，包括认证、请求和响应拦截器、错误处理
+ */
+
 import axios from 'axios';
 import type { WordQueryRequest, WordQueryResponse } from '@ai-voca/shared';
 import { supabase } from '../lib/supabase';

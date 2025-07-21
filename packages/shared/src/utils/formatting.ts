@@ -1,4 +1,10 @@
 /**
+ * @fileoverview 格式化工具函数
+ * @module utils/formatting
+ * @description 提供文本格式化、时间格式化和字符串处理函数
+ */
+
+/**
  * 格式化单词（去除多余空格，转换为小写）
  * @param word 原始单词
  * @returns 格式化后的单词

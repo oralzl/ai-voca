@@ -1,3 +1,9 @@
+/**
+ * @fileoverview AiHubMix API客户端
+ * @module utils/aihubmix-client
+ * @description 封装AiHubMix AI服务API调用，提供统一的模型调用接口
+ */
+
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import type { AiHubMixRequest, AiHubMixResponse, AiHubMixMessage } from '../types/index.js';
 

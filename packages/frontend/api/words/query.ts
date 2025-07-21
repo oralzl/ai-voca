@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 单词查询API无服务器函数
+ * @module api/words/query
+ * @description 处理单词查询请求，集成AI服务、用户认证、数据库记录和XML解析
+ */
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 

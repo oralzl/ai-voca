@@ -1,3 +1,9 @@
+/**
+ * @fileoverview API文档无服务器函数
+ * @module api/words
+ * @description 提供单词查询API的文档和使用说明
+ */
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(

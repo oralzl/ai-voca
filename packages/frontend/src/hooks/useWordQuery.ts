@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 单词查询自定义Hook
+ * @module useWordQuery
+ * @description 管理单词查询状态、处理API调用和错误处理的React Hook
+ */
+
 import { useState, useCallback } from 'react';
 import { WordQueryResponse } from '@ai-voca/shared';
 import { wordApi } from '../utils/api';

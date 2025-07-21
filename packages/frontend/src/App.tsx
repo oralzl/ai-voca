@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 主应用程序组件
+ * @module App
+ * @description AI单词查询应用的核心组件，包含用户认证、单词查询和结果展示功能
+ */
+
 import { useState } from 'react';
 import { WordQueryForm } from './components/WordQueryForm';
 import { WordResult } from './components/WordResult';

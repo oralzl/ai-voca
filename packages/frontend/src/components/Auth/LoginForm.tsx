@@ -1,3 +1,9 @@
+/**
+ * @fileoverview 用户登录表单组件
+ * @module LoginForm
+ * @description 处理用户登录、密码重置功能的表单组件
+ */
+
 import React, { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import './LoginForm.css'
