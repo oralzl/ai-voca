@@ -8,8 +8,7 @@ import {
   FavoriteToggleRequest,
   FavoriteToggleResponse,
   FavoriteCheckResponse,
-  FavoriteListResponse,
-  WordExplanation 
+  FavoriteListResponse
 } from '@ai-voca/shared';
 import { supabase } from '../lib/supabase';
 

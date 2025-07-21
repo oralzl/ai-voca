@@ -7,9 +7,7 @@
 import { useState, useCallback } from 'react';
 import { 
   FavoriteWord, 
-  WordExplanation, 
-  FavoriteToggleResponse, 
-  FavoriteCheckResponse,
+  WordExplanation,
   FavoriteListResponse 
 } from '@ai-voca/shared';
 import { useAuth } from '../contexts/AuthContext';
@@ -42,7 +40,7 @@ export function useFavorites(): UseFavoritesReturn {
     error: null
   });
   
-  const { session } = useAuth();
+  const { } = useAuth(); // 保留认证上下文连接
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));

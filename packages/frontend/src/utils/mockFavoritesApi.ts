@@ -9,8 +9,7 @@ import {
   FavoriteToggleResponse,
   FavoriteCheckResponse,
   FavoriteListResponse,
-  FavoriteWord,
-  WordExplanation 
+  FavoriteWord
 } from '@ai-voca/shared';
 
 // 模拟的本地存储
