@@ -42,6 +42,7 @@ export interface WordQueryResponse {
     word: string;
     timestamp: number;
   };
+  isFavorited?: boolean; // 收藏状态
 }
 
 // AiHubMix API 类型
@@ -80,6 +81,54 @@ export interface ApiError {
   code: string;
   message: string;
   details?: any;
+}
+
+// 收藏相关类型
+export interface FavoriteWord {
+  id: string;
+  word: string;                    // lemma后的标准形式
+  originalQuery?: string;          // 原始查询词
+  queryData: WordExplanation;      // 完整的单词解释数据
+  notes?: string;                  // 用户笔记
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FavoriteToggleRequest {
+  word: string;                    // lemma后的标准单词
+  originalQuery?: string;          // 原始查询词
+  queryData?: WordExplanation;     // 单词数据(添加收藏时需要)
+  notes?: string;                  // 用户笔记
+}
+
+export interface FavoriteToggleResponse {
+  success: boolean;
+  data?: {
+    isFavorited: boolean;          // 切换后的状态
+    favorite?: FavoriteWord;       // 如果是添加操作，返回收藏数据
+  };
+  error?: string;
+}
+
+export interface FavoriteCheckResponse {
+  success: boolean;
+  data?: {
+    isFavorited: boolean;
+    favoriteData?: WordExplanation; // 如果已收藏，返回收藏时的数据
+    favorite?: FavoriteWord;        // 完整的收藏记录
+  };
+  error?: string;
+}
+
+export interface FavoriteListResponse {
+  success: boolean;
+  data?: {
+    favorites: FavoriteWord[];
+    total: number;
+    page: number;
+    pageSize: number;
+  };
+  error?: string;
 }
 
 // 配置类型

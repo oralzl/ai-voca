@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import { WordQueryForm } from './components/WordQueryForm';
 import { WordResult } from './components/WordResult';
+import { FavoritesList } from './components/FavoritesList';
 import { useWordQuery } from './hooks/useWordQuery';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthModal } from './components/Auth/AuthModal';
@@ -25,6 +26,15 @@ function AppContent() {
   
   const { user, loading: authLoading } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState<'search' | 'favorites'>('search');
+  const [currentQuery, setCurrentQuery] = useState<string>('');
+
+  // 处理单词查询，记录原始查询词
+  const handleQueryWord = async (word: string) => {
+    setCurrentQuery(word);
+    setCurrentPage('search'); // 查询时切换到搜索页面
+    await queryWord(word);
+  };
 
   // 如果认证还在加载中，显示加载状态
   if (authLoading) {
@@ -62,32 +72,55 @@ function AppContent() {
               )}
             </div>
           </div>
+          {user && (
+            <nav className="main-nav">
+              <button
+                className={`nav-button ${currentPage === 'search' ? 'active' : ''}`}
+                onClick={() => setCurrentPage('search')}
+              >
+                🔍 单词查询
+              </button>
+              <button
+                className={`nav-button ${currentPage === 'favorites' ? 'active' : ''}`}
+                onClick={() => setCurrentPage('favorites')}
+              >
+                ⭐ 我的收藏
+              </button>
+            </nav>
+          )}
         </header>
         
         <main className="main">
           {user ? (
             <>
-              <WordQueryForm 
-                onQuery={queryWord}
-                loading={loading}
-                onClear={clearResult}
-              />
-              
-              {error && (
-                <div className="error-message">
-                  <h3>查询出错</h3>
-                  <p>{error}</p>
-                </div>
-              )}
-              
-              {result && (
-                <WordResult 
-                  result={result}
-                  onClear={clearResult}
-                  onRetry={retryQuery}
-                  loading={loading}
-                />
-              )}
+              {currentPage === 'search' ? (
+                <>
+                  <WordQueryForm 
+                    onQuery={handleQueryWord}
+                    loading={loading}
+                    onClear={clearResult}
+                  />
+                  
+                  {error && (
+                    <div className="error-message">
+                      <h3>查询出错</h3>
+                      <p>{error}</p>
+                    </div>
+                  )}
+                  
+                  {result && (
+                    <WordResult 
+                      result={result}
+                      onClear={clearResult}
+                      onRetry={retryQuery}
+                      loading={loading}
+                      originalQuery={currentQuery}
+                    />
+                  )}
+                </>
+              ) : currentPage === 'favorites' ? (
+                <FavoritesList />
+              ) : null}
             </>
           ) : (
             <div className="welcome-section">
@@ -97,9 +130,10 @@ function AppContent() {
                 <ul className="feature-list">
                   <li>✨ 智能AI词汇解释</li>
                   <li>📚 详细的词源和用法</li>
+                  <li>⭐ 单词收藏功能</li>
                   <li>🎯 个性化学习记录</li>
                   <li>🔄 查询历史管理</li>
-                  <li>🚀 每日100次免费查询</li>
+                  <li>🚀 无限次免费查询</li>
                 </ul>
                 <button 
                   className="cta-btn"

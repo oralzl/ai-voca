@@ -6,6 +6,7 @@
 
 import { useState } from 'react';
 import { WordQueryResponse, formatTimestamp } from '@ai-voca/shared';
+import { useFavorites } from '../hooks/useFavorites';
 import './WordResult.css';
 
 interface WordResultProps {
@@ -13,10 +14,32 @@ interface WordResultProps {
   onClear: () => void;
   onRetry: () => void;
   loading?: boolean;
+  originalQuery?: string; // 用户的原始查询词
 }
 
-export function WordResult({ result, onClear, onRetry, loading = false }: WordResultProps) {
+export function WordResult({ result, onClear, onRetry, loading = false, originalQuery }: WordResultProps) {
   const [showRawResponse, setShowRawResponse] = useState(false);
+  const { toggleFavorite } = useFavorites();
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+
+  const handleToggleFavorite = async () => {
+    if (!result.data?.text) return;
+    
+    setFavoriteLoading(true);
+    try {
+      await toggleFavorite(
+        result.data.text,           // lemma后的标准单词
+        originalQuery || result.data.word,  // 原始查询词
+        result.data                 // 完整的单词数据
+      );
+      // 更新本地状态
+      result.isFavorited = !result.isFavorited;
+    } catch (error) {
+      console.error('收藏操作失败:', error);
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
   
   if (!result.success || !result.data) {
     return (
@@ -35,7 +58,22 @@ export function WordResult({ result, onClear, onRetry, loading = false }: WordRe
   return (
     <div className="word-result">
       <div className="result-header">
-        <h2 className="word-title">{data.word}</h2>
+        <div className="word-title-section">
+          <h2 className="word-title">{data.word}</h2>
+          <button
+            onClick={handleToggleFavorite}
+            disabled={favoriteLoading}
+            className={`favorite-button ${result.isFavorited ? 'favorited' : ''}`}
+            title={result.isFavorited ? '取消收藏' : '添加收藏'}
+          >
+            {favoriteLoading ? '...' : (result.isFavorited ? '★' : '☆')}
+          </button>
+        </div>
+        {result.isFavorited && (
+          <div className="favorite-indicator">
+            <span className="favorite-badge">已收藏</span>
+          </div>
+        )}
         {data.lemmatizationExplanation && (
           <div className="lemmatization-explanation">
             <span className="lemma-label">词形还原:</span>
@@ -143,6 +181,13 @@ export function WordResult({ result, onClear, onRetry, loading = false }: WordRe
           查询时间: {formatTimestamp(result.timestamp)}
         </div>
         <div className="footer-buttons">
+          <button
+            onClick={handleToggleFavorite}
+            disabled={favoriteLoading}
+            className={`favorite-button-text ${result.isFavorited ? 'favorited' : ''}`}
+          >
+            {favoriteLoading ? '处理中...' : (result.isFavorited ? '取消收藏' : '添加收藏')}
+          </button>
           {result.inputParams && (
             <button 
               onClick={onRetry}

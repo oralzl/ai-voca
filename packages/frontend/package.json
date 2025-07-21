@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "vercel dev --listen 3001 --yes",
+    "dev:full": "concurrently \"npm run dev:api\" \"vite --config vite.config.vercel.ts\"",
     "dev:vercel": "vercel dev --listen 3000",
     "build": "tsc && vite build",
     "preview": "vite preview",
@@ -25,6 +27,7 @@
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^4.0.0",
+    "concurrently": "^8.2.0",
     "eslint": "^8.45.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.3",

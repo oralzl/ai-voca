@@ -7,11 +7,13 @@
 import { useState, useCallback } from 'react';
 import { WordQueryResponse } from '@ai-voca/shared';
 import { wordApi } from '../utils/api';
+import { useFavorites } from './useFavorites';
 
 export function useWordQuery() {
   const [result, setResult] = useState<WordQueryResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { checkFavorite } = useFavorites();
 
   const queryWord = useCallback(async (
     word: string
@@ -21,12 +23,38 @@ export function useWordQuery() {
     setResult(null);
 
     try {
+      // 先进行AI查询获取lemma后的标准形式
       const response = await wordApi.queryWord({
         word,
         includeExample: true
       });
 
-      setResult(response);
+      if (response.success && response.data?.text) {
+        // 使用lemma后的text检查收藏状态
+        const lemmaWord = response.data.text;
+        const favoriteCheck = await checkFavorite(lemmaWord);
+        
+        if (favoriteCheck.isFavorited && favoriteCheck.favoriteData) {
+          // 已收藏，展示收藏时保存的数据
+          setResult({
+            ...response,
+            data: favoriteCheck.favoriteData,
+            isFavorited: true
+          });
+        } else {
+          // 未收藏，展示新查询的数据
+          setResult({
+            ...response,
+            isFavorited: false
+          });
+        }
+      } else {
+        // 查询失败或无数据
+        setResult({
+          ...response,
+          isFavorited: false
+        });
+      }
       
       if (!response.success) {
         setError(response.error || '查询失败');
@@ -49,12 +77,13 @@ export function useWordQuery() {
       setResult({
         success: false,
         error: errorMessage,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        isFavorited: false
       });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [checkFavorite]);
 
   const clearResult = useCallback(() => {
     setResult(null);
