@@ -8,8 +8,7 @@ export function useWordQuery() {
   const [error, setError] = useState<string | null>(null);
 
   const queryWord = useCallback(async (
-    word: string,
-    includeExample: boolean = true
+    word: string
   ) => {
     setLoading(true);
     setError(null);
@@ -18,7 +17,7 @@ export function useWordQuery() {
     try {
       const response = await wordApi.queryWord({
         word,
-        includeExample
+        includeExample: true
       });
 
       setResult(response);
@@ -62,8 +61,8 @@ export function useWordQuery() {
       return;
     }
     
-    const { word, includeExample } = result.inputParams;
-    await queryWord(word, includeExample);
+    const { word } = result.inputParams;
+    await queryWord(word);
   }, [result, queryWord]);
 
   return {

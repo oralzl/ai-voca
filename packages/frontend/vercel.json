@@ -1,7 +1,8 @@
 {
   "version": 2,
+  "framework": "vite",
   "functions": {
-    "api/words/query.ts": {
+    "api/**/*.ts": {
       "maxDuration": 30
     }
   }

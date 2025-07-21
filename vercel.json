@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "buildCommand": "cd packages/frontend && npm run build",
+  "devCommand": "cd packages/frontend && npm run dev -- --port $PORT",
+  "outputDirectory": "packages/frontend/dist",
+  "functions": {
+    "packages/frontend/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  }
+}

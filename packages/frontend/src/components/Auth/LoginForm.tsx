@@ -4,9 +4,10 @@ import './LoginForm.css'
 
 interface LoginFormProps {
   onSwitchToSignup: () => void
+  onSuccess?: () => void
 }
 
-export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
+export function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -24,6 +25,9 @@ export function LoginForm({ onSwitchToSignup }: LoginFormProps) {
       const { error } = await signIn(email, password)
       if (error) {
         setError(error.message)
+      } else {
+        // 登录成功，调用成功回调
+        onSuccess?.()
       }
     } catch (error) {
       setError('登录失败，请检查网络连接')

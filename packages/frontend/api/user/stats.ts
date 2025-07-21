@@ -36,12 +36,21 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
     }
     
     const token = authHeader.substring(7);
-    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
     
-    if (error || !user) {
-      console.error('Auth error:', error);
+    // 使用Auth API直接验证token
+    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      console.error('Auth verification failed:', response.status);
       return null;
     }
+    
+    const user = await response.json();
     
     return {
       id: user.id,

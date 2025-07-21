@@ -3,14 +3,13 @@ import { isValidWord } from '@ai-voca/shared';
 import './WordQueryForm.css';
 
 interface WordQueryFormProps {
-  onQuery: (word: string, includeExample: boolean) => void;
+  onQuery: (word: string) => void;
   loading: boolean;
   onClear: () => void;
 }
 
 export function WordQueryForm({ onQuery, loading, onClear }: WordQueryFormProps) {
   const [word, setWord] = useState('');
-  const [includeExample, setIncludeExample] = useState(true);
   const [error, setError] = useState('');
 
   const handleSubmit = (e: FormEvent) => {
@@ -27,7 +26,7 @@ export function WordQueryForm({ onQuery, loading, onClear }: WordQueryFormProps)
     }
     
     setError('');
-    onQuery(word.trim(), includeExample);
+    onQuery(word.trim());
   };
 
   const handleClear = () => {
@@ -49,20 +48,6 @@ export function WordQueryForm({ onQuery, loading, onClear }: WordQueryFormProps)
           className="word-input"
           disabled={loading}
         />
-      </div>
-      
-      <div className="form-options">
-        <div className="form-group">
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={includeExample}
-              onChange={(e) => setIncludeExample(e.target.checked)}
-              disabled={loading}
-            />
-            <span className="checkbox-text">包含例句</span>
-          </label>
-        </div>
       </div>
       
       {error && (

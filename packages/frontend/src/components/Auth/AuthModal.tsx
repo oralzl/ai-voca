@@ -26,7 +26,10 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         
         <div className="auth-modal-content">
           {isLogin ? (
-            <LoginForm onSwitchToSignup={() => setIsLogin(false)} />
+            <LoginForm 
+              onSwitchToSignup={() => setIsLogin(false)} 
+              onSuccess={onClose}
+            />
           ) : (
             <SignupForm onSwitchToLogin={() => setIsLogin(true)} />
           )}

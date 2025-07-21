@@ -36,7 +36,6 @@ export interface WordQueryResponse {
   queryCount?: number;
   inputParams?: {
     word: string;
-    includeExample: boolean;
     timestamp: number;
   };
 }
@@ -92,12 +91,21 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
     }
     
     const token = authHeader.substring(7);
-    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
     
-    if (error || !user) {
-      console.error('Auth error:', error);
+    // 使用Auth API直接验证token
+    const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      console.error('Auth verification failed:', response.status);
       return null;
     }
+    
+    const user = await response.json();
     
     return {
       id: user.id,
@@ -388,7 +396,7 @@ async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> 
     // 在响应前插入查询参数
     const enrichedResponse = `<input>
   <word>${formattedWord}</word>
-  <includeExample>${request.includeExample !== false}</includeExample>
+  <includeExample>true</includeExample>
   <timestamp>${timestamp}</timestamp>
 </input>
 
@@ -400,7 +408,6 @@ ${rawAiResponse}`;
     // 提取查询参数
     const inputParams = {
       word: formattedWord,
-      includeExample: request.includeExample !== false,
       timestamp
     };
     
@@ -460,14 +467,11 @@ export default async function handler(
     
     // 解析请求参数
     let word: string;
-    let includeExample: boolean;
     
     if (req.method === 'GET') {
       word = req.query.word as string;
-      includeExample = req.query.includeExample === 'true';
     } else {
       word = req.body.word;
-      includeExample = req.body.includeExample !== false;
     }
     
     // 验证参数
@@ -493,8 +497,7 @@ export default async function handler(
     
     // 构建查询请求
     const queryRequest: WordQueryRequest = {
-      word: word.trim(),
-      includeExample
+      word: word.trim()
     };
     
     // 调用服务获取单词解释

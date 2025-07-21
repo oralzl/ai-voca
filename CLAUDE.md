@@ -6,22 +6,23 @@
 请保持用中文与我沟通。
 
 ## 编程哲学
-云原生架构
 
-- 精简高效：每一行代码都需要消耗云资源，必须高效实用
-- 无服务器优先：使用Vercel API Routes替代传统后端服务
-- 安全配置：完全使用环境变量，杜绝硬编码
-- 用户中心：以用户体验为核心，提供稳定可靠的服务
+### Monolithic Repository
+
+- 精简小巧：每一行“代码”都需要消耗能量，因此必须高效。
+- 模块化：基因被组织成可互换的“操纵子”单元（operons）。
+- 自包含性强：非常容易被“复制-粘贴”——这正是水平基因转移的基础。
+- 可读性强：清晰注释、readme.md 、 example
+
 
 ## 项目架构
 
 这是一个云原生部署的AI词汇查询应用，已完整部署到生产环境：
 
-- **前端 (Vercel)**: React + TypeScript + Vite前端应用
-- **API Routes (Vercel)**: 无服务器函数替代传统后端
-- **数据库 (Supabase)**: PostgreSQL + 内置用户认证系统
+- **@ai-voca/frontend**: React + TypeScript + Vite前端应用，包含API Routes
+- **@ai-voca/shared**: 共享类型定义和工具函数
+- **数据库 (Supabase)**: PostgreSQL + 内置用户认证系统  
 - **AI服务 (AiHubMix)**: 智能单词解释API
-- **@ai-voca/shared**: 类型定义和工具函数（已内联到前端）
 
 ### 关键架构模式
 
@@ -33,9 +34,6 @@
 
 **AI集成**: 通过无服务器函数直接调用AiHubMix API，包含完整的XML解析和错误处理逻辑。
 
-**重试机制**: 系统支持智能重试功能，通过在AI响应中嵌入`<input>`标签保存查询参数，实现自包含的重试机制。
-
-**无限查询**: 移除了查询次数限制，用户可以无限制地查询单词，但仍然保存查询记录用于统计。
 
 **数据流**: 前端 → Vercel API Routes → AiHubMix AI / Supabase → 前端显示。`useWordQuery` hook管理整个前端状态生命周期。
 
@@ -226,23 +224,6 @@ interface WordQueryResponse {
 - HTML安全处理，防止XSS攻击
 - 优雅降级处理未知标签
 
-## 重试功能实现
-
-### 技术方案
-1. **参数嵌入**: 后端在AI响应前插入查询参数
-```typescript
-const enrichedResponse = `<input>
-  <word>${formattedWord}</word>
-  <includeExample>${request.includeExample !== false}</includeExample>
-  <timestamp>${timestamp}</timestamp>
-</input>
-
-${rawAiResponse}`;
-```
-
-2. **参数提取**: 前端解析`<input>`标签提取参数
-3. **状态管理**: React hook管理重试状态
-4. **独立会话**: 每次重试都是新的AI对话
 
 ## 重要更新记录
 
