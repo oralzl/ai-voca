@@ -12,6 +12,8 @@ React + TypeScript + Vite
 
 ## 设计要求：
 
+> ⚠️ **重要提醒**: 所有UI设计和开发必须严格遵循 [DESIGN_SYSTEM.md](/DESIGN_SYSTEM.md) 中的设计系统规范，确保视觉一致性和用户体验的统一性。
+
 现代、美观的 UI 设计
 优秀的用户体验
 响应式布局
@@ -536,6 +538,8 @@ interface UseFavoritesReturn {
 - **布局弹性**: 使用Flexbox和Grid实现弹性布局
 
 ### 6.2 关键痛点和改进机会
+
+> ⚠️ **设计系统约束**: 在解决以下痛点时，必须遵循 [DESIGN_SYSTEM.md](/DESIGN_SYSTEM.md) 中定义的组件规范、色彩系统和交互标准，确保改进后的界面保持一致的视觉语言。
 
 #### 🔄 **P1 - 导航和路由系统 (高优先级)**
 

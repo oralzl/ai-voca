@@ -23,6 +23,7 @@ export function UserProfile({ onClick }: UserProfileProps = {}) {
   const { user, signOut } = useAuth()
   const [stats, setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [signOutLoading, setSignOutLoading] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
 
   useEffect(() => {
@@ -69,11 +70,14 @@ export function UserProfile({ onClick }: UserProfileProps = {}) {
   }
 
   const handleSignOut = async () => {
+    setSignOutLoading(true)
     try {
       await signOut()
       setShowDropdown(false)
     } catch (error) {
       console.error('Error signing out:', error)
+    } finally {
+      setSignOutLoading(false)
     }
   }
 
@@ -157,8 +161,8 @@ export function UserProfile({ onClick }: UserProfileProps = {}) {
           )}
 
           <div className="dropdown-actions">
-            <button onClick={handleSignOut} className="sign-out-btn">
-              退出登录
+            <button onClick={handleSignOut} className="sign-out-btn" disabled={signOutLoading}>
+              {signOutLoading ? '退出中...' : '退出登录'}
             </button>
           </div>
         </div>

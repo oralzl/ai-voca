@@ -14,9 +14,51 @@ import { useWordQuery } from './hooks/useWordQuery';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { Button } from './components/ui/button';
-import { Brain } from 'lucide-react';
+import { Card, CardContent } from './components/ui/card';
+import { AuthModal } from './components/Auth/AuthModal';
+import { Brain, Star, Users, Zap, Shield, Globe } from 'lucide-react';
 
 type PageType = 'search' | 'favorites' | 'profile' | 'wordResult';
+
+// Features configuration for landing page
+const features = [
+  {
+    icon: Brain,
+    title: 'AI驱动智能解释',
+    description: '采用先进AI模型提供深度、个性化的单词解释',
+    color: 'text-blue-500'
+  },
+  {
+    icon: Zap,
+    title: '词形还原技术',
+    description: '智能识别单词变形，提供标准形式和变形说明',
+    color: 'text-yellow-500'
+  },
+  {
+    icon: Star,
+    title: '个性化收藏系统',
+    description: '用户可收藏单词，建立个人词汇库',
+    color: 'text-purple-500'
+  },
+  {
+    icon: Globe,
+    title: '云原生架构',
+    description: '无服务器架构，零运维，全球加速访问',
+    color: 'text-green-500'
+  },
+  {
+    icon: Users,
+    title: '学习者友好',
+    description: '专注中文用户英语学习需求，提供结构化学习内容',
+    color: 'text-indigo-500'
+  },
+  {
+    icon: Shield,
+    title: '数据安全',
+    description: '用户数据安全存储，隐私保护放心使用',
+    color: 'text-red-500'
+  }
+];
 
 function AppContent() {
   const { 
@@ -32,6 +74,7 @@ function AppContent() {
   const { user, loading: authLoading } = useAuth();
   const [currentPage, setCurrentPage] = useState<PageType>('search');
   const [currentQuery, setCurrentQuery] = useState<string>('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // 处理单词查询，成功后跳转到结果页面
   const handleQueryWord = async (word: string) => {
@@ -93,59 +136,117 @@ function AppContent() {
     );
   }
 
-  // 未登录状态的欢迎页面
+  // 未登录状态的欢迎页面 - 使用oca-2样式的无侧边栏设计
   if (!user) {
     return (
-      <AppLayout 
-        currentPage={currentPage === 'wordResult' ? 'search' : currentPage} 
-        onPageChange={handlePageChange}
-        hideBottomNavigation={false}
-      >
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center space-y-6 max-w-2xl mx-auto">
-            <div className="space-y-4">
-              <div className="w-20 h-20 bg-gradient-to-r from-primary to-primary/80 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-                <Brain className="w-10 h-10 text-white" />
+      <>
+        {/* Full-screen centered layout for marketing impact */}
+        <div className="min-h-screen flex flex-col justify-center items-center px-4 py-8 bg-gradient-to-br from-background via-background to-muted/10">
+          <div className="max-w-4xl w-full space-y-8 sm:space-y-12">
+            {/* Hero Section - Main value proposition and CTA */}
+            <div className="text-center space-y-6 sm:space-y-8">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="flex items-center justify-center space-x-3 mb-6">
+                  <div className="w-16 h-16 bg-gradient-to-r from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg">
+                    <Brain className="w-8 h-8 text-white" />
+                  </div>
+                  <div>
+                    <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+                      AI-Voca-2
+                    </h1>
+                    <p className="text-muted-foreground text-sm sm:text-base">智能词汇学习助手</p>
+                  </div>
+                </div>
+                <p className="text-sm sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed px-2">
+                  采用先进的AI模型，为你提供深度、个性化的单词解释。
+                  支持词形还原、智能收藏，助你高效构建个人词汇库。
+                </p>
               </div>
-              <h1 className="text-4xl font-bold text-gradient">欢迎使用AI单词查询</h1>
-              <p className="text-lg text-muted-foreground">
-                请先登录或注册账号以使用词汇查询功能
-              </p>
+
+              <div className="pt-2 sm:pt-4">
+                <Button 
+                  size="lg" 
+                  className="text-base sm:text-lg px-8 sm:px-10 py-4 sm:py-6 h-12 sm:h-14 font-semibold hover:scale-105 transition-all duration-300 shadow-lg"
+                  onClick={() => setShowAuthModal(true)}
+                >
+                  立即开始学习
+                </Button>
+              </div>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">✨</span>
-                  <span>智能AI词汇解释</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">📚</span>
-                  <span>详细的词源和用法</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">⭐</span>
-                  <span>单词收藏功能</span>
-                </div>
+
+            {/* Features Section - Showcase top 3 features for marketing */}
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-3 pt-4 sm:pt-8">
+              {features.slice(0, 3).map((feature, index) => (
+                <Card key={index} className="hover:scale-105 transition-all duration-300 shadow-lg border-0 bg-card/50 backdrop-blur-sm text-center">
+                  <CardContent className="p-4 sm:p-6 flex flex-col items-center space-y-3 sm:space-y-4">
+                    <div className={`p-3 sm:p-4 rounded-full bg-background/50 ${feature.color} shadow-sm`}>
+                      <feature.icon className="w-6 h-6 sm:w-8 sm:h-8" />
+                    </div>
+                    <div className="space-y-1 sm:space-y-2">
+                      <h3 className="font-semibold text-base sm:text-lg">{feature.title}</h3>
+                      <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Additional Features Grid - Show all features for comprehensive overview */}
+            <div className="space-y-6 pt-4 sm:pt-8">
+              <div className="text-center">
+                <h3 className="text-xl font-semibold mb-2">更多功能特性</h3>
+                <p className="text-muted-foreground">
+                  AI-Voca-2 为你提供全面的英语词汇学习体验
+                </p>
               </div>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">🎯</span>
-                  <span>个性化学习记录</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">🔄</span>
-                  <span>查询历史管理</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">🚀</span>
-                  <span>无限次免费查询</span>
-                </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {features.slice(3).map((feature, index) => (
+                  <Card key={index + 3} className="hover:scale-105 transition-all duration-300 shadow-sm bg-card/30 backdrop-blur-sm border-border/50">
+                    <CardContent className="p-4">
+                      <div className="flex items-start space-x-3">
+                        <div className={`p-2 rounded-lg bg-background/50 ${feature.color}`}>
+                          <feature.icon className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-sm mb-1">{feature.title}</h4>
+                          <p className="text-xs text-muted-foreground">{feature.description}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Call to Action Section */}
+            <div className="text-center pt-4 sm:pt-8">
+              <div className="space-y-4">
+                <h3 className="text-xl sm:text-2xl font-semibold">准备开始你的学习之旅？</h3>
+                <p className="text-muted-foreground">
+                  注册账户，立即体验AI驱动的智能词汇学习
+                </p>
+                <Button 
+                  variant="outline"
+                  size="lg"
+                  className="text-base px-8 py-4 h-12 hover:scale-105 transition-all duration-300"
+                  onClick={() => setShowAuthModal(true)}
+                >
+                  免费注册账户
+                </Button>
               </div>
             </div>
           </div>
         </div>
-      </AppLayout>
+
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          initialType="register"
+        />
+      </>
     );
   }
 
