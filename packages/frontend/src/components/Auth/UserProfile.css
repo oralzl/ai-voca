@@ -59,6 +59,8 @@
   transform: rotate(180deg);
 }
 
+/* 导航模式样式已迁移到Tailwind CSS类中 */
+
 .user-dropdown {
   position: absolute;
   top: 100%;

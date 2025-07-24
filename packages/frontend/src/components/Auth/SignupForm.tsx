@@ -87,6 +87,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="请输入昵称（可选）"
+            autoComplete="name"
           />
         </div>
 
@@ -98,6 +99,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="请输入邮箱"
+            autoComplete="email"
             required
           />
         </div>
@@ -110,6 +112,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="请输入密码（至少6位）"
+            autoComplete="new-password"
             required
           />
         </div>
@@ -122,6 +125,7 @@ export function SignupForm({ onSwitchToLogin }: SignupFormProps) {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="请再次输入密码"
+            autoComplete="new-password"
             required
           />
         </div>

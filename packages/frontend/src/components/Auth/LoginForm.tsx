@@ -81,6 +81,7 @@ export function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="请输入您的邮箱"
+              autoComplete="email"
               required
             />
           </div>
@@ -115,6 +116,7 @@ export function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="请输入邮箱"
+            autoComplete="email"
             required
           />
         </div>
@@ -127,6 +129,7 @@ export function LoginForm({ onSwitchToSignup, onSuccess }: LoginFormProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="请输入密码"
+            autoComplete="current-password"
             required
           />
         </div>

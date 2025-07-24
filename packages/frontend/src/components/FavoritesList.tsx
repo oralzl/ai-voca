@@ -7,14 +7,26 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FavoriteWord } from '@ai-voca/shared';
 import { useFavorites } from '../hooks/useFavorites';
-import './FavoritesList.css';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Search, Star, BookOpen, Trash2, Eye, Calendar, 
+  Filter, Grid3X3, List, Loader2, ArrowLeft, ArrowRight
+} from 'lucide-react';
 
-export function FavoritesList() {
+interface FavoritesListProps {
+  onWordClick?: (favorite: FavoriteWord) => void;
+}
+
+export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
   const { favorites, loading, error, getFavoritesList, toggleFavorite } = useFavorites();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedFavorite, setSelectedFavorite] = useState<FavoriteWord | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const pageSize = 20;
 
@@ -36,12 +48,7 @@ export function FavoritesList() {
     loadFavorites(1, searchTerm);
   }, [loadFavorites, searchTerm]);
 
-  // 搜索处理
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    loadFavorites(1, searchTerm);
-  };
+
 
   // 页码切换
   const handlePageChange = (page: number) => {
@@ -73,169 +80,412 @@ export function FavoritesList() {
     });
   };
 
+  // 过滤收藏列表（用于搜索）
+  const filteredFavorites = favorites.filter(favorite =>
+    favorite.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    favorite.queryData.definition.includes(searchTerm)
+  );
+
+  // 收藏卡片组件（网格模式）
+  const FavoriteCard = ({ favorite }: { favorite: FavoriteWord }) => (
+    <Card 
+      className="hover-lift hover-glow transition-all duration-300 border-0 shadow-soft cursor-pointer" 
+      onClick={() => onWordClick?.(favorite)}
+    >
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1 flex-1">
+            <CardTitle className="text-xl font-bold text-primary">
+              {favorite.word}
+            </CardTitle>
+            {favorite.originalQuery && favorite.originalQuery !== favorite.word && (
+              <span className="text-sm text-muted-foreground italic">
+                ({favorite.originalQuery})
+              </span>
+            )}
+            {favorite.queryData.partOfSpeech && (
+              <Badge variant="secondary" className="text-xs">
+                {favorite.queryData.partOfSpeech}
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center space-x-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedFavorite(favorite);
+              }}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemoveFavorite(favorite);
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <CardDescription className="text-base leading-relaxed">
+          {favorite.queryData.definition.length > 100
+            ? `${favorite.queryData.definition.substring(0, 100)}...`
+            : favorite.queryData.definition
+          }
+        </CardDescription>
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center space-x-1">
+            <Calendar className="w-3 h-3" />
+            <span>{formatDate(favorite.createdAt)}</span>
+          </div>
+          <div className="flex items-center space-x-1">
+            <BookOpen className="w-3 h-3" />
+            <span>
+              {favorite.queryData.examples ? favorite.queryData.examples.length : 0} 个例句
+            </span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // 收藏列表项组件（列表模式）
+  const FavoriteListItem = ({ favorite }: { favorite: FavoriteWord }) => (
+    <Card 
+      className="hover:bg-muted/50 transition-colors border-0 cursor-pointer" 
+      onClick={() => onWordClick?.(favorite)}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex-1 space-y-1">
+            <div className="flex items-center space-x-3">
+              <h3 className="font-semibold text-lg text-primary">{favorite.word}</h3>
+              {favorite.originalQuery && favorite.originalQuery !== favorite.word && (
+                <span className="text-sm text-muted-foreground italic">
+                  ({favorite.originalQuery})
+                </span>
+              )}
+              {favorite.queryData.partOfSpeech && (
+                <Badge variant="secondary" className="text-xs">
+                  {favorite.queryData.partOfSpeech}
+                </Badge>
+              )}
+            </div>
+            <p className="text-muted-foreground">
+              {favorite.queryData.definition.length > 150
+                ? `${favorite.queryData.definition.substring(0, 150)}...`
+                : favorite.queryData.definition
+              }
+            </p>
+            <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+              <span className="flex items-center space-x-1">
+                <Calendar className="w-3 h-3" />
+                <span>{formatDate(favorite.createdAt)}</span>
+              </span>
+              <span className="flex items-center space-x-1">
+                <BookOpen className="w-3 h-3" />
+                <span>
+                  {favorite.queryData.examples ? favorite.queryData.examples.length : 0} 个例句
+                </span>
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedFavorite(favorite);
+              }}
+            >
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-destructive hover:text-destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemoveFavorite(favorite);
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  // 加载状态
   if (loading && favorites.length === 0) {
     return (
-      <div className="favorites-list">
-        <div className="loading">加载收藏列表中...</div>
+      <div className="max-w-6xl mx-auto space-y-8 p-6">
+        <div className="flex items-center justify-center p-20">
+          <div className="text-center space-y-4">
+            <div className="relative">
+              <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto" />
+              <div className="absolute inset-0 w-12 h-12 border-2 border-primary/20 rounded-full animate-pulse mx-auto"></div>
+            </div>
+            <p className="text-muted-foreground">
+              加载收藏列表中...
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // 错误状态
   if (error) {
     return (
-      <div className="favorites-list">
-        <div className="error">
-          <p>加载失败: {error}</p>
-          <button onClick={() => loadFavorites(1, searchTerm)} className="retry-button">
-            重试
-          </button>
+      <div className="max-w-6xl mx-auto space-y-8 p-6">
+        <div className="text-center p-20">
+          <div className="space-y-4">
+            <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto">
+              <Trash2 className="w-8 h-8 text-destructive" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2 text-destructive">加载失败</h3>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <Button onClick={() => loadFavorites(1, searchTerm)} variant="outline">
+                重试
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="favorites-list">
-      <div className="favorites-header">
-        <h1>我的收藏</h1>
-        <p className="favorites-count">共 {favorites.length} 个单词</p>
+    <div className="max-w-6xl mx-auto space-y-8 pt-8 pb-4">
+      {/* Header */}
+      <div className="flex flex-col space-y-6">
+        <div className="flex items-center justify-between pt-2 pb-4">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-gradient">我的收藏</h1>
+            <p className="text-muted-foreground">
+              管理你收藏的单词，建立个人词汇库
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Badge variant="outline" className="px-4 py-2">
+              <Star className="w-3 h-3 mr-1" />
+              {favorites.length} 个单词
+            </Badge>
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div className="flex-1 max-w-md">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="搜索收藏的单词..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button variant="outline" size="sm">
+              <Filter className="w-4 h-4 mr-2" />
+              筛选
+            </Button>
+            <div className="flex items-center border rounded-lg">
+              <Button
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className="rounded-r-none"
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </Button>
+              <Button
+                variant={viewMode === 'list' ? 'secondary' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="rounded-l-none"
+              >
+                <List className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* 搜索框 */}
-      <form onSubmit={handleSearch} className="search-form">
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="搜索收藏的单词..."
-          className="search-input"
-        />
-        <button type="submit" className="search-button">搜索</button>
-      </form>
+      {/* Search Results Info */}
+      {searchTerm && (
+        <div className="text-sm text-muted-foreground">
+          找到 {filteredFavorites.length} 个匹配的单词
+        </div>
+      )}
 
-      {favorites.length === 0 ? (
-        <div className="empty-state">
-          <p>暂无收藏的单词</p>
-          <p className="empty-hint">查询单词后点击收藏按钮即可添加到这里</p>
+      {/* Favorites Grid/List */}
+      {filteredFavorites.length > 0 ? (
+        <div className={
+          viewMode === 'grid' 
+            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+            : "space-y-3"
+        }>
+          {filteredFavorites.map((favorite) => 
+            viewMode === 'grid' ? (
+              <FavoriteCard key={favorite.id} favorite={favorite} />
+            ) : (
+              <FavoriteListItem key={favorite.id} favorite={favorite} />
+            )
+          )}
         </div>
       ) : (
-        <div className="favorites-content">
-          {/* 收藏列表 */}
-          <div className="favorites-grid">
-            {favorites.map((favorite) => (
-              <div 
-                key={favorite.id} 
-                className={`favorite-card ${selectedFavorite?.id === favorite.id ? 'selected' : ''}`}
-                onClick={() => setSelectedFavorite(favorite)}
-              >
-                <div className="favorite-card-header">
-                  <h3 className="favorite-word">{favorite.word}</h3>
-                  {favorite.originalQuery && favorite.originalQuery !== favorite.word && (
-                    <span className="original-query">({favorite.originalQuery})</span>
-                  )}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveFavorite(favorite);
-                    }}
-                    className="remove-favorite-button"
-                    title="取消收藏"
-                  >
-                    ×
-                  </button>
-                </div>
-                <div className="favorite-definition">
-                  {favorite.queryData.definition.length > 100
-                    ? `${favorite.queryData.definition.substring(0, 100)}...`
-                    : favorite.queryData.definition
-                  }
-                </div>
-                <div className="favorite-meta">
-                  <span className="favorite-date">{formatDate(favorite.createdAt)}</span>
-                  {favorite.notes && (
-                    <span className="has-notes">📝</span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* 分页 */}
-          {totalPages > 1 && (
-            <div className="pagination">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="page-button"
-              >
-                上一页
-              </button>
-              <span className="page-info">
-                第 {currentPage} / {totalPages} 页
-              </span>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="page-button"
-              >
-                下一页
-              </button>
+        <Card className="p-12 text-center border-dashed">
+          <div className="space-y-4">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto">
+              <Star className="w-8 h-8 text-muted-foreground" />
             </div>
-          )}
+            <div>
+              <h3 className="text-lg font-semibold mb-2">
+                {searchTerm ? '没有找到匹配的单词' : '还没有收藏任何单词'}
+              </h3>
+              <p className="text-muted-foreground mb-4">
+                {searchTerm 
+                  ? '尝试使用不同的关键词搜索' 
+                  : '开始查询单词并收藏到这里，建立你的个人词汇库'
+                }
+              </p>
+              {!searchTerm && (
+                <Button className="bg-gradient-primary text-white">
+                  <Search className="w-4 h-4 mr-2" />
+                  开始查询单词
+                </Button>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <div className="flex items-center space-x-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              disabled={currentPage === 1}
+              onClick={() => handlePageChange(currentPage - 1)}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              上一页
+            </Button>
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                const page = i + 1;
+                return (
+                  <Button
+                    key={page}
+                    variant={currentPage === page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(page)}
+                    className={currentPage === page ? "bg-gradient-primary text-white" : ""}
+                  >
+                    {page}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              disabled={currentPage === totalPages}
+              onClick={() => handlePageChange(currentPage + 1)}
+            >
+              下一页
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </div>
         </div>
       )}
 
       {/* 详情面板 */}
       {selectedFavorite && (
-        <div className="favorite-detail-overlay" onClick={() => setSelectedFavorite(null)}>
-          <div className="favorite-detail" onClick={(e) => e.stopPropagation()}>
-            <div className="detail-header">
-              <h2>{selectedFavorite.word}</h2>
-              <button
-                onClick={() => setSelectedFavorite(null)}
-                className="close-detail-button"
-              >
-                ×
-              </button>
-            </div>
-            <div className="detail-content">
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedFavorite(null)}
+        >
+          <Card 
+            className="max-w-2xl max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardHeader className="border-b sticky top-0 bg-background">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-2xl">{selectedFavorite.word}</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedFavorite(null)}
+                  className="h-8 w-8 p-0"
+                >
+                  ×
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
               {selectedFavorite.queryData.pronunciation && (
-                <div className="detail-pronunciation">
+                <div className="text-lg text-destructive italic">
                   /{selectedFavorite.queryData.pronunciation}/
                 </div>
               )}
               {selectedFavorite.queryData.partOfSpeech && (
-                <div className="detail-part-of-speech">
+                <Badge variant="secondary">
                   {selectedFavorite.queryData.partOfSpeech}
-                </div>
+                </Badge>
               )}
-              <div className="detail-definition">
-                <h3>释义</h3>
+              <div>
+                <h3 className="text-lg font-semibold mb-3">释义</h3>
                 <div 
+                  className="text-base leading-relaxed"
                   dangerouslySetInnerHTML={{ __html: selectedFavorite.queryData.definition }}
                 />
               </div>
               {selectedFavorite.queryData.examples && selectedFavorite.queryData.examples.length > 0 && (
-                <div className="detail-examples">
-                  <h3>例句</h3>
-                  {selectedFavorite.queryData.examples.map((example, index) => (
-                    <div key={index} className="detail-example">
-                      <div className="example-sentence">{example.sentence}</div>
-                      {example.translation && (
-                        <div className="example-translation">{example.translation}</div>
-                      )}
-                    </div>
-                  ))}
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">例句</h3>
+                  <div className="space-y-4">
+                    {selectedFavorite.queryData.examples.map((example, index) => (
+                      <Card key={index} className="p-4 bg-muted/30">
+                        <div className="space-y-2">
+                          <div className="font-medium">{example.sentence}</div>
+                          {example.translation && (
+                            <div className="text-muted-foreground italic">{example.translation}</div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               )}
               {selectedFavorite.notes && (
-                <div className="detail-notes">
-                  <h3>笔记</h3>
-                  <p>{selectedFavorite.notes}</p>
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">笔记</h3>
+                  <Card className="p-4 bg-yellow-50 border-yellow-200">
+                    <p>{selectedFavorite.notes}</p>
+                  </Card>
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

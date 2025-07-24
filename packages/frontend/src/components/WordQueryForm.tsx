@@ -6,7 +6,14 @@
 
 import { useState, FormEvent } from 'react';
 import { isValidWord } from '@ai-voca/shared';
-import './WordQueryForm.css';
+import { 
+  Sparkles,
+  BookOpen,
+  Languages,
+  Lightbulb
+} from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { EnhancedSearchInput } from './ui/enhanced-search-input';
 
 interface WordQueryFormProps {
   onQuery: (word: string) => void;
@@ -14,13 +21,17 @@ interface WordQueryFormProps {
   onClear: () => void;
 }
 
-export function WordQueryForm({ onQuery, loading, onClear }: WordQueryFormProps) {
+export function WordQueryForm({ onQuery, loading, onClear: _ }: WordQueryFormProps) {
+  // onClear prop保留以维持接口兼容性，但在新设计中未使用
   const [word, setWord] = useState('');
   const [error, setError] = useState('');
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    
+    handleSearch();
+  };
+
+  const handleSearch = () => {
     if (!word.trim()) {
       setError('请输入要查询的单词');
       return;
@@ -35,51 +46,78 @@ export function WordQueryForm({ onQuery, loading, onClear }: WordQueryFormProps)
     onQuery(word.trim());
   };
 
-  const handleClear = () => {
-    setWord('');
-    setError('');
-    onClear();
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
   };
 
+
+
   return (
-    <form className="word-query-form" onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label htmlFor="word-input">输入单词：</label>
-        <input
-          id="word-input"
-          type="text"
+    <div className="w-full max-w-2xl mx-auto space-y-8 p-4 pb-20 md:pb-4 h-full flex flex-col justify-center">
+      {/* Search Header */}
+      <div className="text-center space-y-4">
+        <h1 className="text-5xl font-bold text-gradient animate-fade-in">智能单词查询</h1>
+        <p className="text-muted-foreground text-lg animate-slide-up">
+          输入任何英文单词，获得AI驱动的深度解释
+        </p>
+      </div>
+
+      {/* Enhanced Search Form */}
+      <form onSubmit={handleSubmit} className="space-y-6 w-full animate-scale-in">
+        <EnhancedSearchInput
           value={word}
-          onChange={(e) => setWord(e.target.value)}
-          placeholder="请输入要查询的单词..."
-          className="word-input"
+          onChange={(value) => setWord(value)}
+          onKeyPress={handleKeyPress}
+          onSearch={handleSearch}
+          placeholder="输入英文单词..."
+          loading={loading}
           disabled={loading}
         />
-      </div>
-      
-      {error && (
-        <div className="form-error">
-          {error}
-        </div>
-      )}
-      
-      <div className="form-actions">
-        <button
-          type="submit"
-          className="query-button"
-          disabled={loading || !word.trim()}
-        >
-          {loading ? '查询中...' : '查询单词'}
-        </button>
         
-        <button
-          type="button"
-          className="clear-button"
-          onClick={handleClear}
-          disabled={loading}
-        >
-          清空
-        </button>
-      </div>
-    </form>
+        {error && (
+          <div className="text-center animate-fade-in">
+            <div className="inline-block p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
+              {error}
+            </div>
+          </div>
+        )}
+      </form>
+
+      {/* Quick Start Tips */}
+      <Card className="bg-gradient-to-r from-primary/5 via-transparent to-primary/5 border-primary/20 hover-lift animate-slide-up">
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2 text-primary">
+            <Sparkles className="w-5 h-5" />
+            <span>使用技巧</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
+            <div className="space-y-3">
+              <div className="flex items-start space-x-2">
+                <BookOpen className="w-4 h-4 mt-0.5 text-primary/60 flex-shrink-0" />
+                <span>支持词形变化查询（如 running → run）</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <Languages className="w-4 h-4 mt-0.5 text-primary/60 flex-shrink-0" />
+                <span>提供多层次的单词解释</span>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-start space-x-2">
+                <Lightbulb className="w-4 h-4 mt-0.5 text-primary/60 flex-shrink-0" />
+                <span>包含词源和记忆技巧</span>
+              </div>
+              <div className="flex items-start space-x-2">
+                <Sparkles className="w-4 h-4 mt-0.5 text-primary/60 flex-shrink-0" />
+                <span>一键收藏重要单词</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

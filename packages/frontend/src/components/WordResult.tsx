@@ -7,7 +7,29 @@
 import { useState } from 'react';
 import { WordQueryResponse, formatTimestamp } from '@ai-voca/shared';
 import { useFavorites } from '../hooks/useFavorites';
-import './WordResult.css';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Button } from './ui/button';
+import { Badge } from './ui/badge';
+import { Separator } from './ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+
+import { 
+  Star, 
+  StarOff,
+  Volume2, 
+  RotateCcw, 
+  Copy, 
+  FileText,
+  Languages,
+  BookOpen,
+  Lightbulb,
+  Clock,
+  ChevronDown,
+  Code,
+  Loader2,
+  Info,
+  X
+} from 'lucide-react';
 
 interface WordResultProps {
   result: WordQueryResponse;
@@ -18,9 +40,9 @@ interface WordResultProps {
 }
 
 export function WordResult({ result, onClear, onRetry, loading = false, originalQuery }: WordResultProps) {
-  const [showRawResponse, setShowRawResponse] = useState(false);
   const { toggleFavorite } = useFavorites();
   const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [showLemmatizationModal, setShowLemmatizationModal] = useState(false);
 
   const handleToggleFavorite = async () => {
     if (!result.data?.text) return;
@@ -40,191 +62,317 @@ export function WordResult({ result, onClear, onRetry, loading = false, original
       setFavoriteLoading(false);
     }
   };
+
+  const handleCopyResult = () => {
+    if (!result.data) return;
+    const text = `${result.data.word} - ${result.data.definition}`;
+    navigator.clipboard.writeText(text);
+  };
   
   if (!result.success || !result.data) {
     return (
-      <div className="word-result error">
-        <h3>查询失败</h3>
-        <p>{result.error || '未知错误'}</p>
-        <button onClick={onClear} className="clear-button">
-          重新查询
-        </button>
-      </div>
+      <Card className="shadow-medium border-destructive/20 bg-destructive/5">
+        <CardContent className="p-6 text-center">
+          <h3 className="text-destructive font-semibold mb-2">查询失败</h3>
+          <p className="text-muted-foreground mb-4">{result.error || '未知错误'}</p>
+          <Button onClick={onClear} variant="outline">
+            重新查询
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   const { data } = result;
 
   return (
-    <div className="word-result">
-      <div className="result-header">
-        <div className="word-title-section">
-          <h2 className="word-title">{data.word}</h2>
-          <button
-            onClick={handleToggleFavorite}
-            disabled={favoriteLoading}
-            className={`favorite-button ${result.isFavorited ? 'favorited' : ''}`}
-            title={result.isFavorited ? '取消收藏' : '添加收藏'}
-          >
-            {favoriteLoading ? '...' : (result.isFavorited ? '★' : '☆')}
-          </button>
+    <Card className="shadow-medium border-0 animate-slide-up">
+      <CardHeader className="pb-4">
+        <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
+              <div className="flex items-center space-x-2">
+                <CardTitle className="text-xl sm:text-2xl font-bold break-words">
+                  {data.word}
+                </CardTitle>
+                {/* 词形还原说明图标 */}
+                {data.lemmatizationExplanation && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+                    onClick={() => setShowLemmatizationModal(true)}
+                    title="查看词形还原说明"
+                  >
+                    <Info className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+              {data.partOfSpeech && (
+                <Badge variant="secondary" className="text-sm w-fit">
+                  {data.partOfSpeech}
+                </Badge>
+              )}
+            </div>
+            
+            <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3 mt-2">
+              {data.pronunciation && (
+                <span className="text-muted-foreground font-mono text-sm break-all">
+                  /{data.pronunciation}/
+                </span>
+              )}
+              <Button variant="ghost" size="sm" className="w-fit">
+                <Volume2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-2 shrink-0">
+            <Button 
+              variant={result.isFavorited ? "default" : "outline"} 
+              size="sm" 
+              onClick={handleToggleFavorite}
+              disabled={favoriteLoading}
+              className="text-xs"
+            >
+              {favoriteLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  {result.isFavorited ? (
+                    <Star className="w-4 h-4 sm:mr-2 fill-current" />
+                  ) : (
+                    <StarOff className="w-4 h-4 sm:mr-2" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {result.isFavorited ? '已收藏' : '收藏'}
+                  </span>
+                </>
+              )}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onRetry} disabled={loading}>
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RotateCcw className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
         </div>
-        {result.isFavorited && (
-          <div className="favorite-indicator">
-            <span className="favorite-badge">已收藏</span>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        {/* 释义 */}
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <FileText className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold">释义</h3>
           </div>
-        )}
-        {data.lemmatizationExplanation && (
-          <div className="lemmatization-explanation">
-            <span className="lemma-label">词形还原:</span>
-            <span className="lemma-text">{data.lemmatizationExplanation}</span>
-          </div>
-        )}
-        {data.pronunciation && (
-          <span className="pronunciation">/{data.pronunciation}/</span>
-        )}
-        {data.partOfSpeech && (
-          <span className="part-of-speech">{data.partOfSpeech}</span>
-        )}
-      </div>
-      
-      <div className="result-content">
-        <div className="definition-section">
-          <h3>释义</h3>
           <div 
-            className="definition-text"
+            className="text-lg leading-relaxed bg-muted/50 p-4 rounded-lg"
             dangerouslySetInnerHTML={{ __html: data.definition }}
           />
         </div>
-        
+
+        {/* 简单解释 */}
         {data.simpleExplanation && (
-          <div className="simple-explanation-section">
-            <h3>简单解释</h3>
-            <div 
-              className="simple-explanation-text"
-              dangerouslySetInnerHTML={{ __html: data.simpleExplanation }}
-            />
-          </div>
+          <>
+            <Separator />
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-5 h-5 text-purple-500" />
+                <h3 className="font-semibold">简单解释</h3>
+              </div>
+              <div 
+                className="text-lg leading-relaxed bg-purple-50 dark:bg-purple-950/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800"
+                dangerouslySetInnerHTML={{ __html: data.simpleExplanation }}
+              />
+            </div>
+          </>
         )}
-        
-        {(data.examples && data.examples.length > 0) ? (
-          <div className="examples-section">
-            <h3>例句</h3>
-            <div className="examples-list">
+
+        <Separator />
+
+        {/* 例句 */}
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <Languages className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold">例句</h3>
+          </div>
+          
+          {(data.examples && data.examples.length > 0) ? (
+            <div className="space-y-4">
               {data.examples.map((example, index) => (
-                <div key={index} className="example-item">
-                  <div className="example-sentence">{example.sentence}</div>
+                <div key={index} className="bg-muted/30 p-4 rounded-lg space-y-2">
+                  <p className="font-medium">{example.sentence}</p>
                   {example.translation && (
-                    <div className="example-translation">{example.translation}</div>
+                    <p className="text-muted-foreground">{example.translation}</p>
                   )}
                 </div>
               ))}
             </div>
-          </div>
-        ) : data.example && (
-          <div className="example-section">
-            <h3>例句</h3>
-            <div className="example-text">
-              {data.example}
+          ) : data.example && (
+            <div className="bg-muted/30 p-4 rounded-lg">
+              <p className="font-medium">{data.example}</p>
             </div>
-          </div>
-        )}
-        
-        {(data.synonyms && data.synonyms.length > 0) && (
-          <div className="synonyms-section">
-            <h3>同义词</h3>
-            <div className="synonyms-list">
-              {data.synonyms.map((synonym, index) => (
-                <span key={index} className="synonym-item">
-                  {synonym}
-                </span>
-              ))}
+          )}
+        </div>
+
+        {/* 同义词和反义词 */}
+        {((data.synonyms && data.synonyms.length > 0) || (data.antonyms && data.antonyms.length > 0)) && (
+          <>
+            <Separator />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* 同义词 */}
+              {(data.synonyms && data.synonyms.length > 0) && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-green-600 dark:text-green-400">同义词</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {data.synonyms.map((synonym, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="outline" 
+                        className="text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-950/20"
+                      >
+                        {synonym}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* 反义词 */}
+              {(data.antonyms && data.antonyms.length > 0) && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-red-600 dark:text-red-400">反义词</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {data.antonyms.map((antonym, index) => (
+                      <Badge 
+                        key={index} 
+                        variant="outline" 
+                        className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950/20"
+                      >
+                        {antonym}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+          </>
         )}
-        
-        {(data.antonyms && data.antonyms.length > 0) && (
-          <div className="antonyms-section">
-            <h3>反义词</h3>
-            <div className="antonyms-list">
-              {data.antonyms.map((antonym, index) => (
-                <span key={index} className="antonym-item">
-                  {antonym}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-        
+
+        {/* 词源 */}
         {data.etymology && (
-          <div className="etymology-section">
-            <h3>词源</h3>
-            <div className="etymology-text">
-              {data.etymology}
+          <>
+            <Separator />
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <BookOpen className="w-4 h-4 text-orange-500" />
+                <h4 className="font-semibold">词源</h4>
+              </div>
+              <p className="text-muted-foreground bg-orange-50 dark:bg-orange-950/20 p-3 rounded-lg border border-orange-200 dark:border-orange-800">
+                {data.etymology}
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* 记忆技巧 */}
+        {data.memoryTips && (
+          <>
+            <Separator />
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Lightbulb className="w-4 h-4 text-orange-500" />
+                <h4 className="font-semibold">记忆技巧</h4>
+              </div>
+              <div 
+                className="text-muted-foreground bg-orange-50 dark:bg-orange-950/20 p-3 rounded-lg border border-orange-200 dark:border-orange-800"
+                dangerouslySetInnerHTML={{ __html: data.memoryTips }}
+              />
+            </div>
+          </>
+        )}
+
+        {/* 原始响应 */}
+        {result.rawResponse && (
+          <>
+            <Separator />
+            <Collapsible>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="flex items-center space-x-2 p-0">
+                  <Code className="w-4 h-4" />
+                  <span>查看原始响应</span>
+                  <ChevronDown className="w-4 h-4" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-3">
+                <div className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto">
+                  <pre className="text-sm whitespace-pre-wrap">{result.rawResponse}</pre>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-2"
+                  onClick={() => navigator.clipboard.writeText(result.rawResponse!)}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  复制到剪贴板
+                </Button>
+              </CollapsibleContent>
+            </Collapsible>
+          </>
+        )}
+
+        {/* 底部操作和时间戳 */}
+        <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+            <Clock className="w-4 h-4" />
+            <span>查询时间: {formatTimestamp(result.timestamp)}</span>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm" onClick={handleCopyResult}>
+              <Copy className="w-4 h-4 mr-2" />
+              复制结果
+            </Button>
+            <Button variant="outline" size="sm" onClick={onClear}>
+              清空结果
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+
+      {/* 词形还原说明弹窗 */}
+      {showLemmatizationModal && data.lemmatizationExplanation && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowLemmatizationModal(false)}
+        >
+          <div 
+            className="bg-background rounded-lg shadow-lg max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">词形还原说明</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowLemmatizationModal(false)}
+                className="h-8 w-8 p-0"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            <div className="p-4">
+              <p className="text-sm text-foreground leading-relaxed">
+                {data.lemmatizationExplanation}
+              </p>
             </div>
           </div>
-        )}
-        
-        {data.memoryTips && (
-          <div className="memory-tips-section">
-            <h3>记忆技巧</h3>
-            <div 
-              className="memory-tips-text"
-              dangerouslySetInnerHTML={{ __html: data.memoryTips }}
-            />
-          </div>
-        )}
-      </div>
-      
-      <div className="result-footer">
-        <div className="timestamp">
-          查询时间: {formatTimestamp(result.timestamp)}
-        </div>
-        <div className="footer-buttons">
-          <button
-            onClick={handleToggleFavorite}
-            disabled={favoriteLoading}
-            className={`favorite-button-text ${result.isFavorited ? 'favorited' : ''}`}
-          >
-            {favoriteLoading ? '处理中...' : (result.isFavorited ? '取消收藏' : '添加收藏')}
-          </button>
-          {result.inputParams && (
-            <button 
-              onClick={onRetry}
-              disabled={loading}
-              className="retry-button"
-            >
-              {loading ? '重试中...' : '重试'}
-            </button>
-          )}
-          {result.rawResponse && (
-            <button 
-              onClick={() => setShowRawResponse(!showRawResponse)} 
-              className="raw-response-button"
-            >
-              {showRawResponse ? '隐藏原始响应' : '查看原始响应'}
-            </button>
-          )}
-          <button onClick={onClear} className="clear-button">
-            清空结果
-          </button>
-        </div>
-      </div>
-      
-      {showRawResponse && result.rawResponse && (
-        <div className="raw-response-section">
-          <h3>AI原始响应</h3>
-          <div className="raw-response-content">
-            <pre>{result.rawResponse}</pre>
-          </div>
-          <button 
-            onClick={() => navigator.clipboard.writeText(result.rawResponse!)}
-            className="copy-button"
-          >
-            复制到剪贴板
-          </button>
         </div>
       )}
-    </div>
+    </Card>
   );
 }

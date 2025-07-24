@@ -15,7 +15,11 @@ interface UserStats {
   lastQueryDate: string | null
 }
 
-export function UserProfile() {
+interface UserProfileProps {
+  onClick?: () => void;
+}
+
+export function UserProfile({ onClick }: UserProfileProps = {}) {
   const { user, signOut } = useAuth()
   const [stats, setStats] = useState<UserStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -93,18 +97,39 @@ export function UserProfile() {
 
   if (!user) return null
 
+  const handleProfileClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      setShowDropdown(!showDropdown);
+    }
+  };
+
   return (
     <div className="user-profile">
-      <div className="user-avatar" onClick={() => setShowDropdown(!showDropdown)}>
+      <div 
+        className={`user-avatar transition-all duration-300 ${
+          onClick 
+            ? 'bg-muted hover:bg-accent border border-border rounded-lg hover:translate-y-[-1px] hover:shadow-sm cursor-pointer' 
+            : ''
+        }`} 
+        onClick={handleProfileClick}
+      >
         {getAvatarUrl() ? (
           <img src={getAvatarUrl()} alt="用户头像" />
         ) : (
-          <div className="avatar-placeholder">
+          <div className={`avatar-placeholder ${onClick ? 'bg-primary text-primary-foreground border-border' : ''}`}>
             {getInitials()}
           </div>
         )}
-        <span className="user-name">{getDisplayName()}</span>
-        <span className="dropdown-arrow">▼</span>
+        <span className={`user-name ${onClick ? 'text-foreground' : ''}`}>{getDisplayName()}</span>
+        <span className={`dropdown-arrow transition-all duration-200 ${
+          onClick 
+            ? 'text-muted-foreground hover:text-primary hover:translate-x-0.5' 
+            : ''
+        }`}>
+          {onClick ? '→' : '▼'}
+        </span>
       </div>
 
       {showDropdown && (

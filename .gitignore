@@ -51,6 +51,9 @@ coverage/
 *.backup
 *.bak
 
+# 参考项目（不需要版本控制）
+oca-2/
+
 # 其他
 .eslintcache
 .stylelintcache

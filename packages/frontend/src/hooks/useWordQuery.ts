@@ -100,12 +100,50 @@ export function useWordQuery() {
     await queryWord(word);
   }, [result, queryWord]);
 
+  // 从收藏数据直接设置结果，无需API查询
+  const loadFromFavorite = useCallback((favoriteData: any, originalQuery: string) => {
+    console.log('useWordQuery: loadFromFavorite called with:', favoriteData.word);
+    
+    // 将收藏的queryData转换为WordQueryResponse格式，确保包含所有字段
+    const wordQueryResponse: WordQueryResponse = {
+      success: true,
+      data: {
+        text: favoriteData.text || favoriteData.word,
+        word: favoriteData.word,
+        lemmatizationExplanation: favoriteData.lemmatizationExplanation || '',
+        pronunciation: favoriteData.pronunciation || '',
+        partOfSpeech: favoriteData.partOfSpeech || '',
+        definition: favoriteData.definition,
+        simpleExplanation: favoriteData.simpleExplanation || '',
+        example: favoriteData.example || '', // 向后兼容
+        examples: favoriteData.examples || [],
+        synonyms: favoriteData.synonyms || [],
+        antonyms: favoriteData.antonyms || [],
+        etymology: favoriteData.etymology || '',
+        memoryTips: favoriteData.memoryTips || ''
+      },
+      isFavorited: true,
+      timestamp: Date.now(),
+      inputParams: {
+        word: originalQuery,
+        timestamp: Date.now()
+      }
+    };
+
+    setResult(wordQueryResponse);
+    setLoading(false);
+    setError(null);
+    
+    console.log('useWordQuery: loadFromFavorite completed, result set');
+  }, []);
+
   return {
     result,
     loading,
     error,
     queryWord,
     clearResult,
-    retryQuery
+    retryQuery,
+    loadFromFavorite
   };
 }
