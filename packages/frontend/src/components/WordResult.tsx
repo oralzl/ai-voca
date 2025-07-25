@@ -118,11 +118,6 @@ export function WordResult({ result, onClear, onRetry, loading = false, original
                   </Button>
                 )}
               </div>
-              {data.partOfSpeech && (
-                <Badge variant="secondary" className="text-sm w-fit">
-                  {data.partOfSpeech}
-                </Badge>
-              )}
             </div>
             
             <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3 mt-2">

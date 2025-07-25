@@ -282,7 +282,6 @@ function parseWordExplanationXml(xmlContent: string): WordExplanation | null {
     result.word = result.text || '';
     result.lemmatizationExplanation = extractTagContent(mainContent, 'lemmatization_explanation');
     result.pronunciation = extractTagContent(mainContent, 'pronunciation');
-    result.partOfSpeech = extractTagContent(mainContent, 'part_of_speech');
     result.etymology = extractTagContent(mainContent, 'etymology');
     
     // 处理定义、解释和记忆技巧
@@ -345,9 +344,26 @@ async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> 
   <text>lemma后的单词</text>
   <lemmatization_explanation>对词形还原结果的简要说明（如有）</lemmatization_explanation>
   <pronunciation>音标（如果适用）</pronunciation>
-  <part_of_speech>词性（兼容多词性）</part_of_speech>
-  <definition>中文释义</definition>
-  <simple_explanation>用常见单词平白地介绍这个单词的英文注释</simple_explanation>
+  <definition>
+    <entry>
+      <pos>词性1</pos>
+      <meaning>对应的中文释义</meaning>
+    </entry>
+    <entry>
+      <pos>词性2</pos>
+      <meaning>对应的中文释义</meaning>
+    </entry>
+  </definition>
+  <simple_explanation>
+    <entry>
+      <pos>词性1</pos>
+      <explanation>用常见单词平白地介绍这个单词的英文注释</explanation>
+    </entry>
+    <entry>
+      <pos>词性2</pos>
+      <explanation>用常见单词平白地介绍这个单词的英文注释</explanation>
+    </entry>
+  </simple_explanation>
   <examples>
     <example>
       <sentence>英文例句</sentence>
@@ -366,11 +382,13 @@ async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> 
 
 要求：
 1. 严格按照XML格式返回，不要添加其他文本
-2. 如果有多个词性，请在part_of_speech和definition中体现
-3. 如果单词需要词形还原，请在text字段提供还原后的形式，并在lemmatization_explanation中说明
-4. 提供至少2个例句
-5. 提供相关的同义词和反义词
-6. 记忆技巧要实用且生动`;
+2. 如果单词有多个词性，请为每个词性创建独立的entry
+3. 每个entry中的pos标签包含词性（如verb, noun, adjective等）
+4. 对应的meaning/explanation要与该词性匹配
+5. 如果单词需要词形还原，请在text字段提供还原后的形式，并在lemmatization_explanation中说明
+6. 提供至少2个例句
+7. 提供相关的同义词和反义词
+8. 记忆技巧要实用且生动`;
 
     // 调用AI API
     const response = await fetch(`${apiUrl}/chat/completions`, {

@@ -17,9 +17,26 @@ export function createSystemPrompt(): string {
   <text>lemma后的单词</text>
   <lemmatization_explanation>对词形还原结果的简要说明（如有）</lemmatization_explanation>
   <pronunciation>音标（如果适用）</pronunciation>
-  <part_of_speech>词性（兼容多词性）</part_of_speech>
-  <definition>中文释义</definition>
-  <simple_explanation>用常见单词平白地介绍这个单词的英文注释</simple_explanation>
+  <definition>
+    <entry>
+      <pos>词性1</pos>
+      <meaning>对应的中文释义</meaning>
+    </entry>
+    <entry>
+      <pos>词性2</pos>
+      <meaning>对应的中文释义</meaning>
+    </entry>
+  </definition>
+  <simple_explanation>
+    <entry>
+      <pos>词性1</pos>
+      <explanation>用常见单词平白地介绍这个单词的英文注释</explanation>
+    </entry>
+    <entry>
+      <pos>词性2</pos>
+      <explanation>用常见单词平白地介绍这个单词的英文注释</explanation>
+    </entry>
+  </simple_explanation>
   <examples>
     <example>
       <sentence>英文例句</sentence>
@@ -41,6 +58,11 @@ export function createSystemPrompt(): string {
   <etymology>用中文介绍词源信息</etymology>
   <memory_tips>用中文介绍记忆技巧</memory_tips>
 </word>
+
+# 词性和释义要求
+- 如果单词有多个词性，请为每个词性创建独立的entry
+- 每个entry中的pos标签包含词性（如verb, noun, adjective等）
+- 对应的meaning/explanation要与该词性匹配
 
 # lemmatization 词形还原分析要求
 

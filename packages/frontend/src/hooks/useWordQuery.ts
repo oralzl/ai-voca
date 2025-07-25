@@ -112,7 +112,6 @@ export function useWordQuery() {
         word: favorite.queryData.word,
         lemmatizationExplanation: favorite.queryData.lemmatizationExplanation || '',
         pronunciation: favorite.queryData.pronunciation || '',
-        partOfSpeech: favorite.queryData.partOfSpeech || '',
         definition: favorite.queryData.definition,
         simpleExplanation: favorite.queryData.simpleExplanation || '',
         example: favorite.queryData.example || '', // 向后兼容

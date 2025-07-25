@@ -14,7 +14,6 @@ export interface ParsedWordExplanation {
   text?: string;
   lemmatizationExplanation?: string;
   pronunciation?: string;
-  partOfSpeech?: string;
   definition?: string;
   simpleExplanation?: string;
   examples?: Example[];
@@ -82,13 +81,18 @@ function processItemTags(content: string): string {
     const entries = extractMultipleTagContents(content, 'entry');
     if (entries.length > 0) {
       const formattedEntries = entries.map(entry => {
-        const partOfSpeech = extractTagContent(entry, 'part_of_speech');
-        const definitionText = extractTagContent(entry, 'definition_text');
+        const pos = extractTagContent(entry, 'pos');
+        const meaning = extractTagContent(entry, 'meaning');
+        const explanation = extractTagContent(entry, 'explanation');
         
-        if (partOfSpeech && definitionText) {
-          return `${partOfSpeech}：${definitionText}`;
-        } else if (definitionText) {
-          return definitionText;
+        if (pos && meaning) {
+          return `<span style="font-weight: bold; font-style: italic;">${pos}</span>：${meaning}`;
+        } else if (pos && explanation) {
+          return `<span style="font-weight: bold; font-style: italic;">${pos}</span>: ${explanation}`;
+        } else if (meaning) {
+          return meaning;
+        } else if (explanation) {
+          return explanation;
         } else {
           return entry.trim();
         }
@@ -233,7 +237,6 @@ export function parseWordExplanationXml(xmlContent: string): ParsedWordExplanati
     result.word = result.text; // 将text字段的值作为word字段的值
     result.lemmatizationExplanation = extractTagContent(mainContent, 'lemmatization_explanation');
     result.pronunciation = extractTagContent(mainContent, 'pronunciation');
-    result.partOfSpeech = extractTagContent(mainContent, 'part_of_speech');
     result.etymology = extractTagContent(mainContent, 'etymology');
     
     // 处理可能包含item标签的字段

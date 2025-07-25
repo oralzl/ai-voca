@@ -1,17 +1,26 @@
 
-取消请求 <part_of_speech></part_of_speech>
+新的AI请求不再要求  <part_of_speech></part_of_speech>
 
-
+参考下面的示例，进一步规范&&约束 <definition><simple_explanation>标签里的内容 <pos> 中的内容在前端粗体斜体显示
 
 <definition>
-    <type>
-        <part_of_speech>副词 verb</part_of_speech>
-        <sub_definition> 1. 使某人看见或知道某事；2. 表演；3. 证明；4. 显露；</sub_definition>
-    <item>2. 表演；</item>    
-    </type>
-    <type>
-        <part_of_speech>名词 noun</part_of_speech>
-        <sub_definition> 1. 展示；2. 表演；3. 演出；4. （电视）节目；</item> 
-    </type>
+    <entry>
+      <pos>verb</pos>
+      <meaning>烹饪；煮；烧；做（饭）</meaning>
+    </entry>
+    <entry>
+      <pos>noun</pos>
+      <meaning>厨师；厨子</meaning>
+    </entry>
   </definition>
+  <simple_explanation>
+    <entry>
+      <pos>verb</pos>
+      <explanation>To make food ready to eat by heating it, for example by boiling, baking, or frying.</explanation>
+    </entry>
+    <entry>
+      <pos>noun</pos>
+      <explanation>A person whose job is to cook food, especially in a restaurant or hotel.</explanation>
+    </entry>
+  </simple_explanation>
 

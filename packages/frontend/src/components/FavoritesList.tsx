@@ -114,11 +114,6 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
                 ({favorite.originalQuery})
               </span>
             )}
-            {favorite.queryData.partOfSpeech && (
-              <Badge variant="secondary" className="text-xs">
-                {favorite.queryData.partOfSpeech}
-              </Badge>
-            )}
           </div>
           <div className="flex items-center space-x-1">
             <Button 
@@ -184,11 +179,6 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
                 <span className="text-sm text-muted-foreground italic">
                   ({favorite.originalQuery})
                 </span>
-              )}
-              {favorite.queryData.partOfSpeech && (
-                <Badge variant="secondary" className="text-xs">
-                  {favorite.queryData.partOfSpeech}
-                </Badge>
               )}
             </div>
             <p className="text-muted-foreground">
