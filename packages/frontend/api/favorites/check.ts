@@ -33,6 +33,7 @@ interface FavoriteWord {
   word: string;
   originalQuery?: string;
   queryData: WordExplanation;
+  rawResponse?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -205,6 +206,7 @@ export default async function handler(
         word: favoriteRecord.word,
         originalQuery: favoriteRecord.original_query,
         queryData: favoriteRecord.query_data,
+        rawResponse: favoriteRecord.raw_response,
         notes: favoriteRecord.notes,
         createdAt: favoriteRecord.created_at,
         updatedAt: favoriteRecord.updated_at

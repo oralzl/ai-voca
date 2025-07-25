@@ -47,12 +47,22 @@ export function WordResult({ result, onClear, onRetry, loading = false, original
   const handleToggleFavorite = async () => {
     if (!result.data?.text) return;
     
+    console.log('收藏操作开始，数据预览:', {
+      word: result.data.text,
+      originalQuery: originalQuery || result.data.word,
+      hasQueryData: !!result.data,
+      hasRawResponse: !!result.rawResponse,
+      rawResponseLength: result.rawResponse?.length || 0,
+      rawResponsePreview: result.rawResponse ? result.rawResponse.substring(0, 100) + '...' : null
+    });
+    
     setFavoriteLoading(true);
     try {
       await toggleFavorite(
         result.data.text,           // lemma后的标准单词
         originalQuery || result.data.word,  // 原始查询词
-        result.data                 // 完整的单词数据
+        result.data,                // 完整的单词数据
+        result.rawResponse          // AI原始响应内容
       );
       // 更新本地状态
       result.isFavorited = !result.isFavorited;

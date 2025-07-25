@@ -11,9 +11,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Search, Star, BookOpen, Trash2, Eye, Calendar, 
-  Filter, Grid3X3, List, Loader2, ArrowLeft, ArrowRight
+  Filter, Grid3X3, List, Loader2, ArrowLeft, ArrowRight,
+  Code, ChevronDown, Copy
 } from 'lucide-react';
 
 interface FavoritesListProps {
@@ -35,6 +38,11 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
     try {
       const result = await getFavoritesList(page, pageSize, search);
       if (result.success && result.data) {
+        console.log('收藏列表加载成功，rawResponse数据检查:', result.data.favorites.map(fav => ({
+          word: fav.word,
+          hasRawResponse: !!fav.rawResponse,
+          rawResponseLength: fav.rawResponse?.length || 0
+        })));
         setTotalPages(Math.ceil(result.data.total / pageSize));
         setCurrentPage(page);
       }
@@ -483,6 +491,35 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
                     <p>{selectedFavorite.notes}</p>
                   </Card>
                 </div>
+              )}
+              {/* 原始响应 */}
+              {selectedFavorite.rawResponse && (
+                <>
+                  <Separator />
+                  <Collapsible>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" className="flex items-center space-x-2 p-0">
+                        <Code className="w-4 h-4" />
+                        <span>查看原始响应</span>
+                        <ChevronDown className="w-4 h-4" />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-3">
+                      <div className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto">
+                        <pre className="text-sm whitespace-pre-wrap">{selectedFavorite.rawResponse}</pre>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={() => navigator.clipboard.writeText(selectedFavorite.rawResponse!)}
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        复制到剪贴板
+                      </Button>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </>
               )}
             </CardContent>
           </Card>

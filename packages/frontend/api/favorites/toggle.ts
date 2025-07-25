@@ -33,6 +33,7 @@ interface FavoriteWord {
   word: string;
   originalQuery?: string;
   queryData: WordExplanation;
+  rawResponse?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -42,6 +43,7 @@ interface FavoriteToggleRequest {
   word: string;
   originalQuery?: string;
   queryData?: WordExplanation;
+  rawResponse?: string;
   notes?: string;
 }
 
@@ -166,7 +168,25 @@ export default async function handler(
     }
     
     // 解析请求参数
-    const { word, originalQuery, queryData, notes } = req.body as FavoriteToggleRequest;
+    const { word, originalQuery, queryData, rawResponse, notes } = req.body as FavoriteToggleRequest;
+    
+    console.log('Toggle API received:', {
+      word,
+      originalQuery,
+      hasQueryData: !!queryData,
+      hasRawResponse: !!rawResponse,
+      rawResponseLength: rawResponse?.length || 0,
+      rawResponsePreview: rawResponse ? rawResponse.substring(0, 100) + '...' : null
+    });
+    
+    console.log('Favorites toggle request data:', {
+      word,
+      originalQuery,
+      hasQueryData: !!queryData,
+      hasRawResponse: !!rawResponse,
+      rawResponseLength: rawResponse?.length || 0,
+      notes
+    });
     
     // 验证必需参数
     if (!word || typeof word !== 'string') {
@@ -242,8 +262,21 @@ export default async function handler(
         word: normalizedWord,
         original_query: originalQuery || word,
         query_data: queryData,
+        raw_response: rawResponse || null,
         notes: notes || null
       };
+      
+      console.log('About to insert to DB:', {
+        ...favoriteRecord,
+        raw_response: favoriteRecord.raw_response ? `${favoriteRecord.raw_response.length} chars` : 'null'
+      });
+      
+      console.log('Adding favorite with data:', {
+        word: normalizedWord,
+        hasQueryData: !!queryData,
+        hasRawResponse: !!rawResponse,
+        rawResponsePreview: rawResponse ? rawResponse.substring(0, 100) + '...' : null
+      });
       
       const { data: newFavorite, error: insertError } = await supabase
         .from('user_favorites')
@@ -265,6 +298,7 @@ export default async function handler(
         word: newFavorite.word,
         originalQuery: newFavorite.original_query,
         queryData: newFavorite.query_data,
+        rawResponse: newFavorite.raw_response,
         notes: newFavorite.notes,
         createdAt: newFavorite.created_at,
         updatedAt: newFavorite.updated_at

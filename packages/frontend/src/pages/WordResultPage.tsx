@@ -162,7 +162,8 @@ export function WordResultPage({ result, originalQuery, onBack, onNewSearch, onR
       await toggleFavorite(
         result.data.text,
         originalQuery || result.data.word,
-        result.data
+        result.data,
+        result.rawResponse
       );
       // 更新本地状态
       result.isFavorited = !result.isFavorited;

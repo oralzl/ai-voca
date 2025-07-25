@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.user_favorites (
   word VARCHAR(100) NOT NULL,           -- 存储lemma后的标准形式(text)
   original_query VARCHAR(100),          -- 原始查询词(如"running")
   query_data JSONB NOT NULL,            -- 完整的WordExplanation数据
+  raw_response TEXT,                    -- AI原始响应内容(可选)
   notes TEXT,                           -- 用户笔记(可选)
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

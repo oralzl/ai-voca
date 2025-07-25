@@ -89,6 +89,7 @@ export interface FavoriteWord {
   word: string;                    // lemma后的标准形式
   originalQuery?: string;          // 原始查询词
   queryData: WordExplanation;      // 完整的单词解释数据
+  rawResponse?: string;            // AI原始响应内容
   notes?: string;                  // 用户笔记
   createdAt: string;
   updatedAt: string;
@@ -98,6 +99,7 @@ export interface FavoriteToggleRequest {
   word: string;                    // lemma后的标准单词
   originalQuery?: string;          // 原始查询词
   queryData?: WordExplanation;     // 单词数据(添加收藏时需要)
+  rawResponse?: string;            // AI原始响应内容
   notes?: string;                  // 用户笔记
 }
 

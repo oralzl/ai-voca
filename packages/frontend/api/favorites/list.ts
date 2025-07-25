@@ -33,6 +33,7 @@ interface FavoriteWord {
   word: string;
   originalQuery?: string;
   queryData: WordExplanation;
+  rawResponse?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
@@ -201,10 +202,17 @@ export default async function handler(
       word: fav.word,
       originalQuery: fav.original_query,
       queryData: fav.query_data,
+      rawResponse: fav.raw_response,
       notes: fav.notes,
       createdAt: fav.created_at,
       updatedAt: fav.updated_at
     }));
+    
+    console.log('Favorites list response preview:', favoriteList.map(fav => ({
+      word: fav.word,
+      hasRawResponse: !!fav.rawResponse,
+      rawResponseLength: fav.rawResponse?.length || 0
+    })));
     
     res.json({
       success: true,

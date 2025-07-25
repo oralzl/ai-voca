@@ -26,7 +26,7 @@ interface UseFavoritesReturn {
   error: string | null;
   
   // 操作函数
-  toggleFavorite: (word: string, originalQuery?: string, queryData?: WordExplanation, notes?: string) => Promise<boolean>;
+  toggleFavorite: (word: string, originalQuery?: string, queryData?: WordExplanation, rawResponse?: string, notes?: string) => Promise<boolean>;
   checkFavorite: (word: string) => Promise<{ isFavorited: boolean; favoriteData?: WordExplanation }>;
   getFavoritesList: (page?: number, pageSize?: number, search?: string) => Promise<FavoriteListResponse>;
   refreshFavorites: () => Promise<void>;
@@ -51,6 +51,7 @@ export function useFavorites(): UseFavoritesReturn {
     word: string,
     originalQuery?: string,
     queryData?: WordExplanation,
+    rawResponse?: string,
     notes?: string
   ): Promise<boolean> => {
     setState(prev => ({ ...prev, loading: true, error: null }));
@@ -60,6 +61,7 @@ export function useFavorites(): UseFavoritesReturn {
         word: word.toLowerCase().trim(),
         originalQuery,
         queryData,
+        rawResponse,
         notes
       });
 
