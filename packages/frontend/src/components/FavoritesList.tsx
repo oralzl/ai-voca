@@ -504,7 +504,15 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
                 </div>
               )}
               {/* 原始响应 */}
-              {selectedFavorite.rawResponse && (
+              {(() => {
+                console.log('检查原始响应条件:', {
+                  hasRawResponse: !!selectedFavorite.rawResponse,
+                  rawResponseLength: selectedFavorite.rawResponse?.length || 0,
+                  rawResponseType: typeof selectedFavorite.rawResponse,
+                  rawResponsePreview: selectedFavorite.rawResponse?.substring(0, 100)
+                });
+                return selectedFavorite.rawResponse;
+              })() && (
                 <>
                   <Separator />
                   <Collapsible>
