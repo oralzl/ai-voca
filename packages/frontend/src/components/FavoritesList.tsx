@@ -135,6 +135,14 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
               className="h-8 w-8 p-0"
               onClick={(e) => {
                 e.stopPropagation();
+                console.log('点击查看详情，收藏数据:', {
+                  word: favorite.word,
+                  hasRawResponse: !!favorite.rawResponse,
+                  rawResponseLength: favorite.rawResponse?.length || 0,
+                  rawResponseType: typeof favorite.rawResponse,
+                  rawResponsePreview: favorite.rawResponse?.substring(0, 100),
+                  fullFavorite: favorite
+                });
                 setSelectedFavorite(favorite);
               }}
             >
@@ -224,6 +232,14 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
+                console.log('列表模式 - 点击查看详情，收藏数据:', {
+                  word: favorite.word,
+                  hasRawResponse: !!favorite.rawResponse,
+                  rawResponseLength: favorite.rawResponse?.length || 0,
+                  rawResponseType: typeof favorite.rawResponse,
+                  rawResponsePreview: favorite.rawResponse?.substring(0, 100),
+                  fullFavorite: favorite
+                });
                 setSelectedFavorite(favorite);
               }}
             >
@@ -511,7 +527,7 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
                   rawResponseType: typeof selectedFavorite.rawResponse,
                   rawResponsePreview: selectedFavorite.rawResponse?.substring(0, 100)
                 });
-                return selectedFavorite.rawResponse;
+                return !!selectedFavorite.rawResponse;
               })() && (
                 <>
                   <Separator />
