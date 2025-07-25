@@ -23,7 +23,6 @@ export interface WordExplanation {
   text?: string;
   lemmatizationExplanation?: string;
   pronunciation?: string;
-  partOfSpeech?: string;
   definition: string;
   simpleExplanation?: string;
   examples?: WordExample[];
@@ -214,13 +213,18 @@ function processItemTags(content: string): string {
     const entries = extractMultipleTagContents(content, 'entry');
     if (entries.length > 0) {
       const formattedEntries = entries.map(entry => {
-        const partOfSpeech = extractTagContent(entry, 'part_of_speech');
-        const definitionText = extractTagContent(entry, 'definition_text');
+        const pos = extractTagContent(entry, 'pos');
+        const meaning = extractTagContent(entry, 'meaning');
+        const explanation = extractTagContent(entry, 'explanation');
         
-        if (partOfSpeech && definitionText) {
-          return `${partOfSpeech}：${definitionText}`;
-        } else if (definitionText) {
-          return definitionText;
+        if (pos && meaning) {
+          return `<span style="font-weight: bold; font-style: italic;">${pos}</span>：${meaning}`;
+        } else if (pos && explanation) {
+          return `<span style="font-weight: bold; font-style: italic;">${pos}</span>: ${explanation}`;
+        } else if (meaning) {
+          return meaning;
+        } else if (explanation) {
+          return explanation;
         } else {
           return entry.trim();
         }
