@@ -5,7 +5,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import { WordQueryResponse } from '@ai-voca/shared';
+import { WordQueryResponse, FavoriteWord } from '@ai-voca/shared';
 import { wordApi } from '../utils/api';
 import { useFavorites } from './useFavorites';
 
@@ -101,31 +101,32 @@ export function useWordQuery() {
   }, [result, queryWord]);
 
   // 从收藏数据直接设置结果，无需API查询
-  const loadFromFavorite = useCallback((favoriteData: any, originalQuery: string) => {
-    console.log('useWordQuery: loadFromFavorite called with:', favoriteData.word);
+  const loadFromFavorite = useCallback((favorite: FavoriteWord) => {
+    console.log('useWordQuery: loadFromFavorite called with:', favorite.word);
     
     // 将收藏的queryData转换为WordQueryResponse格式，确保包含所有字段
     const wordQueryResponse: WordQueryResponse = {
       success: true,
       data: {
-        text: favoriteData.text || favoriteData.word,
-        word: favoriteData.word,
-        lemmatizationExplanation: favoriteData.lemmatizationExplanation || '',
-        pronunciation: favoriteData.pronunciation || '',
-        partOfSpeech: favoriteData.partOfSpeech || '',
-        definition: favoriteData.definition,
-        simpleExplanation: favoriteData.simpleExplanation || '',
-        example: favoriteData.example || '', // 向后兼容
-        examples: favoriteData.examples || [],
-        synonyms: favoriteData.synonyms || [],
-        antonyms: favoriteData.antonyms || [],
-        etymology: favoriteData.etymology || '',
-        memoryTips: favoriteData.memoryTips || ''
+        text: favorite.queryData.text || favorite.queryData.word,
+        word: favorite.queryData.word,
+        lemmatizationExplanation: favorite.queryData.lemmatizationExplanation || '',
+        pronunciation: favorite.queryData.pronunciation || '',
+        partOfSpeech: favorite.queryData.partOfSpeech || '',
+        definition: favorite.queryData.definition,
+        simpleExplanation: favorite.queryData.simpleExplanation || '',
+        example: favorite.queryData.example || '', // 向后兼容
+        examples: favorite.queryData.examples || [],
+        synonyms: favorite.queryData.synonyms || [],
+        antonyms: favorite.queryData.antonyms || [],
+        etymology: favorite.queryData.etymology || '',
+        memoryTips: favorite.queryData.memoryTips || ''
       },
+      rawResponse: favorite.rawResponse, // 添加原始响应数据
       isFavorited: true,
       timestamp: Date.now(),
       inputParams: {
-        word: originalQuery,
+        word: favorite.originalQuery || favorite.word,
         timestamp: Date.now()
       }
     };

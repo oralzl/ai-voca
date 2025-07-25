@@ -11,12 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { 
   Search, Star, BookOpen, Trash2, Eye, Calendar, 
-  Filter, Grid3X3, List, Loader2, ArrowLeft, ArrowRight,
-  Code, ChevronDown, Copy
+  Filter, Grid3X3, List, Loader2, ArrowLeft, ArrowRight
 } from 'lucide-react';
 
 interface FavoritesListProps {
@@ -28,7 +25,6 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [selectedFavorite, setSelectedFavorite] = useState<FavoriteWord | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // 调试收藏数据
@@ -49,10 +45,10 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
     try {
       const result = await getFavoritesList(page, pageSize, search);
       if (result.success && result.data) {
-        console.log('收藏列表加载成功，rawResponse数据检查:', result.data.favorites.map(fav => ({
-          word: fav.word,
-          hasRawResponse: !!fav.rawResponse,
-          rawResponseLength: fav.rawResponse?.length || 0
+        console.log('收藏列表加载成功，rawResponse数据检查:', result.data.favorites.map(f => ({
+          word: f.word,
+          hasRawResponse: !!f.rawResponse,
+          rawResponseLength: f.rawResponse?.length || 0
         })));
         setTotalPages(Math.ceil(result.data.total / pageSize));
         setCurrentPage(page);
@@ -80,10 +76,6 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
       await toggleFavorite(favorite.word);
       // 重新加载当前页
       loadFavorites(currentPage, searchTerm);
-      // 如果当前显示的就是被删除的项目，清空显示
-      if (selectedFavorite?.id === favorite.id) {
-        setSelectedFavorite(null);
-      }
     } catch (error) {
       console.error('取消收藏失败:', error);
     }
@@ -135,15 +127,7 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
               className="h-8 w-8 p-0"
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('点击查看详情，收藏数据:', {
-                  word: favorite.word,
-                  hasRawResponse: !!favorite.rawResponse,
-                  rawResponseLength: favorite.rawResponse?.length || 0,
-                  rawResponseType: typeof favorite.rawResponse,
-                  rawResponsePreview: favorite.rawResponse?.substring(0, 100),
-                  fullFavorite: favorite
-                });
-                setSelectedFavorite(favorite);
+                onWordClick?.(favorite);
               }}
             >
               <Eye className="w-4 h-4" />
@@ -232,15 +216,7 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
               size="sm"
               onClick={(e) => {
                 e.stopPropagation();
-                console.log('列表模式 - 点击查看详情，收藏数据:', {
-                  word: favorite.word,
-                  hasRawResponse: !!favorite.rawResponse,
-                  rawResponseLength: favorite.rawResponse?.length || 0,
-                  rawResponseType: typeof favorite.rawResponse,
-                  rawResponsePreview: favorite.rawResponse?.substring(0, 100),
-                  fullFavorite: favorite
-                });
-                setSelectedFavorite(favorite);
+                onWordClick?.(favorite);
               }}
             >
               <Eye className="w-4 h-4" />
@@ -450,114 +426,6 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
-        </div>
-      )}
-
-      {/* 详情面板 */}
-      {selectedFavorite && (
-        <div 
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedFavorite(null)}
-        >
-          <Card 
-            className="max-w-2xl max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <CardHeader className="border-b sticky top-0 bg-background">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-2xl">{selectedFavorite.word}</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedFavorite(null)}
-                  className="h-8 w-8 p-0"
-                >
-                  ×
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              {selectedFavorite.queryData.pronunciation && (
-                <div className="text-lg text-destructive italic">
-                  /{selectedFavorite.queryData.pronunciation}/
-                </div>
-              )}
-              {selectedFavorite.queryData.partOfSpeech && (
-                <Badge variant="secondary">
-                  {selectedFavorite.queryData.partOfSpeech}
-                </Badge>
-              )}
-              <div>
-                <h3 className="text-lg font-semibold mb-3">释义</h3>
-                <div 
-                  className="text-base leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: selectedFavorite.queryData.definition }}
-                />
-              </div>
-              {selectedFavorite.queryData.examples && selectedFavorite.queryData.examples.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">例句</h3>
-                  <div className="space-y-4">
-                    {selectedFavorite.queryData.examples.map((example, index) => (
-                      <Card key={index} className="p-4 bg-muted/30">
-                        <div className="space-y-2">
-                          <div className="font-medium">{example.sentence}</div>
-                          {example.translation && (
-                            <div className="text-muted-foreground italic">{example.translation}</div>
-                          )}
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {selectedFavorite.notes && (
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">笔记</h3>
-                  <Card className="p-4 bg-yellow-50 border-yellow-200">
-                    <p>{selectedFavorite.notes}</p>
-                  </Card>
-                </div>
-              )}
-              {/* 原始响应 */}
-              {(() => {
-                console.log('检查原始响应条件:', {
-                  hasRawResponse: !!selectedFavorite.rawResponse,
-                  rawResponseLength: selectedFavorite.rawResponse?.length || 0,
-                  rawResponseType: typeof selectedFavorite.rawResponse,
-                  rawResponsePreview: selectedFavorite.rawResponse?.substring(0, 100)
-                });
-                return !!selectedFavorite.rawResponse;
-              })() && (
-                <>
-                  <Separator />
-                  <Collapsible>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" className="flex items-center space-x-2 p-0">
-                        <Code className="w-4 h-4" />
-                        <span>查看原始响应</span>
-                        <ChevronDown className="w-4 h-4" />
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-3">
-                      <div className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto">
-                        <pre className="text-sm whitespace-pre-wrap">{selectedFavorite.rawResponse}</pre>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="mt-2"
-                        onClick={() => navigator.clipboard.writeText(selectedFavorite.rawResponse!)}
-                      >
-                        <Copy className="w-4 h-4 mr-2" />
-                        复制到剪贴板
-                      </Button>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </>
-              )}
-            </CardContent>
-          </Card>
         </div>
       )}
     </div>

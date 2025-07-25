@@ -111,7 +111,8 @@ function AppContent() {
     setCurrentPage('wordResult');
     
     // 直接使用已保存的收藏数据，无需重新查询AI
-    loadFromFavorite(favorite.queryData, favorite.originalQuery || favorite.word);
+    // 传递完整的收藏数据，包括rawResponse
+    loadFromFavorite(favorite);
   };
 
   // 处理底部导航栏的页面切换（不包括wordResult）
