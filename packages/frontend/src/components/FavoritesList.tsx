@@ -31,6 +31,17 @@ export function FavoritesList({ onWordClick }: FavoritesListProps = {}) {
   const [selectedFavorite, setSelectedFavorite] = useState<FavoriteWord | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
+  // 调试收藏数据
+  useEffect(() => {
+    if (favorites.length > 0) {
+      console.log('收藏列表数据:', favorites.map(f => ({
+        word: f.word,
+        hasRawResponse: !!f.rawResponse,
+        rawResponseLength: f.rawResponse?.length || 0
+      })));
+    }
+  }, [favorites]);
+
   const pageSize = 20;
 
   // 加载收藏列表

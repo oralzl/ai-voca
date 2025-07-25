@@ -312,3 +312,7 @@ interface WordQueryResponse {
 **项目状态**: ✅ 已完成部署，功能正常运行
 **生产环境**: https://ai-voca-frontend.vercel.app
 **维护模式**: 云原生架构，自动扩展，无需手动维护
+
+## 开发备忘录
+
+- 测试环境如果有后端修改，也需要 commit 到 github 触发 vercel 的部署
