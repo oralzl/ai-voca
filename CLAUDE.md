@@ -40,7 +40,7 @@ GitOps：声明式配置，易于复制和传播
 这是一个云原生部署的AI词汇查询应用，已完整部署到生产环境：
 
 - **@ai-voca/frontend**: React + TypeScript + Vite前端应用，包含API Routes
-- **@ai-voca/shared**: 共享类型定义和工具函数
+- **@ai-voca/shared**: 共享类型定义和工具函数（⚠️ 注意：由于无服务器架构限制，大部分功能未被使用）
 - **数据库 (Supabase)**: PostgreSQL + 内置用户认证系统  
 - **AI服务 (AiHubMix)**: 智能单词解释API
 
@@ -54,8 +54,25 @@ GitOps：声明式配置，易于复制和传播
 
 **AI集成**: 通过无服务器函数直接调用AiHubMix API，包含完整的XML解析和错误处理逻辑。
 
-
 **数据流**: 前端 → Vercel API Routes → AiHubMix AI / Supabase → 前端显示。`useWordQuery` hook管理整个前端状态生命周期。
+
+### ⚠️ 重要架构说明
+
+由于采用了**无服务器架构**和 Vercel API Routes，项目中存在一些代码重复：
+
+1. **AI提示词位置**：
+   - ❌ `packages/shared/src/utils/prompt.ts` - **未使用**，仅作参考
+   - ✅ `packages/frontend/api/words/query.ts` (第345-402行) - **实际使用的提示词**
+
+2. **XML解析器位置**：
+   - ❌ `packages/shared/src/utils/xml-parser.ts` - **未使用**，仅作参考
+   - ✅ `packages/frontend/api/words/query.ts` 中内联的解析逻辑 - **实际使用**
+
+3. **类型定义位置**：
+   - ⚠️ `packages/shared/src/types/index.ts` - 部分被前端使用
+   - ✅ `packages/frontend/api/words/query.ts` 中内联的类型 - API实际使用
+
+**修改提示词或解析逻辑时，请直接修改 API Routes 中的内联代码！**
 
 ## 生产环境
 

@@ -2,6 +2,15 @@
  * @fileoverview AI提示词生成器
  * @module utils/prompt
  * @description 生成AI单词查询的系统提示词和用户消息
+ * 
+ * ⚠️ 重要提示：由于项目采用无服务器架构（Vercel API Routes），
+ * 这个文件中的函数实际上【未被使用】。
+ * 
+ * 实际使用的提示词位于：
+ * packages/frontend/api/words/query.ts（第345-402行）
+ * 
+ * 如需修改AI提示词，请直接修改上述文件中的内联提示词。
+ * 本文件仅作为参考和备份。
  */
 
 import { AiHubMixMessage } from '../types';

@@ -342,6 +342,9 @@ async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> 
     const timestamp = Date.now();
     
     // 构建AI提示词
+    // ⚠️ 重要：这是实际使用的AI提示词！
+    // 如需修改提示词，请直接修改此处的内容。
+    // 注意：packages/shared/src/utils/prompt.ts 中的提示词【未被使用】
     const prompt = `请详细分析英文单词 "${formattedWord}"，并严格按照以下XML格式返回：
 
 <word>
