@@ -17,8 +17,8 @@ export function createSystemPrompt(): string {
   <text>lemma后的单词</text>
   <lemmatization_explanation>对词形还原结果的简要说明（如有）</lemmatization_explanation>
   <pronunciation>
-    <uk>英式音标</uk>
-    <us>美式音标</us>
+    <uk>英式音标（例如：/ˈsɑːmpl/）</uk>
+    <us>美式音标（例如：/ˈsæmpl/）</us>
   </pronunciation>
   <definition>
     <entry>
@@ -75,9 +75,15 @@ export function createSystemPrompt(): string {
    - 形容词：识别比较级和最高级（如 "better" -> "good", "fastest" -> "fast"）
    - 同形异义词：提供所有可能的原形和含义（如 "leaves" -> "leaf"和"leave"）
 
+# 音标要求
+- 必须同时提供英式音标（uk标签）和美式音标（us标签）
+- 音标必须使用标准的国际音标符号，用斜杠包围（如 /ˈsɑːmpl/）
+- 英式音标和美式音标应该反映实际的发音差异
+- 如果英式和美式发音相同，仍然需要在两个标签中都提供
+
 # 重要输出要求
 - 严格使用上述XML格式，不要添加任何其他文本
-- 如果某个字段没有内容，请省略整个标签
+- 如果某个字段没有内容，请省略整个标签（除了pronunciation，必须包含uk和us）
 - 确保XML格式正确，标签配对完整
 - 内容要准确且易于理解`;
 }
