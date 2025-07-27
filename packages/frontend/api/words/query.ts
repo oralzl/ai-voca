@@ -22,7 +22,10 @@ export interface WordExplanation {
   word: string;
   text?: string;
   lemmatizationExplanation?: string;
-  pronunciation?: string;
+  pronunciation?: string | {
+    uk?: string;
+    us?: string;
+  };
   definition: string;
   simpleExplanation?: string;
   examples?: WordExample[];
@@ -77,9 +80,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: { autoRefreshToken: false, persistSession: false }
 });
 
-const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
 
 // 内联的认证函数
 interface AuthUser {
@@ -100,7 +100,7 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
     // 使用Auth API直接验证token
     const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
       headers: {
-        'apikey': supabaseAnonKey,
+        'apikey': supabaseAnonKey || '',
         'Authorization': `Bearer ${token}`
       }
     });
@@ -164,8 +164,8 @@ function extractTagContent(xml: string, tagName: string): string | undefined {
 
 function extractMultipleTagContents(xml: string, tagName: string): string[] {
   const regex = new RegExp(`<${tagName}>(.*?)</${tagName}>`, 'gs');
-  const matches = [];
-  let match;
+  const matches: string[] = [];
+  let match: RegExpExecArray | null;
   
   while ((match = regex.exec(xml)) !== null) {
     matches.push(match[1].trim());
@@ -285,7 +285,23 @@ function parseWordExplanationXml(xmlContent: string): WordExplanation | null {
     result.text = extractTagContent(mainContent, 'text');
     result.word = result.text || '';
     result.lemmatizationExplanation = extractTagContent(mainContent, 'lemmatization_explanation');
-    result.pronunciation = extractTagContent(mainContent, 'pronunciation');
+    // 处理音标（支持新的嵌套格式和旧的字符串格式）
+    const pronunciationContent = extractTagContent(mainContent, 'pronunciation');
+    if (pronunciationContent) {
+      const ukPronunciation = extractTagContent(pronunciationContent, 'uk');
+      const usPronunciation = extractTagContent(pronunciationContent, 'us');
+      
+      if (ukPronunciation || usPronunciation) {
+        // 新格式：包含uk/us标签
+        result.pronunciation = {
+          uk: ukPronunciation,
+          us: usPronunciation
+        } as any;
+      } else {
+        // 旧格式：直接是字符串
+        result.pronunciation = pronunciationContent;
+      }
+    }
     result.etymology = extractTagContent(mainContent, 'etymology');
     
     // 处理定义、解释和记忆技巧
