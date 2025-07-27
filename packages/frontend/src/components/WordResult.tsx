@@ -28,7 +28,8 @@ import {
   Code,
   Loader2,
   Info,
-  X
+  X,
+  AlertCircle
 } from 'lucide-react';
 
 interface WordResultProps {
@@ -43,6 +44,8 @@ export function WordResult({ result, onClear, onRetry, loading = false, original
   const { toggleFavorite } = useFavorites();
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [showLemmatizationModal, setShowLemmatizationModal] = useState(false);
+  const [playingAudio, setPlayingAudio] = useState<'uk' | 'us' | null>(null);
+  const [audioError, setAudioError] = useState<{ uk?: boolean; us?: boolean }>({});
 
   const handleToggleFavorite = async () => {
     if (!result.data?.text) return;
@@ -77,6 +80,33 @@ export function WordResult({ result, onClear, onRetry, loading = false, original
     if (!result.data) return;
     const text = `${result.data.word} - ${result.data.definition}`;
     navigator.clipboard.writeText(text);
+  };
+
+  const playPronunciation = async (word: string, accent: 'uk' | 'us') => {
+    const audioUrl = `https://api.dictionaryapi.dev/media/pronunciations/en/${word}-${accent}.mp3`;
+    
+    setPlayingAudio(accent);
+    setAudioError(prev => ({ ...prev, [accent]: false }));
+    
+    try {
+      const audio = new Audio(audioUrl);
+      
+      audio.addEventListener('ended', () => {
+        setPlayingAudio(null);
+      });
+      
+      audio.addEventListener('error', () => {
+        console.warn(`音频文件不存在: ${audioUrl}`);
+        setAudioError(prev => ({ ...prev, [accent]: true }));
+        setPlayingAudio(null);
+      });
+      
+      await audio.play();
+    } catch (error) {
+      console.error('播放音频失败:', error);
+      setAudioError(prev => ({ ...prev, [accent]: true }));
+      setPlayingAudio(null);
+    }
   };
   
   if (!result.success || !result.data) {
@@ -122,13 +152,65 @@ export function WordResult({ result, onClear, onRetry, loading = false, original
             
             <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3 mt-2">
               {data.pronunciation && (
-                <span className="text-muted-foreground font-mono text-sm break-all">
-                  /{data.pronunciation}/
-                </span>
+                <>
+                  {typeof data.pronunciation === 'string' ? (
+                    // 旧格式：单个音标
+                    <span className="text-muted-foreground font-mono text-sm break-all">
+                      /{data.pronunciation}/
+                    </span>
+                  ) : (
+                    // 新格式：英式和美式音标
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                      {data.pronunciation.uk && (
+                        <div className="flex items-center gap-1">
+                          <Badge variant="outline" className="text-xs px-1 py-0">英</Badge>
+                          <span className="text-muted-foreground font-mono text-sm">
+                            /{data.pronunciation.uk}/
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() => playPronunciation(data.text || data.word, 'uk')}
+                            disabled={playingAudio === 'uk' || audioError.uk}
+                          >
+                            {playingAudio === 'uk' ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : audioError.uk ? (
+                              <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                            ) : (
+                              <Volume2 className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                      {data.pronunciation.us && (
+                        <div className="flex items-center gap-1">
+                          <Badge variant="outline" className="text-xs px-1 py-0">美</Badge>
+                          <span className="text-muted-foreground font-mono text-sm">
+                            /{data.pronunciation.us}/
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0"
+                            onClick={() => playPronunciation(data.text || data.word, 'us')}
+                            disabled={playingAudio === 'us' || audioError.us}
+                          >
+                            {playingAudio === 'us' ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : audioError.us ? (
+                              <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                            ) : (
+                              <Volume2 className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               )}
-              <Button variant="ghost" size="sm" className="w-fit">
-                <Volume2 className="w-4 h-4" />
-              </Button>
             </div>
           </div>
           

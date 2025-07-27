@@ -16,7 +16,10 @@ export function createSystemPrompt(): string {
 <word>
   <text>lemma后的单词</text>
   <lemmatization_explanation>对词形还原结果的简要说明（如有）</lemmatization_explanation>
-  <pronunciation>音标（如果适用）</pronunciation>
+  <pronunciation>
+    <uk>英式音标</uk>
+    <us>美式音标</us>
+  </pronunciation>
   <definition>
     <entry>
       <pos>词性1</pos>

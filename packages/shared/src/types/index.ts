@@ -20,7 +20,10 @@ export interface WordExplanation {
   word: string;
   text?: string; // lemma后的单词
   lemmatizationExplanation?: string; // 对词形还原结果的简要说明
-  pronunciation?: string;
+  pronunciation?: string | {
+    uk?: string;
+    us?: string;
+  };
   definition: string;
   simpleExplanation?: string; // 用常见单词平白介绍的英文注释
   example?: string; // 保留向后兼容性

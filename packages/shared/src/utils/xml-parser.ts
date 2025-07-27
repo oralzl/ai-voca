@@ -13,7 +13,10 @@ export interface ParsedWordExplanation {
   word?: string;
   text?: string;
   lemmatizationExplanation?: string;
-  pronunciation?: string;
+  pronunciation?: string | {
+    uk?: string;
+    us?: string;
+  };
   definition?: string;
   simpleExplanation?: string;
   examples?: Example[];
@@ -236,7 +239,22 @@ export function parseWordExplanationXml(xmlContent: string): ParsedWordExplanati
     result.text = extractTagContent(mainContent, 'text');
     result.word = result.text; // 将text字段的值作为word字段的值
     result.lemmatizationExplanation = extractTagContent(mainContent, 'lemmatization_explanation');
-    result.pronunciation = extractTagContent(mainContent, 'pronunciation');
+    // 处理音标（支持新的嵌套格式和旧的字符串格式）
+    const pronunciationContent = extractTagContent(mainContent, 'pronunciation');
+    if (pronunciationContent) {
+      const ukPronunciation = extractTagContent(pronunciationContent, 'uk');
+      const usPronunciation = extractTagContent(pronunciationContent, 'us');
+      
+      if (ukPronunciation || usPronunciation) {
+        // 新格式：包含uk/us标签
+        result.pronunciation = {} as { uk?: string; us?: string };
+        if (ukPronunciation) (result.pronunciation as any).uk = ukPronunciation;
+        if (usPronunciation) (result.pronunciation as any).us = usPronunciation;
+      } else {
+        // 旧格式：直接是字符串
+        result.pronunciation = pronunciationContent;
+      }
+    }
     result.etymology = extractTagContent(mainContent, 'etymology');
     
     // 处理可能包含item标签的字段
