@@ -1,21 +1,8 @@
 /**
  * @fileoverview 格式化工具函数
  * @module utils/formatting
- * @description 提供文本格式化、时间格式化和字符串处理函数
+ * @description 提供时间格式化函数
  */
-
-/**
- * 格式化单词（去除多余空格，转换为小写）
- * @param word 原始单词
- * @returns 格式化后的单词
- */
-export function formatWord(word: string): string {
-  if (!word || typeof word !== 'string') {
-    return '';
-  }
-  
-  return word.trim().toLowerCase();
-}
 
 /**
  * 格式化时间戳为可读格式
@@ -31,31 +18,4 @@ export function formatTimestamp(timestamp: number): string {
     minute: '2-digit',
     second: '2-digit'
   });
-}
-
-/**
- * 截取文本到指定长度
- * @param text 原始文本
- * @param maxLength 最大长度
- * @returns 截取后的文本
- */
-export function truncateText(text: string, maxLength: number): string {
-  if (!text || text.length <= maxLength) {
-    return text;
-  }
-  
-  return text.substring(0, maxLength - 3) + '...';
-}
-
-/**
- * 首字母大写
- * @param text 原始文本
- * @returns 首字母大写的文本
- */
-export function capitalize(text: string): string {
-  if (!text || typeof text !== 'string') {
-    return '';
-  }
-  
-  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }

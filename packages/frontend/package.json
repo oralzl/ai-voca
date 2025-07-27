@@ -9,6 +9,8 @@
     "dev:full": "concurrently \"npm run dev:api\" \"vite --config vite.config.vercel.ts\"",
     "dev:vercel": "vercel dev --listen 3000",
     "build": "tsc && vite build",
+    "start": "node server.mjs",
+    "start:zeabur": "npm run build && node server.mjs",
     "preview": "vite preview",
     "test": "vitest",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
@@ -40,7 +42,9 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^4.0.8"
+    "zod": "^4.0.8",
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
