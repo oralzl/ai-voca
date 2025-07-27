@@ -347,7 +347,10 @@ async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> 
 <word>
   <text>lemma后的单词</text>
   <lemmatization_explanation>对词形还原结果的简要说明（如有）</lemmatization_explanation>
-  <pronunciation>音标（如果适用）</pronunciation>
+  <pronunciation>
+    <uk>英式音标（例如：/ˈsɑːmpl/）</uk>
+    <us>美式音标（例如：/ˈsæmpl/）</us>
+  </pronunciation>
   <definition>
     <entry>
       <pos>词性1</pos>
@@ -392,7 +395,11 @@ async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> 
 5. 如果单词需要词形还原，请在text字段提供还原后的形式，并在lemmatization_explanation中说明
 6. 提供至少2个例句
 7. 提供相关的同义词和反义词
-8. 记忆技巧要实用且生动`;
+8. 记忆技巧要实用且生动
+9. 必须同时提供英式音标（uk标签）和美式音标（us标签）
+10. 音标必须使用标准的国际音标符号，用斜杠包围（如 /ˈsɑːmpl/）
+11. 英式音标和美式音标应该反映实际的发音差异
+12. 如果英式和美式发音相同，仍然需要在两个标签中都提供`;
 
     // 调用AI API
     const response = await fetch(`${apiUrl}/chat/completions`, {
