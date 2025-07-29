@@ -309,9 +309,21 @@ function AppContent() {
 }
 
 function App() {
+  // 检测是否为预览环境
+  const isPreviewEnvironment = import.meta.env.VITE_SUPABASE_URL?.includes('test') || 
+                              window.location.hostname !== 'ai-voca-frontend.vercel.app';
+
   return (
     <AuthProvider>
-      <AppContent />
+      {/* 预览环境指示器 */}
+      {isPreviewEnvironment && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500 text-black text-center py-1 text-sm font-medium">
+          🧪 测试环境 - Preview Environment
+        </div>
+      )}
+      <div className={isPreviewEnvironment ? 'pt-8' : ''}>
+        <AppContent />
+      </div>
     </AuthProvider>
   );
 }
