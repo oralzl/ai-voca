@@ -16,6 +16,7 @@ import { AppLayout } from './components/layout/AppLayout';
 import { Button } from './components/ui/button';
 import { Card, CardContent } from './components/ui/card';
 import { AuthModal } from './components/Auth/AuthModal';
+import { EnvironmentInfo } from './components/debug/EnvironmentInfo';
 import { Brain, Star, Users, Zap, Shield, Globe } from 'lucide-react';
 
 type PageType = 'search' | 'favorites' | 'profile' | 'wordResult';
@@ -284,6 +285,11 @@ function AppContent() {
             </div>
           )}
           
+          {/* 环境信息测试组件 */}
+          <div className="mx-auto max-w-2xl p-4">
+            <EnvironmentInfo />
+          </div>
+          
           {/* 不再在搜索页面显示结果，而是跳转到结果页面 */}
         </div>
       ) : currentPage === 'wordResult' ? (
@@ -310,7 +316,7 @@ function AppContent() {
 
 function App() {
   // 检测是否为预览环境
-  const isPreviewEnvironment = import.meta.env.VITE_SUPABASE_URL?.includes('test') || 
+  const isPreviewEnvironment = import.meta.env.VITE_SUPABASE_URL?.includes('ogdqwsminccyayybqrrd') || 
                               window.location.hostname !== 'ai-voca-frontend.vercel.app';
 
   return (
