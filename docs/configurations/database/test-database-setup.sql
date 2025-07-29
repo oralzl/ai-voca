@@ -169,6 +169,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- 2. 创建新项目，命名为 "ai-voca-test"
 -- 3. 在SQL编辑器中执行上述SQL脚本
 -- 4. 记录下新项目的URL和密钥：
---    - Project URL: https://your-test-project.supabase.co
---    - Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
---    - Service Role Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+--    - Project URL: https://ogdqwsminccyayybqrrd.supabase.co
+--    - Anon Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9nZHF3c21pbmNjeWF5eWJxcnJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM4MDEyMjcsImV4cCI6MjA2OTM3NzIyN30.skoQs4w9W5q3HQ7cGTfU-rk2tJAk_3Y-WO5C51J0zAg
+--    - Service Role Key: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9nZHF3c21pbmNjeWF5eWJxcnJkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MzgwMTIyNywiZXhwIjoyMDY5Mzc3MjI3fQ.88b-RgMyp1mgQ9eMUx4Q-dN9558csSzIuBqjngUqUuM
