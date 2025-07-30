@@ -2,7 +2,7 @@
  * @fileoverview 单词查询API无服务器函数
  * @module api/words/query
  * @description 处理单词查询请求，集成AI服务、用户认证、数据库记录和XML解析
- * @version 3.0.4 - 彻底修复模块加载时的环境变量检查问题
+ * @version 3.0.5 - 完全移除模块级别的环境变量访问
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -66,36 +66,6 @@ function isValidWord(word: string): boolean {
 }
 
 // Supabase配置将在handler函数中初始化，避免模块加载时的环境变量检查
-let supabase: any = null;
-
-// 初始化Supabase客户端的函数
-function initializeSupabase() {
-  if (supabase) return supabase;
-  
-  // 在运行时获取环境变量，避免模块加载时访问
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
-  const rawAnonKey = process.env.SUPABASE_ANON_KEY;
-  const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
-  const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
-
-  if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
-    console.error('Missing Supabase environment variables:', {
-      hasUrl: !!supabaseUrl,
-      hasServiceKey: !!supabaseServiceKey,
-      hasAnonKey: !!supabaseAnonKey,
-      serviceKeyLength: supabaseServiceKey?.length,
-      anonKeyLength: supabaseAnonKey?.length
-    });
-    throw new Error('Missing Supabase environment variables');
-  }
-
-  supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
-  });
-  
-  return supabase;
-}
 
 
 // 内联的认证函数
@@ -546,18 +516,7 @@ export default async function handler(
     vercelEnv: process.env.VERCEL_ENV
   });
   
-  // 初始化Supabase客户端
-  try {
-    initializeSupabase();
-  } catch (error) {
-    console.error('Failed to initialize Supabase:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Server configuration error',
-      timestamp: Date.now()
-    });
-    return;
-  }
+  // Supabase 客户端将在需要时在各自的函数中初始化
   
   // 设置 CORS 头
   res.setHeader('Access-Control-Allow-Origin', '*');
