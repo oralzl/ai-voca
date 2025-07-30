@@ -2,7 +2,7 @@
  * @fileoverview 单词查询API无服务器函数
  * @module api/words/query
  * @description 处理单词查询请求，集成AI服务、用户认证、数据库记录和XML解析
- * @version 3.0.2 - 修复模块加载时的环境变量检查问题
+ * @version 3.0.3 - 修复模块加载时的环境变量检查问题
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -114,7 +114,7 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
     
     const token = authHeader.substring(7);
     
-    // 获取环境变量
+    // 获取环境变量 - 在运行时获取，避免模块加载时访问
     const supabaseUrl = process.env.SUPABASE_URL;
     const rawAnonKey = process.env.SUPABASE_ANON_KEY;
     const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
@@ -167,7 +167,9 @@ async function saveQueryRecord(
   responseData: any
 ): Promise<void> {
   try {
-    const { error } = await supabase
+    // 确保 Supabase 客户端已初始化
+    const supabaseClient = initializeSupabase();
+    const { error } = await supabaseClient
       .from('word_queries')
       .insert({
         user_id: userId,
