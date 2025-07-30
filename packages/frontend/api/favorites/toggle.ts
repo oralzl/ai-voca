@@ -56,20 +56,27 @@ interface FavoriteToggleResponse {
   error?: string;
 }
 
-// Supabase配置
-const supabaseUrl = process.env.SUPABASE_URL;
-const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
-const rawAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
-const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
+// Supabase配置 - 使用 try-catch 避免模块加载时的环境变量检查错误
+let supabase: any = null;
+let supabaseUrl: string | undefined;
+let supabaseServiceKey: string | undefined;
+let supabaseAnonKey: string | undefined;
 
-if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+try {
+  supabaseUrl = process.env.SUPABASE_URL;
+  const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
+  const rawAnonKey = process.env.SUPABASE_ANON_KEY;
+  supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
+  supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
+
+  if (supabaseUrl && supabaseServiceKey && supabaseAnonKey) {
+    supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+  }
+} catch (error) {
+  console.log('Supabase initialization deferred to runtime');
 }
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
 
 // 用户认证函数
 interface AuthUser {
@@ -138,6 +145,43 @@ export default async function handler(
   res: VercelResponse
 ) {
   console.log('Favorites toggle handler started', { method: req.method });
+  
+  // 运行时初始化Supabase配置（如果模块加载时未成功）
+  if (!supabase) {
+    try {
+      supabaseUrl = process.env.SUPABASE_URL;
+      const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
+      const rawAnonKey = process.env.SUPABASE_ANON_KEY;
+      supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
+      supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
+
+      if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
+        console.error('Missing Supabase environment variables:', {
+          hasUrl: !!supabaseUrl,
+          hasServiceKey: !!supabaseServiceKey,
+          hasAnonKey: !!supabaseAnonKey
+        });
+        res.status(500).json({
+          success: false,
+          error: 'Server configuration error',
+          timestamp: Date.now()
+        });
+        return;
+      }
+
+      supabase = createClient(supabaseUrl, supabaseServiceKey, {
+        auth: { autoRefreshToken: false, persistSession: false }
+      });
+    } catch (error) {
+      console.error('Failed to initialize Supabase:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Server configuration error',
+        timestamp: Date.now()
+      });
+      return;
+    }
+  }
   
   // 设置 CORS 头
   res.setHeader('Access-Control-Allow-Origin', '*');
