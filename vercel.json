@@ -5,7 +5,11 @@
   "outputDirectory": "packages/frontend/dist",
   "functions": {
     "packages/frontend/api/**/*.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "runtime": "nodejs20.x"
     }
+  },
+  "env": {
+    "FORCE_RUNTIME_TAG": "2025-01-30-fix"
   }
 }
