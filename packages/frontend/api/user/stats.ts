@@ -7,25 +7,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase配置（使用环境变量）
-const supabaseUrl = process.env.SUPABASE_URL;
-// 清理JWT token中的无效字符（换行符、空格等）
-const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
-const rawAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
-const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
-
-if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
-
-const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
+// Supabase配置将在handler函数中初始化，避免模块加载时的环境变量检查
 
 // 内联的认证函数
 interface AuthUser {
@@ -34,7 +16,7 @@ interface AuthUser {
   user_metadata: any;
 }
 
-async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
+async function authenticateUser(req: VercelRequest, supabaseUrl: string, supabaseAnonKey: string): Promise<AuthUser | null> {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -81,8 +63,46 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  console.log('User stats handler started');
-  console.log('Supabase config:', {
+  console.log('User stats handler started', { 
+    method: req.method, 
+    url: req.url,
+    hasAuth: !!req.headers.authorization,
+    timestamp: new Date().toISOString()
+  });
+  
+  // 检查环境变量是否正确加载
+  console.log('Environment check:', {
+    hasSupabaseUrl: !!process.env.SUPABASE_URL,
+    hasSupabaseServiceKey: !!process.env.SUPABASE_SERVICE_KEY,
+    hasSupabaseAnonKey: !!process.env.SUPABASE_ANON_KEY,
+    nodeEnv: process.env.NODE_ENV,
+    vercelEnv: process.env.VERCEL_ENV
+  });
+  
+  // 初始化 Supabase 配置
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
+  const rawAnonKey = process.env.SUPABASE_ANON_KEY;
+  const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
+  const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
+
+  if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
+    console.error('Missing Supabase environment variables:', {
+      hasUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+      hasAnonKey: !!supabaseAnonKey,
+      serviceKeyLength: supabaseServiceKey?.length,
+      anonKeyLength: supabaseAnonKey?.length
+    });
+    res.status(500).json({
+      success: false,
+      error: 'Server configuration error',
+      timestamp: Date.now()
+    });
+    return;
+  }
+  
+  console.log('Supabase config initialized:', {
     url: supabaseUrl,
     hasServiceKey: !!supabaseServiceKey,
     hasAnonKey: !!supabaseAnonKey
@@ -109,7 +129,7 @@ export default async function handler(
     console.log('Starting user authentication');
     
     // 用户认证
-    const user = await authenticateUser(req);
+    const user = await authenticateUser(req, supabaseUrl, supabaseAnonKey);
     if (!user) {
       console.log('User authentication failed');
       res.status(401).json(createAuthError('请先登录'));
