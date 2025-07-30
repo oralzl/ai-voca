@@ -73,6 +73,13 @@ const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim
 const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
 
 if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables:', {
+    hasUrl: !!supabaseUrl,
+    hasServiceKey: !!supabaseServiceKey,
+    hasAnonKey: !!supabaseAnonKey,
+    serviceKeyLength: supabaseServiceKey?.length,
+    anonKeyLength: supabaseAnonKey?.length
+  });
   throw new Error('Missing Supabase environment variables');
 }
 
@@ -488,7 +495,22 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  console.log('Word query handler started', { method: req.method, headers: req.headers });
+  console.log('Word query handler started', { 
+    method: req.method, 
+    url: req.url,
+    hasAuth: !!req.headers.authorization,
+    timestamp: new Date().toISOString()
+  });
+  
+  // 检查环境变量是否正确加载
+  console.log('Environment check:', {
+    hasSupabaseUrl: !!process.env.SUPABASE_URL,
+    hasSupabaseServiceKey: !!process.env.SUPABASE_SERVICE_KEY,
+    hasSupabaseAnonKey: !!process.env.SUPABASE_ANON_KEY,
+    hasAiHubMixKey: !!process.env.AIHUBMIX_API_KEY,
+    nodeEnv: process.env.NODE_ENV,
+    vercelEnv: process.env.VERCEL_ENV
+  });
   
   // 设置 CORS 头
   res.setHeader('Access-Control-Allow-Origin', '*');
