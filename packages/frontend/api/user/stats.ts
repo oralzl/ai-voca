@@ -2,6 +2,7 @@
  * @fileoverview 用户统计信息API无服务器函数
  * @module api/user/stats
  * @description 获取用户查询统计信息，包括总查询数、今日查询数和剩余次数
+ * @version 2.0.0 - 修复模块级别环境变量检查问题
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -63,7 +64,7 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  console.log('User stats handler started', { 
+  console.log('User stats handler started - v2.0.0', { 
     method: req.method, 
     url: req.url,
     hasAuth: !!req.headers.authorization,
