@@ -8,7 +8,9 @@ import axios from 'axios';
 import type { WordQueryRequest, WordQueryResponse } from '@ai-voca/shared';
 import { supabase } from '../lib/supabase';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// 在Vercel部署环境中，API Routes使用相对路径
+// 本地开发时使用localhost:3000，生产/预览环境使用当前域名
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
