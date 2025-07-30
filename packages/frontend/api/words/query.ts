@@ -2,14 +2,8 @@
  * @fileoverview 单词查询API无服务器函数
  * @module api/words/query
  * @description 处理单词查询请求，集成AI服务、用户认证、数据库记录和XML解析
- * @version 3.0.1 - 修复模块加载时的环境变量检查问题
+ * @version 3.0.2 - 修复模块加载时的环境变量检查问题
  */
-
-console.log('[Query API] Module loading started - v3.0.1', {
-  timestamp: new Date().toISOString(),
-  env: process.env.VERCEL_ENV,
-  hasSupabaseUrl: !!process.env.SUPABASE_URL
-});
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';

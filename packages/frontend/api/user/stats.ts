@@ -2,13 +2,11 @@
  * @fileoverview 用户统计信息API无服务器函数
  * @module api/user/stats
  * @description 获取用户查询统计信息，包括总查询数、今日查询数和剩余次数
- * @version 2.0.0 - 修复模块级别环境变量检查问题
+ * @version 2.1.0 - 修复模块级别环境变量检查问题
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-
-// Supabase配置将在handler函数中初始化，避免模块加载时的环境变量检查
 
 // 内联的认证函数
 interface AuthUser {
@@ -64,7 +62,7 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  console.log('User stats handler started - v2.0.0', { 
+  console.log('User stats handler started - v2.1.0', { 
     method: req.method, 
     url: req.url,
     hasAuth: !!req.headers.authorization,
