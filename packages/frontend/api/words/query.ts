@@ -64,28 +64,37 @@ function isValidWord(word: string): boolean {
   return validPattern.test(trimmed);
 }
 
-// Supabase配置（使用环境变量）
-const supabaseUrl = process.env.SUPABASE_URL;
-// 清理JWT token中的无效字符（换行符、空格等）
-const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
-const rawAnonKey = process.env.SUPABASE_ANON_KEY;
-const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
-const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
+// Supabase配置将在handler函数中初始化，避免模块加载时的环境变量检查
+let supabase: any = null;
 
-if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables:', {
-    hasUrl: !!supabaseUrl,
-    hasServiceKey: !!supabaseServiceKey,
-    hasAnonKey: !!supabaseAnonKey,
-    serviceKeyLength: supabaseServiceKey?.length,
-    anonKeyLength: supabaseAnonKey?.length
+// 初始化Supabase客户端的函数
+function initializeSupabase() {
+  if (supabase) return supabase;
+  
+  const supabaseUrl = process.env.SUPABASE_URL;
+  // 清理JWT token中的无效字符（换行符、空格等）
+  const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
+  const rawAnonKey = process.env.SUPABASE_ANON_KEY;
+  const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
+  const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
+
+  if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
+    console.error('Missing Supabase environment variables:', {
+      hasUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+      hasAnonKey: !!supabaseAnonKey,
+      serviceKeyLength: supabaseServiceKey?.length,
+      anonKeyLength: supabaseAnonKey?.length
+    });
+    throw new Error('Missing Supabase environment variables');
+  }
+
+  supabase = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { autoRefreshToken: false, persistSession: false }
   });
-  throw new Error('Missing Supabase environment variables');
+  
+  return supabase;
 }
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
 
 
 // 内联的认证函数
@@ -104,10 +113,20 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
     
     const token = authHeader.substring(7);
     
+    // 获取环境变量
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const rawAnonKey = process.env.SUPABASE_ANON_KEY;
+    const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase URL or anon key for authentication');
+      return null;
+    }
+    
     // 使用Auth API直接验证token
     const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
       headers: {
-        'apikey': supabaseAnonKey || '',
+        'apikey': supabaseAnonKey,
         'Authorization': `Bearer ${token}`
       }
     });
@@ -511,6 +530,19 @@ export default async function handler(
     nodeEnv: process.env.NODE_ENV,
     vercelEnv: process.env.VERCEL_ENV
   });
+  
+  // 初始化Supabase客户端
+  try {
+    initializeSupabase();
+  } catch (error) {
+    console.error('Failed to initialize Supabase:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Server configuration error',
+      timestamp: Date.now()
+    });
+    return;
+  }
   
   // 设置 CORS 头
   res.setHeader('Access-Control-Allow-Origin', '*');
