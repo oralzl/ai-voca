@@ -2,7 +2,7 @@
  * @fileoverview 单词查询API无服务器函数
  * @module api/words/query
  * @description 处理单词查询请求，集成AI服务、用户认证、数据库记录和XML解析
- * @version 3.0.3 - 修复模块加载时的环境变量检查问题
+ * @version 3.0.4 - 彻底修复模块加载时的环境变量检查问题
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -72,8 +72,8 @@ let supabase: any = null;
 function initializeSupabase() {
   if (supabase) return supabase;
   
+  // 在运行时获取环境变量，避免模块加载时访问
   const supabaseUrl = process.env.SUPABASE_URL;
-  // 清理JWT token中的无效字符（换行符、空格等）
   const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
   const rawAnonKey = process.env.SUPABASE_ANON_KEY;
   const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
@@ -114,7 +114,7 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
     
     const token = authHeader.substring(7);
     
-    // 获取环境变量 - 在运行时获取，避免模块加载时访问
+    // 在函数内部直接获取环境变量，避免模块加载时的问题
     const supabaseUrl = process.env.SUPABASE_URL;
     const rawAnonKey = process.env.SUPABASE_ANON_KEY;
     const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
@@ -167,8 +167,20 @@ async function saveQueryRecord(
   responseData: any
 ): Promise<void> {
   try {
-    // 确保 Supabase 客户端已初始化
-    const supabaseClient = initializeSupabase();
+    // 在函数内部直接初始化 Supabase 客户端，避免模块加载时的问题
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
+    const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase environment variables for saveQueryRecord');
+      return;
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
     const { error } = await supabaseClient
       .from('word_queries')
       .insert({
