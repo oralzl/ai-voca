@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Brain, Search, Star, LogIn } from 'lucide-react';
+import { Brain, Search, Star, LogIn, Bug } from 'lucide-react';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -23,12 +23,16 @@ const navigation = [{
   name: '我的收藏',
   key: 'favorites' as const,
   icon: Star
+}, {
+  name: '调试',
+  key: 'debug' as const,
+  icon: Bug
 }];
 
 interface AppSidebarProps {
   className?: string;
-  currentPage: 'search' | 'favorites' | 'profile';
-  onPageChange: (page: 'search' | 'favorites' | 'profile') => void;
+  currentPage: 'search' | 'favorites' | 'profile' | 'debug';
+  onPageChange: (page: 'search' | 'favorites' | 'profile' | 'debug') => void;
 }
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({ 
@@ -39,7 +43,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   
-  const isActive = (key: 'search' | 'favorites' | 'profile') => currentPage === key;
+  const isActive = (key: 'search' | 'favorites' | 'profile' | 'debug') => currentPage === key;
 
   return (
     <>
