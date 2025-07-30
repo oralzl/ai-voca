@@ -96,7 +96,7 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
     
     const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
       headers: {
-        'apikey': supabaseAnonKey,
+        'apikey': supabaseAnonKey || '',
         'Authorization': `Bearer ${token}`
       }
     });
