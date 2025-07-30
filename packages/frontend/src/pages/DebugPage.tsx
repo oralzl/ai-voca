@@ -22,6 +22,8 @@ export function DebugPage() {
       MODE: import.meta.env.MODE,
       PROD: import.meta.env.PROD,
       DEV: import.meta.env.DEV,
+      VERCEL_ENV: import.meta.env.VITE_VERCEL_ENV || '未设置',
+      NODE_ENV: import.meta.env.VITE_NODE_ENV || '未设置',
       timestamp: new Date().toISOString()
     };
     setEnvInfo(envData);
@@ -46,24 +48,40 @@ export function DebugPage() {
 
   const testApiWithAuth = async () => {
     try {
+      console.log('开始 API 测试...');
+      
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Session 信息:', {
+        hasSession: !!session,
+        hasToken: !!session?.access_token,
+        tokenLength: session?.access_token?.length || 0
+      });
+      
       if (!session?.access_token) {
-        alert('请先登录');
+        alert('请先登录 - 没有找到有效的认证 token');
         return;
       }
 
+      console.log('准备发送 API 请求...');
       const response = await fetch('/api/words/query?word=hello', {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json'
         }
       });
       
+      console.log('API 响应状态:', response.status, response.statusText);
       const data = await response.json();
-      console.log('API test result:', data);
-      alert(`API test: ${data.success ? '成功' : '失败'} - ${data.error || '无错误'}`);
+      console.log('API 响应数据:', data);
+      
+      if (data.success) {
+        alert(`API 测试成功！\n单词: ${data.data?.word}\n定义: ${data.data?.definition?.substring(0, 50)}...`);
+      } else {
+        alert(`API 测试失败: ${data.error}`);
+      }
     } catch (error) {
       console.error('API test error:', error);
-      alert(`API test error: ${error}`);
+      alert(`API 测试错误: ${error}`);
     }
   };
 
@@ -109,6 +127,21 @@ export function DebugPage() {
               className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
             >
               测试 API (带认证)
+            </button>
+            <button 
+              onClick={async () => {
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  console.log('当前 Session:', session);
+                  alert(`Session: ${session ? '已登录' : '未登录'}\nToken: ${session?.access_token ? '已获取' : '未获取'}`);
+                } catch (error) {
+                  console.error('Session 检查错误:', error);
+                  alert(`Session 检查错误: ${error}`);
+                }
+              }}
+              className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              检查当前 Session
             </button>
             <pre className="text-sm bg-gray-100 p-2 rounded overflow-auto">
               {JSON.stringify(apiTest, null, 2)}
