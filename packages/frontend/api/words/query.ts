@@ -2,7 +2,7 @@
  * @fileoverview 单词查询API无服务器函数
  * @module api/words/query
  * @description 处理单词查询请求，集成AI服务、用户认证、数据库记录和XML解析
- * @version 3.0.5 - 完全移除模块级别的环境变量访问
+ * @version 3.0.6 - 使用动态函数获取环境变量
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -84,9 +84,13 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
     
     const token = authHeader.substring(7);
     
-    // 在函数内部直接获取环境变量，避免模块加载时的问题
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const rawAnonKey = process.env.SUPABASE_ANON_KEY;
+    // 使用动态方式获取环境变量，避免模块加载时的问题
+    const getEnvVars = () => ({
+      supabaseUrl: process.env.SUPABASE_URL,
+      rawAnonKey: process.env.SUPABASE_ANON_KEY
+    });
+    
+    const { supabaseUrl, rawAnonKey } = getEnvVars();
     const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
     
     if (!supabaseUrl || !supabaseAnonKey) {
@@ -137,9 +141,13 @@ async function saveQueryRecord(
   responseData: any
 ): Promise<void> {
   try {
-    // 在函数内部直接初始化 Supabase 客户端，避免模块加载时的问题
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
+    // 使用动态方式获取环境变量，避免模块加载时的问题
+    const getEnvVars = () => ({
+      supabaseUrl: process.env.SUPABASE_URL,
+      rawServiceKey: process.env.SUPABASE_SERVICE_KEY
+    });
+    
+    const { supabaseUrl, rawServiceKey } = getEnvVars();
     const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
 
     if (!supabaseUrl || !supabaseServiceKey) {
