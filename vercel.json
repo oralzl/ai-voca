@@ -10,6 +10,6 @@
     }
   },
   "env": {
-    "FORCE_RUNTIME_TAG": "2025-01-30-fix"
+    "FORCE_RUNTIME_TAG": "2025-01-30-fix-v2"
   }
 }
