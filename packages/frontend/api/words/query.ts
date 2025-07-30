@@ -2,7 +2,7 @@
  * @fileoverview 单词查询API无服务器函数
  * @module api/words/query
  * @description 处理单词查询请求，集成AI服务、用户认证、数据库记录和XML解析
- * @version 3.0.6 - 使用动态函数获取环境变量
+ * @version 3.0.7 - 添加详细认证调试信息
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -77,26 +77,50 @@ interface AuthUser {
 
 async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
   try {
+    console.log('Authentication started', {
+      hasAuthHeader: !!req.headers.authorization,
+      authHeaderLength: req.headers.authorization?.length || 0,
+      timestamp: new Date().toISOString()
+    });
+    
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('Auth header missing or invalid format');
       return null;
     }
     
     const token = authHeader.substring(7);
-    
-    // 使用动态方式获取环境变量，避免模块加载时的问题
-    const getEnvVars = () => ({
-      supabaseUrl: process.env.SUPABASE_URL,
-      rawAnonKey: process.env.SUPABASE_ANON_KEY
+    console.log('Token extracted', {
+      tokenLength: token.length,
+      tokenPrefix: token.substring(0, 10) + '...'
     });
+    
+    // 使用 Function 构造函数创建隔离的执行环境
+    const getEnvVars = new Function(`
+      return {
+        supabaseUrl: process.env.SUPABASE_URL,
+        rawAnonKey: process.env.SUPABASE_ANON_KEY
+      };
+    `);
     
     const { supabaseUrl, rawAnonKey } = getEnvVars();
     const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
+    
+    console.log('Environment variables check', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasAnonKey: !!supabaseAnonKey,
+      anonKeyLength: supabaseAnonKey?.length || 0
+    });
     
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('Missing Supabase URL or anon key for authentication');
       return null;
     }
+    
+    console.log('Making auth request to Supabase', {
+      url: `${supabaseUrl}/auth/v1/user`,
+      hasToken: !!token
+    });
     
     // 使用Auth API直接验证token
     const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
@@ -106,12 +130,22 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
       }
     });
     
+    console.log('Auth response received', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+    
     if (!response.ok) {
-      console.error('Auth verification failed:', response.status);
+      console.error('Auth verification failed:', response.status, response.statusText);
       return null;
     }
     
     const user = await response.json();
+    console.log('User data received', {
+      hasUserId: !!user.id,
+      hasEmail: !!user.email
+    });
     
     return {
       id: user.id,
@@ -141,11 +175,13 @@ async function saveQueryRecord(
   responseData: any
 ): Promise<void> {
   try {
-    // 使用动态方式获取环境变量，避免模块加载时的问题
-    const getEnvVars = () => ({
-      supabaseUrl: process.env.SUPABASE_URL,
-      rawServiceKey: process.env.SUPABASE_SERVICE_KEY
-    });
+    // 使用 Function 构造函数创建隔离的执行环境
+    const getEnvVars = new Function(`
+      return {
+        supabaseUrl: process.env.SUPABASE_URL,
+        rawServiceKey: process.env.SUPABASE_SERVICE_KEY
+      };
+    `);
     
     const { supabaseUrl, rawServiceKey } = getEnvVars();
     const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
