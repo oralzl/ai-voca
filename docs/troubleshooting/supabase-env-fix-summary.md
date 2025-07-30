@@ -14,8 +14,11 @@
 - **状态**: ✅ 已修复
 
 #### `packages/frontend/api/words/query.ts`
-- **版本**: 3.0.1 → 3.0.2
-- **修复**: 移除了模块加载时的 console.log 语句，避免在模块加载时访问环境变量
+- **版本**: 3.0.1 → 3.0.2 → 3.0.3
+- **修复**: 
+  - 移除了模块加载时的 console.log 语句
+  - 修复了 `saveQueryRecord` 函数中的 supabase 变量访问问题
+  - 改为使用 `initializeSupabase()` 函数确保客户端正确初始化
 - **状态**: ✅ 已修复
 
 #### `packages/frontend/lib/api/supabase.ts`
@@ -47,6 +50,26 @@
 1. **延迟初始化**: 在 handler 函数中而不是模块加载时检查环境变量
 2. **错误处理**: 使用 try-catch 包装环境变量检查
 3. **函数式导出**: 导出初始化函数而不是直接导出实例
+4. **运行时访问**: 确保所有环境变量访问都在运行时进行
+
+## 关键修复点
+
+### 1. saveQueryRecord 函数修复
+**问题**: 函数直接使用全局 `supabase` 变量，可能在模块加载时访问
+**解决**: 改为调用 `initializeSupabase()` 函数确保客户端正确初始化
+
+```typescript
+// ❌ 之前的方式
+const { error } = await supabase.from('word_queries').insert(...);
+
+// ✅ 修复后的方式
+const supabaseClient = initializeSupabase();
+const { error } = await supabaseClient.from('word_queries').insert(...);
+```
+
+### 2. 环境变量访问时机
+**问题**: 在函数定义中访问环境变量
+**解决**: 确保所有环境变量访问都在函数调用时进行
 
 ## 验证方法
 
@@ -71,6 +94,12 @@ npm run dev:api
 1. **代码审查**: 确保新的 API 文件不在模块级别检查环境变量
 2. **测试**: 使用 `test-env.ts` API 验证环境变量配置
 3. **文档**: 参考故障排除文档了解最佳实践
+4. **函数调用**: 避免在模块加载时调用可能访问环境变量的函数
+
+## 提交历史
+
+- `6affe2c`: 初始修复 - 修复模块级别的环境变量检查
+- `48e0ac2`: 深度修复 - 修复 saveQueryRecord 函数的 supabase 初始化问题
 
 ## 下一步
 
