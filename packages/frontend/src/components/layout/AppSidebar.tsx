@@ -15,19 +15,29 @@ import { useAuth } from '@/contexts/AuthContext';
 import { UserProfile } from '@/components/Auth/UserProfile';
 import { AuthModal } from '@/components/Auth/AuthModal';
 
-const navigation = [{
-  name: '单词查询',
-  key: 'search' as const,
-  icon: Search
-}, {
-  name: '我的收藏',
-  key: 'favorites' as const,
-  icon: Star
-}, {
-  name: '调试',
-  key: 'debug' as const,
-  icon: Bug
-}];
+// 根据环境决定是否显示调试功能
+const getNavigation = () => {
+  const baseNavigation = [{
+    name: '单词查询',
+    key: 'search' as const,
+    icon: Search
+  }, {
+    name: '我的收藏',
+    key: 'favorites' as const,
+    icon: Star
+  }];
+  
+  // 只在开发环境显示调试功能
+  if (import.meta.env.DEV) {
+    baseNavigation.push({
+      name: '调试',
+      key: 'debug' as const,
+      icon: Bug
+    });
+  }
+  
+  return baseNavigation;
+};
 
 interface AppSidebarProps {
   className?: string;
@@ -66,7 +76,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           <SidebarGroup className="px-6 py-6">
             <SidebarGroupContent>
               <SidebarMenu className="space-y-2">
-                {navigation.map(item => {
+                {getNavigation().map(item => {
                   const Icon = item.icon;
                   return (
                     <SidebarMenuItem key={item.name}>
