@@ -258,24 +258,14 @@ export function WordResult({ result, onClear, onRetry, loading = false, original
             className="text-lg leading-relaxed bg-muted/50 p-4 rounded-lg"
             dangerouslySetInnerHTML={{ __html: data.definition }}
           />
+          {/* 简单解释合并显示 */}
+          {data.simpleExplanation && (
+            <div 
+              className="text-lg leading-relaxed bg-muted/50 p-4 rounded-lg"
+              dangerouslySetInnerHTML={{ __html: data.simpleExplanation }}
+            />
+          )}
         </div>
-
-        {/* 简单解释 */}
-        {data.simpleExplanation && (
-          <>
-            <Separator />
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <FileText className="w-5 h-5 text-purple-500" />
-                <h3 className="font-semibold">简单解释</h3>
-              </div>
-              <div 
-                className="text-lg leading-relaxed bg-purple-50 dark:bg-purple-950/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800"
-                dangerouslySetInnerHTML={{ __html: data.simpleExplanation }}
-              />
-            </div>
-          </>
-        )}
 
         <Separator />
 
