@@ -8,19 +8,9 @@ import axios from 'axios';
 import type { WordQueryRequest, WordQueryResponse } from '@ai-voca/shared';
 import { supabase } from '../lib/supabase';
 
-// 在Vercel部署环境中，API Routes使用相对路径
-// 本地开发时使用localhost:3000，生产/预览环境使用当前域名
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+// Vercel 部署环境中，API Routes 使用相对路径
+const API_BASE_URL = '';
 
-// 调试信息 - 临时添加
-console.log('🔍 API Configuration Debug:', {
-  VITE_API_URL: import.meta.env.VITE_API_URL,
-  API_BASE_URL,
-  MODE: import.meta.env.MODE,
-  PROD: import.meta.env.PROD,
-  DEV: import.meta.env.DEV,
-  all_env_vars: import.meta.env
-});
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

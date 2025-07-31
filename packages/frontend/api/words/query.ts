@@ -95,15 +95,8 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
       tokenPrefix: token.substring(0, 10) + '...'
     });
     
-    // 使用 Function 构造函数创建隔离的执行环境
-    const getEnvVars = new Function(`
-      return {
-        supabaseUrl: process.env.SUPABASE_URL,
-        rawAnonKey: process.env.SUPABASE_ANON_KEY
-      };
-    `);
-    
-    const { supabaseUrl, rawAnonKey } = getEnvVars();
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const rawAnonKey = process.env.SUPABASE_ANON_KEY;
     const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
     
     console.log('Environment variables check', {
@@ -175,15 +168,8 @@ async function saveQueryRecord(
   responseData: any
 ): Promise<void> {
   try {
-    // 使用 Function 构造函数创建隔离的执行环境
-    const getEnvVars = new Function(`
-      return {
-        supabaseUrl: process.env.SUPABASE_URL,
-        rawServiceKey: process.env.SUPABASE_SERVICE_KEY
-      };
-    `);
-    
-    const { supabaseUrl, rawServiceKey } = getEnvVars();
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const rawServiceKey = process.env.SUPABASE_SERVICE_KEY;
     const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
 
     if (!supabaseUrl || !supabaseServiceKey) {

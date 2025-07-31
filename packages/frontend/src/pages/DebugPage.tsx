@@ -18,7 +18,6 @@ export function DebugPage() {
     const envData = {
       VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
       VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY ? '已设置' : '未设置',
-      VITE_API_URL: import.meta.env.VITE_API_URL || '未设置',
       MODE: import.meta.env.MODE,
       PROD: import.meta.env.PROD,
       DEV: import.meta.env.DEV,
