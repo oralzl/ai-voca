@@ -273,9 +273,9 @@ function processItemTags(content: string): string {
         const explanation = extractTagContent(entry, 'explanation');
         
         if (pos && meaning) {
-          return `<span style="font-weight: bold; font-style: italic;">${pos}</span>：${meaning}`;
+          return `<strong><em>${pos}</em></strong> ${meaning}`;
         } else if (pos && explanation) {
-          return `<span style="font-weight: bold; font-style: italic;">${pos}</span>: ${explanation}`;
+          return `<strong><em>${pos}</em></strong> ${explanation}`;
         } else if (meaning) {
           return meaning;
         } else if (explanation) {
@@ -422,8 +422,8 @@ async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> 
   <text>lemma后的单词</text>
   <lemmatization_explanation>对词形还原结果的简要说明（如有）</lemmatization_explanation>
   <pronunciation>
-    <uk>英式音标（例如：/ˈsɑːmpl/）</uk>
-    <us>美式音标（例如：/ˈsæmpl/）</us>
+    <uk>英式音标（仅音标符号，例如：ˈsɑːmpl）</uk>
+    <us>美式音标（仅音标符号，例如：ˈsæmpl）</us>
   </pronunciation>
   <definition>
     <entry>
@@ -471,7 +471,7 @@ async function queryWord(request: WordQueryRequest): Promise<WordQueryResponse> 
 7. 提供相关的同义词和反义词
 8. 记忆技巧要实用且生动
 9. 必须同时提供英式音标（uk标签）和美式音标（us标签）
-10. 音标必须使用标准的国际音标符号，用斜杠包围（如 /ˈsɑːmpl/）
+10. 音标必须使用标准的国际音标符号，不要包含斜杠（如 ˈsɑːmpl）
 11. 英式音标和美式音标应该反映实际的发音差异
 12. 如果英式和美式发音相同，仍然需要在两个标签中都提供`;
 
