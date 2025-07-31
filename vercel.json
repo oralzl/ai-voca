@@ -10,7 +10,7 @@
     }
   },
   "env": {
-    "FORCE_RUNTIME_TAG": "2025-01-30-fix-v3",
+    "FORCE_RUNTIME_TAG": "2025-01-30-fix-v4-no-proxy",
     "FORCE_REBUILD": "true"
   }
 }
