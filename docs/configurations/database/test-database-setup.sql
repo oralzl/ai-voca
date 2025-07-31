@@ -41,12 +41,16 @@ CREATE TABLE IF NOT EXISTS public.user_favorites (
   word VARCHAR(100) NOT NULL,
   original_query VARCHAR(100),
   query_data JSONB NOT NULL,
+  raw_response TEXT,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   
   UNIQUE(user_id, word)
 );
+
+-- 添加字段注释
+COMMENT ON COLUMN public.user_favorites.raw_response IS 'AI原始响应内容，用于在收藏详情中展示';
 
 -- 5. 创建索引优化查询性能
 CREATE INDEX IF NOT EXISTS idx_user_queries_user_id ON public.word_queries(user_id);
