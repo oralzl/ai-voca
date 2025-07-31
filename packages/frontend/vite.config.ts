@@ -17,16 +17,8 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3000,
-    proxy: {
-      // 开发环境下，将 API 请求代理到生产环境
-      '/api': {
-        target: 'https://ai-voca-frontend.vercel.app',
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path
-      }
-    }
+    port: 3000
+    // 移除API代理配置，让预览环境使用自己的API Routes
   },
   build: {
     outDir: 'dist',
