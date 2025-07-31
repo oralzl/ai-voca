@@ -15,7 +15,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 
 import { 
   Star, 
-  StarOff,
   Volume2, 
   RotateCcw, 
   Copy, 
@@ -229,7 +228,7 @@ export function WordResult({ result, onClear, onRetry, loading = false, original
                   {result.isFavorited ? (
                     <Star className="w-4 h-4 sm:mr-2 fill-current" />
                   ) : (
-                    <StarOff className="w-4 h-4 sm:mr-2" />
+                    <Star className="w-4 h-4 sm:mr-2" />
                   )}
                   <span className="hidden sm:inline">
                     {result.isFavorited ? '已收藏' : '收藏'}

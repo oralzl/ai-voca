@@ -13,7 +13,6 @@ import { useFavorites } from '../hooks/useFavorites';
 import { 
   ArrowLeft,
   Star,
-  StarOff,
   RotateCcw,
   Copy,
   Loader2
@@ -278,7 +277,7 @@ export function WordResultPage({ result, originalQuery, onBack, onNewSearch, onR
             ) : result.isFavorited ? (
               <Star className="w-5 h-5 fill-current text-yellow-500" />
             ) : (
-              <StarOff className="w-5 h-5" />
+              <Star className="w-5 h-5" />
             )}
           </Button>
           
