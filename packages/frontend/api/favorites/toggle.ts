@@ -285,6 +285,25 @@ export default async function handler(
         return;
       }
       
+      // 🔄 清理对应的复习状态（取消收藏时清理）
+      try {
+        const { error: cleanupError } = await supabase
+          .from('user_word_state')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('word', normalizedWord);
+        
+        if (cleanupError) {
+          console.error('Failed to cleanup review state:', cleanupError);
+          // 非致命错误，继续返回成功
+        } else {
+          console.log('Successfully cleaned up review state:', normalizedWord);
+        }
+      } catch (cleanupError) {
+        console.error('Review cleanup error:', cleanupError);
+        // 清理失败不影响取消收藏功能
+      }
+      
       res.json({
         success: true,
         data: {
@@ -327,6 +346,50 @@ export default async function handler(
         .insert(favoriteRecord)
         .select('*')
         .single();
+      
+      // 🔄 同步到复习系统（收藏时自动加入复习）
+      if (!insertError && newFavorite) {
+        try {
+          const now = new Date().toISOString();
+          
+          // 检查是否已存在复习状态
+          const { data: existingState } = await supabase
+            .from('user_word_state')
+            .select('word')
+            .eq('user_id', user.id)
+            .eq('word', normalizedWord)
+            .single();
+          
+          if (!existingState) {
+            const { error: syncError } = await supabase
+              .from('user_word_state')
+              .insert({
+                user_id: user.id,
+                word: normalizedWord,
+                familiarity: 0,
+                difficulty: 2.5,
+                stability: null,
+                recall_p: null,
+                successes: 0,
+                lapses: 0,
+                last_seen_at: null,
+                next_due_at: now,
+                created_at: now,
+                updated_at: now
+              });
+            
+            if (syncError) {
+              console.error('Failed to sync to review system:', syncError);
+              // 非致命错误，继续返回成功
+            } else {
+              console.log('Successfully synced to review system:', normalizedWord);
+            }
+          }
+        } catch (syncError) {
+          console.error('Review sync error:', syncError);
+          // 同步失败不影响收藏功能
+        }
+      }
       
       if (insertError) {
         console.error('Error adding favorite:', insertError);
