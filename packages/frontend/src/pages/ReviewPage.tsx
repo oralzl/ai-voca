@@ -8,7 +8,6 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
 import { 
   ArrowLeft,
   Loader2,
@@ -23,7 +22,7 @@ interface ReviewPageProps {
 export function ReviewPage({ onBack }: ReviewPageProps) {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   useEffect(() => {
     // TODO: 实现复习流程
