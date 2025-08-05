@@ -13,6 +13,7 @@ components/
 │   └── UserProfile.tsx     # 用户资料
 ├── WordQueryForm.tsx        # 单词查询表单
 ├── WordResult.tsx          # 查询结果展示
+├── SentenceDisplay.tsx     # 句子展示组件
 └── *.css                   # 对应的样式文件
 ```
 
@@ -99,163 +100,194 @@ interface UserProfileProps {
 - ✅ 单词输入验证
 - ✅ 实时输入提示
 - ✅ 查询历史记录
-- ✅ 快捷键支持（Enter提交）
-- ✅ 加载状态显示
+- ✅ 响应式设计
 
 **Props接口**:
 ```typescript
 interface WordQueryFormProps {
-  onQuery: (word: string, includeExample?: boolean) => void;
-  loading: boolean;
-  onClear: () => void;
-  disabled?: boolean;
+  onQuery: (word: string) => void;  // 查询回调
+  loading?: boolean;                 // 加载状态
+}
+```
+
+### WordResult.tsx - 查询结果展示
+**功能**: 单词查询结果的详细展示
+
+**特性**:
+- ✅ 多维度信息展示（释义、例句、词性等）
+- ✅ 收藏功能集成
+- ✅ 响应式布局
+- ✅ 加载状态处理
+
+**Props接口**:
+```typescript
+interface WordResultProps {
+  result: WordQueryResult;   // 查询结果
+  onFavorite: (word: string) => void;  // 收藏回调
+  isFavorited?: boolean;     // 是否已收藏
+}
+```
+
+## 📚 复习组件
+
+### SentenceDisplay.tsx - 句子展示组件
+**功能**: 显示生成的复习句子，支持目标词高亮和新词汇提示
+
+**特性**:
+- ✅ 目标词高亮显示
+- ✅ 新词汇提示功能
+- ✅ 难度等级显示
+- ✅ 可展开详细信息
+- ✅ 响应式设计
+- ✅ 工具提示集成
+
+**Props接口**:
+```typescript
+interface SentenceDisplayProps {
+  item: GeneratedItem;       // 生成的句子数据
+  showNewTerms?: boolean;    // 是否显示新词汇提示
+  expandable?: boolean;      // 是否可展开详细信息
+  className?: string;        // 自定义样式类
 }
 ```
 
 **使用示例**:
 ```typescript
-<WordQueryForm 
-  onQuery={handleQuery}
-  loading={loading}
-  onClear={handleClear}
-  disabled={!user}
+<SentenceDisplay
+  item={generatedItem}
+  showNewTerms={true}
+  expandable={true}
+  className="mb-4"
 />
 ```
 
-### WordResult.tsx - 查询结果展示
-**功能**: 展示单词查询结果
+**核心功能**:
+- **目标词高亮**: 自动识别并高亮显示句子中的目标词汇
+- **新词汇提示**: 显示可能的新词汇及其释义和CEFR等级
+- **难度评估**: 显示句子的预测CEFR等级
+- **详细信息**: 可展开查看生成理由和新词汇详情
+- **响应式布局**: 适配不同屏幕尺寸
 
-**特性**:
-- ✅ 词形还原信息显示
-- ✅ 完整单词信息展示（音标、词性、释义等）
-- ✅ 例句列表显示
-- ✅ 智能重试功能
-- ✅ 原始响应查看
-- ✅ HTML内容安全渲染
+**子组件**:
+- `HighlightedText`: 高亮显示目标词的文本组件
+- `NewTermsTooltip`: 新词汇提示组件
+- `DifficultyBadge`: 难度等级显示组件
 
-**Props接口**:
+## 🎨 UI组件 (ui/)
+
+### 基础组件
+- `button.tsx` - 按钮组件
+- `input.tsx` - 输入框组件
+- `card.tsx` - 卡片容器
+- `badge.tsx` - 标签组件
+- `dialog.tsx` - 对话框组件
+- `form.tsx` - 表单组件
+- `label.tsx` - 标签组件
+- `separator.tsx` - 分割线组件
+- `skeleton.tsx` - 骨架屏组件
+- `tooltip.tsx` - 工具提示组件
+
+### 复合组件
+- `enhanced-search-input.tsx` - 增强搜索输入框
+- `dropdown-menu.tsx` - 下拉菜单
+- `sidebar.tsx` - 侧边栏组件
+- `sheet.tsx` - 侧边面板
+- `tabs.tsx` - 标签页组件
+- `collapsible.tsx` - 可折叠组件
+
+## 📋 组件开发规范
+
+### 1. 文件命名
+- 使用 PascalCase 命名组件文件
+- 组件名与文件名保持一致
+- 使用 `.tsx` 扩展名
+
+### 2. 组件结构
 ```typescript
-interface WordResultProps {
-  result: WordQueryResponse | null;
-  onClear: () => void;
-  onRetry: () => void;
-  loading: boolean;
-}
-```
+/**
+ * @fileoverview 组件描述
+ * @module ComponentName
+ * @description 详细功能说明
+ */
 
-**显示内容**:
-```typescript
-// 展示的单词信息
-{
-  word: "单词本身",
-  text: "词形还原后的原形",
-  lemmatizationExplanation: "词形还原说明",
-  pronunciation: "音标",
-  partOfSpeech: "词性",
-  definition: "中文释义（支持HTML）",
-  simpleExplanation: "英文解释",
-  examples: [/* 例句数组 */],
-  synonyms: [/* 同义词 */],
-  antonyms: [/* 反义词 */],
-  etymology: "词源信息",
-  memoryTips: "记忆技巧"
-}
-```
+import React from 'react';
+import { ComponentProps } from './types';
 
-## 🎨 样式设计
-
-### CSS模块化
-每个组件都有对应的CSS文件：
-```
-AuthModal.tsx     → AuthModal.css
-LoginForm.tsx     → LoginForm.css
-UserProfile.tsx   → UserProfile.css
-WordQueryForm.tsx → WordQueryForm.css
-WordResult.tsx    → WordResult.css
-```
-
-### 设计原则
-- **一致性**: 统一的颜色、字体、间距规范
-- **响应式**: 适配不同屏幕尺寸
-- **可访问性**: 支持键盘导航和屏幕阅读器
-- **现代化**: 简洁的现代UI设计
-
-### 主题色彩
-```css
-:root {
-  --primary-color: #3498db;     /* 主色调 - 蓝色 */
-  --secondary-color: #2c3e50;   /* 次要色 - 深灰 */
-  --success-color: #27ae60;     /* 成功色 - 绿色 */
-  --error-color: #e74c3c;       /* 错误色 - 红色 */
-  --warning-color: #f39c12;     /* 警告色 - 橙色 */
-  --background-color: #f8f9fa;  /* 背景色 - 浅灰 */
-  --text-color: #2c3e50;        /* 文本色 - 深灰 */
-  --border-color: #dee2e6;      /* 边框色 - 中灰 */
-}
-```
-
-## 🔧 开发规范
-
-### 组件设计原则
-1. **单一职责**: 每个组件只负责一个功能
-2. **Props类型**: 使用TypeScript定义清晰的Props接口
-3. **状态管理**: 优先使用useState和useEffect
-4. **错误处理**: 组件内部处理可预见的错误
-5. **可测试性**: 便于单元测试的组件结构
-
-### 命名规范
-- **组件名**: PascalCase（如 `AuthModal`）
-- **文件名**: 与组件名一致（如 `AuthModal.tsx`）
-- **CSS类名**: kebab-case（如 `.auth-modal`）
-- **Props名**: camelCase（如 `onClose`）
-
-### 代码结构
-```typescript
-// 1. 导入部分
-import React, { useState, useEffect } from 'react';
-import './ComponentName.css';
-
-// 2. 类型定义
 interface ComponentProps {
-  // Props定义
+  // Props 定义
 }
 
-// 3. 组件实现
-export const ComponentName: React.FC<ComponentProps> = ({ 
-  // Props解构
-}) => {
-  // 4. 状态和副作用
-  const [state, setState] = useState();
-  
-  // 5. 事件处理函数
-  const handleEvent = () => {
-    // 处理逻辑
-  };
-  
-  // 6. 渲染部分
-  return (
-    <div className="component-name">
-      {/* JSX内容 */}
-    </div>
-  );
-};
+export function ComponentName({ ... }: ComponentProps) {
+  // 组件实现
+}
+
+export default ComponentName;
 ```
 
-## 🧪 测试策略
+### 3. Props 设计原则
+- 使用 TypeScript 接口定义 Props
+- 提供合理的默认值
+- 支持扩展性（className、style等）
+- 添加 JSDoc 注释
 
-### 单元测试
-- **组件渲染**: 测试组件是否正常渲染
-- **Props传递**: 测试Props是否正确传递和处理
-- **事件处理**: 测试用户交互事件
-- **状态变化**: 测试状态更新逻辑
+### 4. 样式规范
+- 使用 Tailwind CSS 类名
+- 支持暗色模式
+- 响应式设计
+- 无障碍访问支持
 
-### 集成测试
-- **组件协作**: 测试组件间的交互
-- **Context使用**: 测试Context的正确使用
-- **API集成**: 测试API调用的集成
+### 5. 状态管理
+- 使用 React Hooks
+- 避免过度复杂的状态
+- 提供清晰的状态更新接口
 
----
+### 6. 错误处理
+- 提供错误边界
+- 显示友好的错误信息
+- 支持重试机制
 
-**📦 组件状态**: ✅ 生产环境稳定运行  
-**🎨 UI框架**: 自定义CSS + 响应式设计  
-**🔧 开发模式**: TypeScript + React Hooks
+### 7. 性能优化
+- 使用 React.memo 优化渲染
+- 避免不必要的重新渲染
+- 合理使用 useCallback 和 useMemo
+
+### 8. 测试支持
+- 组件应该是可测试的
+- 提供测试友好的接口
+- 支持模拟用户交互
+
+## 🔧 组件使用指南
+
+### 导入组件
+```typescript
+// 默认导入
+import SentenceDisplay from '../components/SentenceDisplay';
+
+// 命名导入
+import { SentenceDisplay } from '../components/SentenceDisplay';
+```
+
+### 类型导入
+```typescript
+import type { GeneratedItem } from '@ai-voca/shared';
+```
+
+### 样式定制
+```typescript
+<SentenceDisplay
+  item={item}
+  className="custom-class"
+  showNewTerms={true}
+  expandable={true}
+/>
+```
+
+## 📝 更新日志
+
+### v1.0.0
+- ✅ 基础认证组件
+- ✅ 单词查询组件
+- ✅ 复习系统组件
+- ✅ UI组件库集成
+- ✅ 响应式设计支持
+- ✅ 暗色模式支持

@@ -230,12 +230,18 @@
   - **完成文件**：
     - `packages/frontend/src/pages/ReviewPage.tsx`
 
-- [ ] **5.2 实现句子展示组件**
+- [x] **5.2 实现句子展示组件** ✅
   - 创建 `packages/frontend/src/components/SentenceDisplay.tsx`
   - 实现目标词高亮显示
   - 添加新词汇提示功能
   - 实现响应式设计
   - 引用需求：2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 3.4, 8.4
+  - **完成文件**：
+    - `packages/frontend/src/components/SentenceDisplay.tsx`
+    - `packages/frontend/src/components/SentenceDisplay.test.tsx`
+    - `packages/frontend/src/hooks/useReviewData.ts`
+    - 更新 `packages/frontend/src/pages/ReviewPage.tsx` 集成真实数据
+    - 更新 `packages/frontend/src/components/README.md` 添加组件文档
 
 - [ ] **5.3 实现词汇反馈卡片**
   - 创建 `packages/frontend/src/components/WordFeedbackCard.tsx`
@@ -267,19 +273,23 @@
 
 ### 6. 导航和布局更新
 
-- [ ] **6.1 更新底部导航栏**
+- [x] **6.1 更新底部导航栏** ✅
   - 修改 `packages/frontend/src/components/layout/BottomNavigation.tsx`
   - 添加复习 Tab 到导航列表
   - 实现复习数量显示
   - 添加激活状态管理
   - 引用需求：8.1, 8.2, 8.7, 8.8
+  - **完成文件**：
+    - `packages/frontend/src/components/layout/BottomNavigation.tsx`
 
-- [ ] **6.2 更新侧边栏导航**
+- [x] **6.2 更新侧边栏导航** ✅
   - 修改 `packages/frontend/src/components/layout/AppSidebar.tsx`
   - 添加复习菜单项
   - 实现开发环境调试功能
   - 更新导航状态管理
   - 引用需求：8.1, 8.2, 8.7, 8.8
+  - **完成文件**：
+    - `packages/frontend/src/components/layout/AppSidebar.tsx`
 
 - [ ] **6.3 实现复习计数 Hook**
   - 创建 `packages/frontend/src/hooks/useReviewCount.ts`
@@ -290,12 +300,15 @@
 
 ### 7. 集成和测试
 
-- [ ] **7.1 集成复习系统到主应用**
+- [x] **7.1 集成复习系统到主应用** ✅
   - 更新 `packages/frontend/src/App.tsx`
   - 添加复习路由配置
   - 集成复习页面组件
   - 实现页面切换逻辑
   - 引用需求：8.8, 技术约束（项目架构）
+  - **完成文件**：
+    - `packages/frontend/src/App.tsx`
+    - `packages/frontend/src/components/layout/AppLayout.tsx`
 
 - [ ] **7.2 实现端到端测试**
   - 创建 `packages/frontend/src/tests/review.e2e.test.ts`
