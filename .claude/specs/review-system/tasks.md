@@ -2,6 +2,9 @@
 
 ## 文档关系说明
 
+### 预览环境分支
+- Preview branch is test/preview-environment-setup
+- git commit 分支后才可以通过 vercel 预览
 
 ### 🔗 文档依赖关系
 
@@ -218,12 +221,14 @@
 
 ### 5. 前端组件实现
 
-- [ ] **5.1 实现复习主界面组件**
+- [x] **5.1 实现复习主界面组件** ✅
   - 创建 `packages/frontend/src/pages/ReviewPage.tsx`
   - 实现复习流程管理
   - 添加加载状态和错误处理
   - 集成进度显示
   - 引用需求：8.3, 8.4, 8.5, 8.6, 8.7, 8.8
+  - **完成文件**：
+    - `packages/frontend/src/pages/ReviewPage.tsx`
 
 - [ ] **5.2 实现句子展示组件**
   - 创建 `packages/frontend/src/components/SentenceDisplay.tsx`
