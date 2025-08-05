@@ -9,11 +9,15 @@
   "scripts": {
     "dev": "npm run dev:frontend",
     "dev:frontend": "npm run dev -w @ai-voca/frontend",
+    "dev:review-engine": "npm run dev -w @ai-voca/review-engine",
     "dev:vercel": "cd packages/frontend && vercel dev",
-    "build": "npm run build -w @ai-voca/shared && npm run build -w @ai-voca/frontend",
+    "build": "npm run build -w @ai-voca/shared && npm run build -w @ai-voca/review-engine && npm run build -w @ai-voca/frontend",
     "build:frontend": "npm run build -w @ai-voca/frontend",
-    "test": "npm run test -w @ai-voca/shared && npm run test -w @ai-voca/frontend",
-    "lint": "npm run lint -w @ai-voca/shared && npm run lint -w @ai-voca/frontend",
+    "build:review-engine": "npm run build -w @ai-voca/review-engine",
+    "test": "npm run test -w @ai-voca/shared && npm run test -w @ai-voca/review-engine && npm run test -w @ai-voca/frontend",
+    "test:review-engine": "npm run test -w @ai-voca/review-engine",
+    "lint": "npm run lint -w @ai-voca/shared && npm run lint -w @ai-voca/review-engine && npm run lint -w @ai-voca/frontend",
+    "lint:review-engine": "npm run lint -w @ai-voca/review-engine",
     "clean": "rm -rf node_modules packages/*/node_modules packages/*/dist"
   },
   "devDependencies": {

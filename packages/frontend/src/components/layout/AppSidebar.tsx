@@ -17,13 +17,17 @@ import { AuthModal } from '@/components/Auth/AuthModal';
 
 // 根据环境决定是否显示调试功能
 const getNavigation = () => {
-  const baseNavigation = [{
+  const baseNavigation: Array<{
+    name: string;
+    key: 'search' | 'favorites' | 'debug';
+    icon: React.ComponentType<{ className?: string }>;
+  }> = [{
     name: '单词查询',
-    key: 'search' as const,
+    key: 'search',
     icon: Search
   }, {
     name: '我的收藏',
-    key: 'favorites' as const,
+    key: 'favorites',
     icon: Star
   }];
   
@@ -31,7 +35,7 @@ const getNavigation = () => {
   if (import.meta.env.DEV) {
     baseNavigation.push({
       name: '调试',
-      key: 'debug' as const,
+      key: 'debug',
       icon: Bug
     });
   }
