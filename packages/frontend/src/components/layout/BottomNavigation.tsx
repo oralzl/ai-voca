@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Star, User, Bug } from 'lucide-react';
+import { Search, Star, BookOpen, User, Bug } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const navigation = [{
@@ -10,6 +10,10 @@ const navigation = [{
   name: '我的收藏',
   key: 'favorites' as const,
   icon: Star
+}, {
+  name: '复习',
+  key: 'review' as const,
+  icon: BookOpen
 }, {
   name: '我的',
   key: 'profile' as const,
@@ -22,8 +26,8 @@ const navigation = [{
 
 interface BottomNavigationProps {
   className?: string;
-  currentPage: 'search' | 'favorites' | 'profile' | 'debug';
-  onPageChange: (page: 'search' | 'favorites' | 'profile' | 'debug') => void;
+  currentPage: 'search' | 'favorites' | 'review' | 'profile' | 'debug';
+  onPageChange: (page: 'search' | 'favorites' | 'review' | 'profile' | 'debug') => void;
 }
 
 export const BottomNavigation: React.FC<BottomNavigationProps> = ({ 
@@ -31,7 +35,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   currentPage, 
   onPageChange 
 }) => {
-  const isActive = (key: 'search' | 'favorites' | 'profile' | 'debug') => currentPage === key;
+  const isActive = (key: 'search' | 'favorites' | 'review' | 'profile' | 'debug') => currentPage === key;
 
   return (
     <nav className={cn(
