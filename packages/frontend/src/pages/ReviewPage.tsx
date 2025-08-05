@@ -34,7 +34,6 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     candidatesError,
     refreshCandidates,
     generatedItems,
-    generatedLoading,
     generatedError,
     generateSentences,
     userPrefs,
@@ -42,7 +41,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   } = useReviewData();
 
   const [currentStep, setCurrentStep] = useState<'loading' | 'candidates' | 'reviewing' | 'completed'>('loading');
-  const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
+  const [, setSelectedTargets] = useState<string[]>([]);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
 
   // 处理候选词选择
@@ -203,7 +202,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                 </p>
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {candidates.slice(0, 12).map((candidate, index) => (
+                  {candidates.slice(0, 12).map((candidate) => (
                     <CandidateWordCard
                       key={candidate.word}
                       candidate={candidate}
