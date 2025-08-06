@@ -107,13 +107,12 @@ async function syncFavoritesToReview(supabase: any, userId: string): Promise<str
       user_id: userId,
       word: f.word,
       familiarity: 0,
-      difficulty: 2.5,
-      stability: null,
-      recall_p: null,
-      successes: 0,
-      lapses: 0,
       last_seen_at: null,
       next_due_at: now, // 新词汇立即加入复习
+      interval_days: 1,
+      ease_factor: 2.5,
+      review_count: 0,
+      lapse_count: 0,
       created_at: f.created_at || now,
       updated_at: now
     }));
