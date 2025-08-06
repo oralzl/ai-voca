@@ -65,13 +65,13 @@ function HighlightedText({ text, targets, className = '' }: HighlightedTextProps
 
     // 添加高亮的目标词
     parts.push(
-      <span
+      <mark
         key={`target-${index}`}
-        className={`${className} bg-yellow-200 dark:bg-yellow-800/30 font-semibold px-1 rounded`}
+        className={`bg-yellow-200 dark:bg-yellow-800/30 font-semibold px-1 rounded`}
         title={`目标词: ${target.word}`}
       >
         {text.slice(target.begin, target.end)}
-      </span>
+      </mark>
     );
 
     lastIndex = target.end;
