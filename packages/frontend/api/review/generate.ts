@@ -44,17 +44,34 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
     const rawAnonKey = process.env.SUPABASE_ANON_KEY;
     const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
     
+    console.log('Auth environment check', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasAnonKey: !!supabaseAnonKey,
+      anonKeyLength: supabaseAnonKey?.length || 0
+    });
+    
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('Missing Supabase URL or anon key for authentication');
       return null;
     }
     
     // 使用Auth API直接验证token
+    console.log('Making auth request to Supabase', {
+      url: `${supabaseUrl}/auth/v1/user`,
+      hasToken: !!token
+    });
+    
     const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
       headers: {
         'apikey': supabaseAnonKey,
         'Authorization': `Bearer ${token}`
       }
+    });
+    
+    console.log('Auth response received', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
     });
     
     if (!response.ok) {
