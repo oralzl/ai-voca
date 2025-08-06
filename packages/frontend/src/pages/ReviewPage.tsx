@@ -70,20 +70,14 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     reset();
   };
 
-  // 自动处理状态转换
+  // 自动处理状态转换 - 防止无限循环
   useEffect(() => {
-    if (syncStatus.isSyncing) {
+    if (syncStatus.isSyncing || candidatesLoading) {
       setCurrentStep('loading');
-    } else if (candidatesLoading) {
-      setCurrentStep('loading');
-    } else if (candidatesError) {
-      setCurrentStep('loading');
-    } else if (candidates.length > 0 && currentStep === 'loading') {
+    } else {
       setCurrentStep('candidates');
-    } else if (generatedItems.length > 0 && currentStep === 'reviewing') {
-      // 保持在reviewing状态
     }
-  }, [candidatesLoading, candidatesError, candidates.length, generatedItems.length, currentStep, syncStatus.isSyncing]);
+  }, [syncStatus.isSyncing, candidatesLoading]);
 
   if (!user) {
     return (
