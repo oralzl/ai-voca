@@ -31,6 +31,7 @@ interface UseFavoritesReturn {
   getFavoritesList: (page?: number, pageSize?: number, search?: string) => Promise<FavoriteListResponse>;
   refreshFavorites: () => Promise<void>;
   clearError: () => void;
+  syncToReview: () => Promise<void>;
 }
 
 export function useFavorites(): UseFavoritesReturn {
@@ -46,50 +47,6 @@ export function useFavorites(): UseFavoritesReturn {
     setState(prev => ({ ...prev, error: null }));
   }, []);
 
-  // 切换收藏状态
-  const toggleFavorite = useCallback(async (
-    word: string,
-    originalQuery?: string,
-    queryData?: WordExplanation,
-    rawResponse?: string,
-    notes?: string
-  ): Promise<boolean> => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-
-    try {
-      const result = await favoritesApi.toggleFavorite({
-        word: word.toLowerCase().trim(),
-        originalQuery,
-        queryData,
-        rawResponse,
-        notes
-      });
-
-      // 更新本地状态
-      if (result.data?.isFavorited && result.data.favorite) {
-        // 添加到收藏
-        setState(prev => ({
-          ...prev,
-          favorites: [...prev.favorites, result.data!.favorite!],
-          loading: false
-        }));
-      } else {
-        // 从收藏中移除
-        setState(prev => ({
-          ...prev,
-          favorites: prev.favorites.filter(fav => fav.word !== word.toLowerCase().trim()),
-          loading: false
-        }));
-      }
-
-      return result.data?.isFavorited || false;
-
-    } catch (error: any) {
-      const errorMessage = error.message || '操作失败，请稍后重试';
-      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
-      throw error;
-    }
-  }, []);
 
   // 检查收藏状态
   const checkFavorite = useCallback(async (word: string): Promise<{ 
@@ -187,9 +144,7 @@ export function useFavorites(): UseFavoritesReturn {
     }
   }, [getAccessToken]);
 
-  /**
-   * 切换收藏状态并自动同步到复习系统
-   */
+  // 切换收藏状态并自动同步到复习系统
   const toggleFavorite = useCallback(async (
     word: string,
     originalQuery?: string,
