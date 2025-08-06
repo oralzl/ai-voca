@@ -138,11 +138,10 @@ async function getCandidateWords(
       .select(`
         word,
         familiarity,
-        difficulty,
-        stability,
-        recall_p,
-        successes,
-        lapses,
+        interval_days,
+        ease_factor,
+        review_count,
+        lapse_count,
         last_seen_at,
         next_due_at
       `)
@@ -166,11 +165,10 @@ async function getCandidateWords(
         .select(`
           word,
           familiarity,
-          difficulty,
-          stability,
-          recall_p,
-          successes,
-          lapses,
+          interval_days,
+          ease_factor,
+          review_count,
+          lapse_count,
           last_seen_at,
           next_due_at
         `)
@@ -194,11 +192,11 @@ async function getCandidateWords(
       word: word.word,
       state: {
         familiarity: word.familiarity || 0,
-        difficulty: word.difficulty || 2.5,
-        stability: word.stability,
-        recall_p: word.recall_p,
-        successes: word.successes || 0,
-        lapses: word.lapses || 0,
+        difficulty: word.ease_factor || 2.5,
+        stability: word.interval_days,
+        recall_p: null,
+        successes: word.review_count || 0,
+        lapses: word.lapse_count || 0,
         last_seen_at: word.last_seen_at,
         next_due_at: word.next_due_at
       },
