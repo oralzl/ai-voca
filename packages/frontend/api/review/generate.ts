@@ -92,12 +92,12 @@ interface LLMConfig {
 }
 
 function getLLMConfig(): LLMConfig {
-  const apiUrl = process.env.AIHUB_API_URL || 'https://api.aihub.com';
-  const apiKey = process.env.AIHUB_API_KEY || '';
-  const model = process.env.AIHUB_MODEL || 'gemini-1.5-flash';
+  const apiUrl = process.env.AIHUBMIX_API_URL || process.env.AIHUB_API_URL || 'https://aihubmix.com/v1';
+  const apiKey = process.env.AIHUBMIX_API_KEY || process.env.AIHUB_API_KEY || '';
+  const model = process.env.AIHUBMIX_MODEL || process.env.AIHUB_MODEL || 'gemini-1.5-flash';
   
   if (!apiKey) {
-    throw new Error('AIHUB_API_KEY environment variable is required');
+    throw new Error('AIHUB_API_KEY or AIHUBMIX_API_KEY environment variable is required');
   }
   
   return {
