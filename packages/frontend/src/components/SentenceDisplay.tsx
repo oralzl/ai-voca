@@ -40,65 +40,11 @@ interface HighlightedTextProps {
 }
 
 /**
- * 高亮显示目标词的文本组件
+ * 显示文本组件（不再高亮目标词）
  */
 function HighlightedText({ text, targets, className = '' }: HighlightedTextProps) {
-  if (targets.length === 0) {
-    return <span className={className}>{text}</span>;
-  }
-
-  // 按位置排序目标词
-  const sortedTargets = [...targets].sort((a, b) => a.begin - b.begin);
-  
-  const parts: JSX.Element[] = [];
-  let lastIndex = 0;
-
-  // 调试日志
-  console.log('Highlighting text:', text);
-  console.log('Targets:', targets);
-
-  sortedTargets.forEach((target, index) => {
-    // 确保索引在有效范围内
-    const safeBegin = Math.max(0, Math.min(target.begin, text.length));
-    const safeEnd = Math.max(safeBegin, Math.min(target.end + 1, text.length));
-
-    // 添加目标词前的文本
-    if (safeBegin > lastIndex) {
-      parts.push(
-        <span key={`text-${index}-before`} className={className}>
-          {text.slice(lastIndex, safeBegin)}
-        </span>
-      );
-    }
-
-    // 获取实际高亮的文本内容
-    const highlightedText = text.slice(safeBegin, safeEnd);
-    console.log(`Highlighting '${target.word}' at [${safeBegin}, ${safeEnd}]: '${highlightedText}'`);
-
-    // 添加高亮的目标词
-    parts.push(
-      <mark
-        key={`target-${index}`}
-        className="bg-yellow-200 dark:bg-yellow-800/30 font-semibold px-1 rounded"
-        title={`目标词: ${target.word}`}
-      >
-        {highlightedText}
-      </mark>
-    );
-
-    lastIndex = safeEnd;
-  });
-
-  // 添加剩余的文本
-  if (lastIndex < text.length) {
-    parts.push(
-      <span key="text-end" className={className}>
-        {text.slice(lastIndex)}
-      </span>
-    );
-  }
-
-  return <>{parts}</>;
+  // 直接显示文本，不再高亮任何内容
+  return <span className={className}>{text}</span>;
 }
 
 /**

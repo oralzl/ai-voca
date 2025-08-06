@@ -497,19 +497,11 @@ export default async function handler(
       });
     }
     
-    // 8. 验证所有目标词都被包含，并修正索引
+    // 8. 验证所有目标词都被包含
     const generatedTargets = new Set<string>();
     generatedResult.items.forEach(item => {
       item.targets.forEach(target => {
         generatedTargets.add(target.word.toLowerCase());
-        
-        // 确保索引在有效范围内
-        const textLength = item.text.length;
-        target.begin = Math.max(0, Math.min(target.begin, textLength - 1));
-        target.end = Math.max(target.begin, Math.min(target.end, textLength - 1));
-        
-        // 调试日志
-        console.log(`Validated target indices for '${target.word}': [${target.begin}, ${target.end}] in text: "${item.text}"`);
       });
     });
     
