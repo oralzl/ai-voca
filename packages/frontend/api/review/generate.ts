@@ -111,7 +111,7 @@ interface LLMConfig {
 function getLLMConfig(): LLMConfig {
   const apiUrl = process.env.AIHUBMIX_API_URL || process.env.AIHUB_API_URL || 'https://aihubmix.com/v1';
   const apiKey = process.env.AIHUBMIX_API_KEY || process.env.AIHUB_API_KEY || '';
-  const model = process.env.AIHUBMIX_MODEL || process.env.AIHUB_MODEL || 'gemini-1.5-flash';
+  const model = process.env.AIHUBMIX_MODEL || process.env.AIHUB_MODEL || 'gemini-2.5-flash-lite-preview-06-17';
   
   if (!apiKey) {
     throw new Error('AIHUB_API_KEY or AIHUBMIX_API_KEY environment variable is required');
@@ -147,7 +147,17 @@ async function callLLM(request: LLMRequest, config: LLMConfig): Promise<LLMRespo
   const { prompt, maxTokens = 1000, temperature = 0.7 } = request;
   
   try {
-    const response = await fetch(`${config.apiUrl}/v1/chat/completions`, {
+    const apiEndpoint = config.apiUrl.includes('aihubmix.com') 
+      ? `${config.apiUrl}/chat/completions`
+      : `${config.apiUrl}/v1/chat/completions`;
+    
+    console.log('Calling LLM API:', {
+      endpoint: apiEndpoint,
+      model: config.model,
+      promptLength: prompt.length
+    });
+    
+    const response = await fetch(apiEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -170,6 +180,11 @@ async function callLLM(request: LLMRequest, config: LLMConfig): Promise<LLMRespo
     
     if (!response.ok) {
       const errorText = await response.text();
+      console.error('LLM API error details:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorText
+      });
       throw new Error(`LLM API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
     
@@ -408,6 +423,13 @@ export default async function handler(
     // 3. 获取LLM配置
     const llmConfig = getLLMConfig();
     
+    console.log('LLM Config loaded:', {
+      apiUrl: llmConfig.apiUrl,
+      model: llmConfig.model,
+      hasApiKey: !!llmConfig.apiKey,
+      apiKeyPrefix: llmConfig.apiKey ? llmConfig.apiKey.substring(0, 10) + '...' : 'none'
+    });
+    
     // 4. 构建提示词
     const prompt = buildPrompt(
       requestBody.targets,
@@ -416,6 +438,7 @@ export default async function handler(
     );
     
     console.log('Generated prompt for targets:', requestBody.targets);
+    console.log('Prompt length:', prompt.length);
     
     // 5. 调用LLM（带重试机制）
     let llmResponse: LLMResponse;
