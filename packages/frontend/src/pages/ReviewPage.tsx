@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useReviewData } from '../hooks/useReviewData';
+import { useReviewSync } from '../hooks/useReviewSync';
 import { SentenceDisplay } from '../components/SentenceDisplay';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
@@ -39,6 +40,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     userPrefs,
     reset
   } = useReviewData();
+  const { syncStatus } = useReviewSync();
 
   const [currentStep, setCurrentStep] = useState<'loading' | 'candidates' | 'reviewing' | 'completed'>('loading');
   const [, setSelectedTargets] = useState<string[]>([]);
@@ -70,7 +72,9 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
 
   // 自动处理状态转换
   useEffect(() => {
-    if (candidatesLoading) {
+    if (syncStatus.isSyncing) {
+      setCurrentStep('loading');
+    } else if (candidatesLoading) {
       setCurrentStep('loading');
     } else if (candidatesError) {
       setCurrentStep('loading');
@@ -79,7 +83,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     } else if (generatedItems.length > 0 && currentStep === 'reviewing') {
       // 保持在reviewing状态
     }
-  }, [candidatesLoading, candidatesError, candidates.length, generatedItems.length, currentStep]);
+  }, [candidatesLoading, candidatesError, candidates.length, generatedItems.length, currentStep, syncStatus.isSyncing]);
 
   if (!user) {
     return (
@@ -98,7 +102,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   }
 
   // 加载状态
-  if (currentStep === 'loading' || candidatesLoading) {
+  if (currentStep === 'loading' || candidatesLoading || syncStatus.isSyncing) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -106,7 +110,11 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
             <div className="text-center space-y-4">
               <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
               <h2 className="text-xl font-semibold">准备复习</h2>
-              <p className="text-muted-foreground">正在加载复习内容...</p>
+              <p className="text-muted-foreground">
+                {syncStatus.isSyncing 
+                  ? `正在同步 ${syncStatus.syncedWords.length} 个词汇到复习系统...` 
+                  : '正在加载复习内容...'}
+              </p>
             </div>
           </CardContent>
         </Card>
