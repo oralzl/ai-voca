@@ -251,6 +251,7 @@ Output Contract:
       {
         "sid": "string",
         "text": "string",
+        "translation": "string",
         "targets": [{"word":"string","begin":number,"end":number}, ...],
         "self_eval": {
           "predicted_cefr": "A1|A2|B1|B2|C1|C2",
@@ -293,6 +294,8 @@ ${constraintsJson}
 
 Create ONE engaging narrative that naturally incorporates all target words in meaningful context. Focus on creating memorable connections between the words.
 
+Additionally, provide an accurate Chinese translation of the complete narrative that preserves the meaning and context of the original English text.
+
 Return STRICT JSON ONLY.`;
 }
 
@@ -315,7 +318,7 @@ function parseLLMResponse(response: string): GenerateItemsOutput {
     
     // 验证每个item的结构
     const validatedItems: GeneratedItem[] = parsed.items.map((item: any, index: number) => {
-      if (!item.sid || !item.text || !item.targets || !item.self_eval) {
+      if (!item.sid || !item.text || !item.translation || !item.targets || !item.self_eval) {
         throw new Error(`Item ${index} missing required fields`);
       }
       
@@ -363,6 +366,7 @@ function createFallbackResponse(targets: string[]): GenerateItemsOutput {
     return {
       sid: `fallback_${index + 1}`,
       text: sentence,
+      translation: `我今天学习了单词"${target"。`,
       targets: [{
         word: target,
         begin: targetIndex >= 0 ? targetIndex : 4,

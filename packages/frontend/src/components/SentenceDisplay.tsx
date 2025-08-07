@@ -13,7 +13,8 @@ import {
   Info,
   BookOpen,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Languages
 } from 'lucide-react';
 import type { 
   GeneratedItem,
@@ -121,19 +122,33 @@ export function SentenceDisplay({
   className = ''
 }: SentenceDisplayProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showTranslation, setShowTranslation] = useState(false);
   const hasNewTerms = item.self_eval.new_terms && item.self_eval.new_terms.length > 0;
 
   return (
     <Card className={`${className}`}>
       <CardContent className="p-4 space-y-3">
         {/* 句子内容 */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="text-lg leading-relaxed">
             <HighlightedText
               text={item.text}
               className="text-foreground"
             />
           </div>
+          
+          {/* 中文翻译 */}
+          {showTranslation && item.translation && (
+            <div className="pt-3 border-t border-border/50">
+              <div className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                <Languages className="w-4 h-4" />
+                <span>中文翻译</span>
+              </div>
+              <div className="text-base text-foreground leading-relaxed">
+                {item.translation}
+              </div>
+            </div>
+          )}
           
           {/* 目标词列表 */}
           <div className="flex flex-wrap gap-1">
@@ -160,6 +175,19 @@ export function SentenceDisplay({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* 翻译按钮 */}
+            {item.translation && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowTranslation(!showTranslation)}
+                className="h-6 px-2 text-xs"
+              >
+                <Languages className="w-3 h-3 mr-1" />
+                {showTranslation ? '隐藏翻译' : '显示翻译'}
+              </Button>
+            )}
+            
             {/* 新词汇提示 */}
             {showNewTerms && hasNewTerms && (
               <NewTermsTooltip newTerms={item.self_eval.new_terms!} />
