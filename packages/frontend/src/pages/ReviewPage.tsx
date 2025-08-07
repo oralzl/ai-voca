@@ -43,14 +43,25 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   const { syncStatus } = useReviewSync();
 
   const [currentStep, setCurrentStep] = useState<'loading' | 'candidates' | 'reviewing' | 'completed'>('loading');
-  const [, setSelectedTargets] = useState<string[]>([]);
+  const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
 
   // 处理候选词选择
-  const handleTargetSelection = (targets: string[]) => {
-    setSelectedTargets(targets);
-    setCurrentStep('reviewing');
-    generateSentences(targets);
+  const handleTargetToggle = (word: string) => {
+    setSelectedTargets(prev => {
+      if (prev.includes(word)) {
+        return prev.filter(w => w !== word);
+      } else {
+        return [...prev, word].slice(0, 8); // 最多选择8个
+      }
+    });
+  };
+
+  const handleStartReview = () => {
+    if (selectedTargets.length > 0) {
+      setCurrentStep('reviewing');
+      generateSentences(selectedTargets);
+    }
   };
 
   // 处理句子切换
@@ -198,20 +209,30 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold">选择要复习的词汇</h3>
-                <p className="text-sm text-muted-foreground">
-                  最多选择 8 个词汇进行复习
-                </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">选择要复习的词汇</h3>
+                    <p className="text-sm text-muted-foreground">
+                      已选择 {selectedTargets.length}/8 个词汇
+                    </p>
+                  </div>
+                  {selectedTargets.length > 0 && (
+                    <Button 
+                      onClick={handleStartReview}
+                      className="flex items-center gap-2"
+                    >
+                      开始复习 ({selectedTargets.length})
+                    </Button>
+                  )}
+                </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                   {candidates.slice(0, 12).map((candidate) => (
                     <CandidateWordCard
                       key={candidate.word}
                       candidate={candidate}
-                      onSelect={() => {
-                        const targets = [candidate.word];
-                        handleTargetSelection(targets);
-                      }}
+                      isSelected={selectedTargets.includes(candidate.word)}
+                      onToggle={() => handleTargetToggle(candidate.word)}
                     />
                   ))}
                 </div>
@@ -334,27 +355,36 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
 }
 
 /**
- * 候选词卡片组件
+ * 候选词卡片组件（支持多选）
  */
 function CandidateWordCard({ 
   candidate, 
-  onSelect 
+  isSelected,
+  onToggle 
 }: { 
   candidate: CandidateWord; 
-  onSelect: () => void;
+  isSelected: boolean;
+  onToggle: () => void;
 }) {
   return (
     <Card 
-      className="cursor-pointer hover:bg-accent/50 transition-colors"
-      onClick={onSelect}
+      className={`cursor-pointer transition-all ${
+        isSelected 
+          ? 'ring-2 ring-primary bg-primary/10' 
+          : 'hover:bg-accent/50'
+      }`}
+      onClick={onToggle}
     >
       <CardContent className="p-3">
         <div className="text-center space-y-2">
-          <div className="font-semibold text-sm">{candidate.word}</div>
+          <div className={`font-semibold text-sm ${isSelected ? 'text-primary' : ''}`}>
+            {candidate.word}
+          </div>
           <div className="flex justify-center gap-1">
             <Badge variant="outline" className="text-xs">
               熟悉度: {candidate.state.familiarity}/5
             </Badge>
+            {isSelected && <Badge variant="default" className="text-xs bg-primary">已选</Badge>}
           </div>
         </div>
       </CardContent>
