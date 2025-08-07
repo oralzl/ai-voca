@@ -56,7 +56,7 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
 
 function ratingToDbValue(rating: Rating): number {
   const ratingMap: Record<Rating, number> = {
-    'again': 1, 'hard': 2, 'good': 3, 'easy': 4, 'unknown': 5
+    'again': 1, 'hard': 2, 'good': 3, 'easy': 4
   };
   return ratingMap[rating];
 }
@@ -275,7 +275,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
     
-    const validRatings: Rating[] = ['again', 'hard', 'good', 'easy', 'unknown'];
+    const validRatings: Rating[] = ['again', 'hard', 'good', 'easy'];
     if (!validRatings.includes(requestBody.rating)) {
       res.status(400).json({ success: false, error: '无效的rating值' });
       return;

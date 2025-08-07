@@ -46,7 +46,6 @@ export function fsrsUpdate(prev: WordState, rating: Rating, now: Date): { next: 
   
   switch (rating) {
     case 'again':
-    case 'unknown':
       // 降低熟悉度，但不低于最小值
       newFamiliarity = Math.max(FAMILIARITY_MIN, currentFamiliarity - 1);
       break;
@@ -69,7 +68,7 @@ export function fsrsUpdate(prev: WordState, rating: Rating, now: Date): { next: 
   
   // 更新成功/失败计数
   const isSuccess = rating === 'good' || rating === 'easy';
-  const isFailure = rating === 'again' || rating === 'unknown';
+  const isFailure = rating === 'again';
   
   const newSuccesses = (prev.successes ?? 0) + (isSuccess ? 1 : 0);
   const newLapses = (prev.lapses ?? 0) + (isFailure ? 1 : 0);
