@@ -16,8 +16,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import type { 
-  GeneratedItem, 
-  TargetPosition, 
+  GeneratedItem,
   NewTerm,
   CEFRLevel 
 } from '@ai-voca/shared';
