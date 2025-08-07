@@ -9,6 +9,7 @@ import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { WordFeedbackCard } from './WordFeedbackCard';
 import { CheckCircle } from 'lucide-react';
+import { cn } from '../lib/utils';
 import type { Rating } from '@ai-voca/shared';
 
 interface WordFeedbackGridProps {

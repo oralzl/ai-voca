@@ -6,7 +6,6 @@
 
 import { render, screen, fireEvent } from '@testing-library/react';
 import { WordFeedbackCard } from './WordFeedbackCard';
-import type { Rating } from '@ai-voca/shared';
 
 describe('WordFeedbackCard', () => {
   const mockOnFeedback = jest.fn();
