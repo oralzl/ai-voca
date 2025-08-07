@@ -50,7 +50,7 @@ export function WordFeedbackGrid({
     }
   };
 
-  const isComplete = Object.keys(wordFeedback).length === words.length;
+  const isComplete = Object.keys(wordFeedback).length === words.length && words.every(word => wordFeedback[word] !== undefined);
   const progress = (Object.keys(wordFeedback).length / words.length) * 100;
 
   return (

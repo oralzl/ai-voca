@@ -150,14 +150,6 @@ export function SentenceDisplay({
             </div>
           )}
           
-          {/* 目标词列表 */}
-          <div className="flex flex-wrap gap-1">
-            {item.targets.map((target, index) => (
-              <Badge key={index} variant="outline" className="text-xs">
-                {target.word}
-              </Badge>
-            ))}
-          </div>
         </div>
 
         {/* 底部信息栏 */}

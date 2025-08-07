@@ -5,10 +5,8 @@
  */
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
-import { Progress } from './ui/progress';
-import { WordFeedbackGrid } from './WordFeedbackGrid';
 import { SentenceDisplay } from './SentenceDisplay';
 import { 
   Send,
@@ -94,20 +92,49 @@ function DifficultyFeedback({ feedback, onFeedback }: DifficultyFeedbackProps) {
 }
 
 /**
- * 复习进度显示
+ * 紧凑的词汇反馈组件
  */
-function ReviewProgress({ current, total }: { current: number; total: number }) {
-  const progress = (current / total) * 100;
-  
+function CompactWordFeedback({
+  word,
+  feedback,
+  onFeedback,
+  disabled
+}: {
+  word: string;
+  feedback: Rating | undefined;
+  onFeedback: (rating: Rating) => void;
+  disabled?: boolean;
+}) {
+  const ratingOptions = [
+    { value: 'again' as const, label: '不记得', emoji: '😵', color: 'text-red-500' },
+    { value: 'hard' as const, label: '困难', emoji: '🤔', color: 'text-orange-500' },
+    { value: 'good' as const, label: '良好', emoji: '😊', color: 'text-green-500' },
+    { value: 'easy' as const, label: '容易', emoji: '😎', color: 'text-blue-500' },
+    { value: 'unknown' as const, label: '不熟悉', emoji: '🤷', color: 'text-purple-500' }
+  ];
+
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-center">
-        <span className="text-sm font-medium">复习进度</span>
-        <span className="text-sm text-muted-foreground">
-          {current} / {total}
-        </span>
+    <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+      <span className="font-medium text-sm">{word}</span>
+      <div className="flex gap-1">
+        {ratingOptions.map((option) => (
+          <Button
+            key={option.value}
+            variant={feedback === option.value ? 'default' : 'ghost'}
+            size="sm"
+            className={`h-7 px-2 text-xs transition-all ${
+              feedback === option.value
+                ? 'ring-1 ring-primary shadow-sm'
+                : 'hover:bg-background'
+            }`}
+            onClick={() => onFeedback(option.value)}
+            disabled={disabled}
+            title={`${option.label} - ${option.emoji}`}
+          >
+            {option.emoji}
+          </Button>
+        ))}
       </div>
-      <Progress value={progress} className="h-2" />
     </div>
   );
 }
@@ -131,9 +158,10 @@ export function ReviewFeedbackPanel({
   const targetWords = item.targets.map(target => target.word);
 
   // 计算完成度
-  const isWordFeedbackComplete = Object.keys(wordFeedback).length === targetWords.length;
+  const isWordFeedbackComplete = Object.keys(wordFeedback).length === targetWords.length && targetWords.every(word => wordFeedback[word] !== undefined);
   const isDifficultyFeedbackComplete = difficultyFeedback !== null;
   const isFeedbackComplete = isWordFeedbackComplete && isDifficultyFeedbackComplete;
+
 
 
   return (
@@ -180,8 +208,12 @@ export function ReviewFeedbackPanel({
 
       {/* 主要内容 */}
       <div className="p-4 space-y-4 max-w-4xl mx-auto">
-        {/* 进度条 */}
-        <ReviewProgress current={currentIndex + 1} total={totalSentences} />
+        {/* 进度显示 */}
+        <div className="text-center">
+          <div className="text-sm text-muted-foreground">
+            句子 {currentIndex + 1} / {totalSentences}
+          </div>
+        </div>
 
         {/* 句子展示 - 去除额外边框 */}
         <SentenceDisplay
@@ -191,28 +223,28 @@ export function ReviewFeedbackPanel({
           className="glass hover-lift border-0 shadow-lg"
         />
 
-        {/* 词汇反馈卡片 */}
-        <Card className="glass hover-lift border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold text-foreground">
-              词汇反馈
-            </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              请对每个目标词汇进行评分
-            </p>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6">
-            <WordFeedbackGrid
-              words={targetWords}
-              onSubmitFeedback={(feedback) => {
-                setWordFeedback(feedback);
-              }}
-              showDefinitions={false}
-              showSubmitButton={false}
-              isSubmitting={isSubmitting}
-            />
-          </CardContent>
-        </Card>
+        {/* 词汇反馈 */}
+        <div className="space-y-2">
+          <div className="text-sm font-medium text-foreground">
+            词汇反馈 ({Object.keys(wordFeedback).length}/{targetWords.length})
+          </div>
+          <div className="space-y-1">
+            {targetWords.map((word) => (
+              <CompactWordFeedback
+                key={word}
+                word={word}
+                feedback={wordFeedback[word]}
+                onFeedback={(rating: Rating) => {
+                  setWordFeedback(prev => ({
+                    ...prev,
+                    [word]: rating
+                  }));
+                }}
+                disabled={isSubmitting}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* 整体难度反馈 */}
         <Card className="glass hover-lift border-0 shadow-lg">
