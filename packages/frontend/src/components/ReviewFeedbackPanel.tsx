@@ -183,16 +183,13 @@ export function ReviewFeedbackPanel({
         {/* 进度条 */}
         <ReviewProgress current={currentIndex + 1} total={totalSentences} />
 
-        {/* 句子展示 */}
-        <Card className="glass hover-lift border-0 shadow-lg">
-          <CardContent className="p-4 sm:p-6">
-            <SentenceDisplay
-              item={item}
-              showNewTerms={true}
-              expandable={true}
-            />
-          </CardContent>
-        </Card>
+        {/* 句子展示 - 去除额外边框 */}
+        <SentenceDisplay
+          item={item}
+          showNewTerms={true}
+          expandable={true}
+          className="glass hover-lift border-0 shadow-lg"
+        />
 
         {/* 词汇反馈卡片 */}
         <Card className="glass hover-lift border-0 shadow-lg">

@@ -41,21 +41,21 @@ const ratingOptions: RatingOption[] = [
     value: 'again',
     label: '不记得',
     emoji: '😵',
-    variant: 'destructive',
+    variant: 'outline',
     color: 'text-red-500'
   },
   {
     value: 'hard',
     label: '困难',
     emoji: '🤔',
-    variant: 'secondary',
+    variant: 'outline',
     color: 'text-orange-500'
   },
   {
     value: 'good',
     label: '良好',
     emoji: '😊',
-    variant: 'default',
+    variant: 'outline',
     color: 'text-green-500'
   },
   {
@@ -69,7 +69,7 @@ const ratingOptions: RatingOption[] = [
     value: 'unknown',
     label: '不熟悉',
     emoji: '🤷',
-    variant: 'secondary',
+    variant: 'outline',
     color: 'text-purple-500'
   }
 ];
