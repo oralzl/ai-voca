@@ -7,7 +7,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { fsrsUpdate } from '@ai-voca/review-engine';
+import { fsrsUpdate, initializeWordState } from '@ai-voca/review-engine';
 import type { ReviewSubmitRequest, ReviewSubmitResponse, WordState, UserPrefs, Rating, DifficultyFeedback } from '@ai-voca/shared';
 
 interface AuthUser {
@@ -170,9 +170,10 @@ async function updateUserReviewPrefs(supabase: any, userId: string, difficultyFe
 
 async function processReviewSubmit(supabase: any, userId: string, request: ReviewSubmitRequest): Promise<{ wordState: WordState; userPrefs: UserPrefs } | null> {
   try {
-    const currentState = await getUserWordState(supabase, userId, request.word);
+    let currentState = await getUserWordState(supabase, userId, request.word);
     if (!currentState) {
-      return null;
+      // 为新词汇初始化状态
+      currentState = initializeWordState(new Date());
     }
     
     const now = new Date();
