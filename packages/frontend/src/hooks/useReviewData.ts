@@ -176,12 +176,12 @@ export function useReviewData(): UseReviewDataReturn {
     setUserPrefs(null);
   }, []);
 
-  // 自动获取候选词
+  // 自动获取候选词 - 只在用户登录且候选词为空时获取
   useEffect(() => {
-    if (user) {
+    if (user && candidates.length === 0) {
       fetchCandidates();
     }
-  }, [user, fetchCandidates]);
+  }, [user, candidates.length, fetchCandidates]);
 
   return {
     candidates,

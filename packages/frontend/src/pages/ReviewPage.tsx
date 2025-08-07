@@ -85,10 +85,11 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   useEffect(() => {
     if (syncStatus.isSyncing || candidatesLoading) {
       setCurrentStep('loading');
-    } else {
+    } else if (candidates.length > 0 && selectedTargets.length === 0) {
+      // 只有在首次加载候选词且未选择时才设置为candidates状态
       setCurrentStep('candidates');
     }
-  }, [syncStatus.isSyncing, candidatesLoading]);
+  }, [syncStatus.isSyncing, candidatesLoading, candidates.length, selectedTargets.length]);
 
   if (!user) {
     return (
