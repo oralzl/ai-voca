@@ -8,7 +8,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useReviewData } from '../hooks/useReviewData';
 import { useReviewSync } from '../hooks/useReviewSync';
-import { SentenceDisplay } from '../components/SentenceDisplay';
+import { useReviewFeedback } from '../hooks/useReviewFeedback';
+import { ReviewFeedbackPanel } from '../components/ReviewFeedbackPanel';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
@@ -18,8 +19,7 @@ import {
   AlertCircle,
   CheckCircle,
   RefreshCw,
-  Play,
-  SkipForward
+  Play
 } from 'lucide-react';
 import type { CandidateWord } from '@ai-voca/shared';
 
@@ -41,6 +41,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     reset
   } = useReviewData();
   const { syncStatus } = useReviewSync();
+  const { isSubmitting, submitError, submitFeedback, reset: resetFeedback } = useReviewFeedback();
 
   const [currentStep, setCurrentStep] = useState<'loading' | 'candidates' | 'reviewing' | 'completed'>('loading');
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
@@ -73,12 +74,21 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     }
   };
 
+  // 处理反馈提交
+  const handleSubmitFeedback = async (feedback: any) => {
+    const success = await submitFeedback(feedback);
+    if (success) {
+      handleNextSentence();
+    }
+  };
+
   // 处理重新开始
   const handleRestart = () => {
     setCurrentStep('candidates');
     setSelectedTargets([]);
     setCurrentSentenceIndex(0);
     reset();
+    resetFeedback();
   };
 
   // 自动处理状态转换 - 防止无限循环
@@ -129,7 +139,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   }
 
   // 错误状态
-  if (candidatesError || generatedError) {
+  if (candidatesError || generatedError || submitError) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
@@ -138,14 +148,14 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
               <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
               <h2 className="text-xl font-semibold">复习出错</h2>
               <p className="text-muted-foreground">
-                {candidatesError || generatedError}
+                {candidatesError || generatedError || submitError}
               </p>
               <div className="flex gap-2 justify-center">
                 <Button onClick={onBack} variant="outline">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   返回
                 </Button>
-                <Button onClick={refreshCandidates} variant="outline">
+                <Button onClick={submitError ? () => ({}) : refreshCandidates} variant="outline">
                   <RefreshCw className="w-4 h-4 mr-2" />
                   重试
                 </Button>
@@ -274,52 +284,15 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     }
 
     return (
-      <div className="min-h-screen bg-background">
-        {/* 顶部导航 */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
-          <div className="flex items-center justify-between px-4 py-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="flex items-center space-x-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>返回</span>
-            </Button>
-            
-            <div className="flex-1 text-center">
-              <h1 className="text-lg font-semibold">词汇复习</h1>
-              <p className="text-xs text-muted-foreground">
-                {currentSentenceIndex + 1} / {generatedItems.length}
-              </p>
-            </div>
-            
-            <div className="w-16" /> {/* 占位 */}
-          </div>
-        </div>
-
-        {/* 主要内容 */}
-        <div className="p-4 space-y-4">
-          {/* 句子展示 */}
-          <SentenceDisplay
-            item={currentItem}
-            showNewTerms={true}
-            expandable={true}
-          />
-
-          {/* 操作按钮 */}
-          <div className="flex gap-2 justify-center">
-            <Button
-              onClick={handleNextSentence}
-              className="flex items-center gap-2"
-            >
-              <SkipForward className="w-4 h-4" />
-              下一句
-            </Button>
-          </div>
-        </div>
-      </div>
+      <ReviewFeedbackPanel
+        item={currentItem}
+        currentIndex={currentSentenceIndex}
+        totalSentences={generatedItems.length}
+        isSubmitting={isSubmitting}
+        onSubmitFeedback={handleSubmitFeedback}
+        onNextSentence={handleNextSentence}
+        onPreviousSentence={currentSentenceIndex > 0 ? () => setCurrentSentenceIndex(currentSentenceIndex - 1) : undefined}
+      />
     );
   }
 
