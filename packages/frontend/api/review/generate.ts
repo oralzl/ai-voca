@@ -366,7 +366,8 @@ function createFallbackResponse(targets: string[]): GenerateItemsOutput {
     return {
       sid: `fallback_${index + 1}`,
       text: sentence,
-      translation: `我今天学习了单词"${target"。`,
+      translation: `我今天学习了单词"${target}"`,
+
       targets: [{
         word: target,
         begin: targetIndex >= 0 ? targetIndex : 4,

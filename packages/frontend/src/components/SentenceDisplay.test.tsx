@@ -12,6 +12,7 @@ import type { GeneratedItem } from '@ai-voca/shared';
 const mockGeneratedItem: GeneratedItem = {
   sid: 'test-sentence-1',
   text: 'The quick brown fox jumps over the lazy dog.',
+  translation: '敏捷的棕色狐狸跳过了懒惰的狗。',
   targets: [
     { word: 'quick', begin: 4, end: 9 },
     { word: 'fox', begin: 16, end: 19 },

@@ -136,6 +136,8 @@ export interface GeneratedItem {
   sid: string;
   /** 生成的句子 */
   text: string;
+  /** 中文翻译 */
+  translation: string;
   /** 目标词位置 */
   targets: TargetPosition[];
   /** 自评结果 */
@@ -386,6 +388,7 @@ export const SelfEvaluationSchema = z.object({
 export const GeneratedItemSchema = z.object({
   sid: z.string(),
   text: z.string(),
+  translation: z.string(),
   targets: z.array(TargetPositionSchema),
   self_eval: SelfEvaluationSchema,
 });
