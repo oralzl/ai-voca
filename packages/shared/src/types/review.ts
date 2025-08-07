@@ -11,7 +11,7 @@ import { z } from 'zod';
 /**
  * 复习结果评分类型
  */
-export type Rating = 'again' | 'hard' | 'good' | 'easy' | 'unknown';
+export type Rating = 'again' | 'hard' | 'good' | 'easy';
 
 /**
  * 难度反馈类型
@@ -307,7 +307,7 @@ export interface ReviewCountResponse {
 /**
  * Rating类型Schema
  */
-export const RatingSchema = z.enum(['again', 'hard', 'good', 'easy', 'unknown']);
+export const RatingSchema = z.enum(['again', 'hard', 'good', 'easy']);
 
 /**
  * DifficultyFeedback类型Schema

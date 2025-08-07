@@ -8,7 +8,7 @@
 
 ### 基础类型
 
-- `Rating`: 复习结果评分类型 ('again' | 'hard' | 'good' | 'easy' | 'unknown')
+- `Rating`: 复习结果评分类型 ('again' | 'hard' | 'good' | 'easy')
 - `DifficultyFeedback`: 难度反馈类型 ('too_easy' | 'ok' | 'too_hard')
 - `ReviewEventType`: 复习事件类型 ('read' | 'quiz' | 'mark_unknown')
 - `CEFRLevel`: CEFR等级类型 ('A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2')

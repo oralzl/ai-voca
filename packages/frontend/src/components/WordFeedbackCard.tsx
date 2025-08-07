@@ -9,7 +9,7 @@ import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { cn } from '../lib/utils';
-import type { Rating } from '@ai-voca/shared';
+type Rating = 'again' | 'hard' | 'good' | 'easy';
 
 interface WordFeedbackCardProps {
   /** 词汇文本 */
@@ -39,38 +39,31 @@ interface RatingOption {
 const ratingOptions: RatingOption[] = [
   {
     value: 'again',
-    label: '不记得',
+    label: '完全不记得',
     emoji: '😵',
     variant: 'outline',
     color: 'text-red-500'
   },
   {
     value: 'hard',
-    label: '困难',
+    label: '需要提示',
     emoji: '🤔',
     variant: 'outline',
     color: 'text-orange-500'
   },
   {
     value: 'good',
-    label: '良好',
+    label: '基本掌握',
     emoji: '😊',
     variant: 'outline',
     color: 'text-green-500'
   },
   {
     value: 'easy',
-    label: '容易',
+    label: '熟练掌握',
     emoji: '😎',
     variant: 'outline',
     color: 'text-blue-500'
-  },
-  {
-    value: 'unknown',
-    label: '不熟悉',
-    emoji: '🤷',
-    variant: 'outline',
-    color: 'text-purple-500'
   }
 ];
 

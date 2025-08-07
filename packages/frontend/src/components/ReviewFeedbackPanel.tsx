@@ -13,7 +13,9 @@ import {
   ArrowLeft,
   ArrowRight
 } from 'lucide-react';
-import type { GeneratedItem, Rating } from '@ai-voca/shared';
+import type { GeneratedItem } from '@ai-voca/shared';
+
+type Rating = 'again' | 'hard' | 'good' | 'easy';
 
 interface ReviewFeedbackPanelProps {
   /** 当前句子数据 */
@@ -53,9 +55,9 @@ interface DifficultyFeedbackProps {
  */
 function DifficultyFeedback({ feedback, onFeedback }: DifficultyFeedbackProps) {
   const options = [
-    { value: 'too_easy' as const, label: '太简单', emoji: '😊', color: 'text-green-600' },
-    { value: 'ok' as const, label: '合适', emoji: '😌', color: 'text-blue-600' },
-    { value: 'too_hard' as const, label: '太难', emoji: '😅', color: 'text-orange-600' }
+    { value: 'too_easy' as const, label: '太简单' },
+    { value: 'ok' as const, label: '合适' },
+    { value: 'too_hard' as const, label: '太难' }
   ];
 
   return (
@@ -74,16 +76,15 @@ function DifficultyFeedback({ feedback, onFeedback }: DifficultyFeedbackProps) {
           <Button
             key={option.value}
             variant={feedback === option.value ? 'default' : 'outline'}
-            size="lg"
-            className={`flex flex-col items-center gap-1 h-auto py-3 transition-all duration-200 ${
+            size="sm"
+            className={`flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium transition-all duration-200 ${
               feedback === option.value
-                ? 'ring-2 ring-primary shadow-lg'
+                ? 'ring-2 ring-primary shadow-lg bg-primary text-primary-foreground'
                 : 'hover:scale-105'
             }`}
             onClick={() => onFeedback(option.value)}
           >
-            <span className="text-2xl">{option.emoji}</span>
-            <span className="text-sm font-medium">{option.label}</span>
+            {option.label}
           </Button>
         ))}
       </div>
@@ -106,11 +107,10 @@ function CompactWordFeedback({
   disabled?: boolean;
 }) {
   const ratingOptions = [
-    { value: 'again' as const, label: '不记得', emoji: '😵', color: 'text-red-500' },
-    { value: 'hard' as const, label: '困难', emoji: '🤔', color: 'text-orange-500' },
-    { value: 'good' as const, label: '良好', emoji: '😊', color: 'text-green-500' },
-    { value: 'easy' as const, label: '容易', emoji: '😎', color: 'text-blue-500' },
-    { value: 'unknown' as const, label: '不熟悉', emoji: '🤷', color: 'text-purple-500' }
+    { value: 'again' as const, label: '完全不记得' },
+    { value: 'hard' as const, label: '需要提示' },
+    { value: 'good' as const, label: '基本掌握' },
+    { value: 'easy' as const, label: '熟练掌握' }
   ];
 
   return (
@@ -122,16 +122,15 @@ function CompactWordFeedback({
             key={option.value}
             variant={feedback === option.value ? 'default' : 'ghost'}
             size="sm"
-            className={`h-7 px-2 text-xs transition-all ${
+            className={`h-7 px-3 text-xs transition-all ${
               feedback === option.value
-                ? 'ring-1 ring-primary shadow-sm'
-                : 'hover:bg-background'
+                ? 'ring-1 ring-primary shadow-sm bg-primary text-primary-foreground'
+                : 'hover:bg-background border'
             }`}
             onClick={() => onFeedback(option.value)}
             disabled={disabled}
-            title={`${option.label} - ${option.emoji}`}
           >
-            {option.emoji}
+            {option.label}
           </Button>
         ))}
       </div>
