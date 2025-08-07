@@ -8,13 +8,115 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-import type { 
-  GenerateRequest, 
-  GenerateResponse, 
-  GenerateItemsOutput,
-  GeneratedItem,
-  UserPrefs 
-} from '@ai-voca/shared';
+
+// ==================== 内联类型定义 ====================
+
+/**
+ * 用户复习偏好接口
+ */
+interface UserPrefs {
+  /** CEFR等级 */
+  level_cefr: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  /** 是否允许顺带学习 */
+  allow_incidental: boolean;
+  /** 每句允许新词数 0-4 */
+  unknown_budget: number;
+  /** 生成风格 */
+  style: 'neutral' | 'news' | 'dialog' | 'academic';
+  /** 难度偏置 -1.5到+1.5 */
+  difficulty_bias: number;
+}
+
+/**
+ * 目标词位置接口
+ */
+interface TargetPosition {
+  /** 目标词 */
+  word: string;
+  /** 开始位置 */
+  begin: number;
+  /** 结束位置 */
+  end: number;
+}
+
+/**
+ * 新词汇接口
+ */
+interface NewTerm {
+  /** 词汇表面形式 */
+  surface: string;
+  /** CEFR等级 */
+  cefr: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  /** 释义 */
+  gloss: string;
+}
+
+/**
+ * 自评结果接口
+ */
+interface SelfEvaluation {
+  /** 预测的CEFR等级 */
+  predicted_cefr: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  /** 估计的新词汇数量 */
+  estimated_new_terms_count: number;
+  /** 新词汇列表 */
+  new_terms?: NewTerm[];
+  /** 生成理由 */
+  reason?: string;
+}
+
+/**
+ * 生成的句子项接口
+ */
+interface GeneratedItem {
+  /** 句子ID */
+  sid: string;
+  /** 生成的句子 */
+  text: string;
+  /** 中文翻译 */
+  translation: string;
+  /** 目标词位置 */
+  targets: TargetPosition[];
+  /** 自评结果 */
+  self_eval: SelfEvaluation;
+}
+
+/**
+ * 生成输出接口
+ */
+interface GenerateItemsOutput {
+  /** 生成的句子列表 */
+  items: GeneratedItem[];
+}
+
+/**
+ * 句子生成请求接口
+ */
+interface GenerateRequest {
+  /** 目标词汇列表 */
+  targets: string[];
+  /** 用户偏好 */
+  profile: UserPrefs;
+  /** 生成约束 */
+  constraints: {
+    /** 句长范围 [最小, 最大] */
+    sentence_length_range: [number, number];
+    /** 每句最大目标词数 */
+    max_targets_per_sentence: number;
+  };
+}
+
+/**
+ * 句子生成响应接口
+ */
+interface GenerateResponse {
+  /** 成功状态 */
+  success: boolean;
+  /** 生成结果 */
+  data?: GenerateItemsOutput;
+  /** 错误信息 */
+  error?: string;
+}
 
 // ==================== 类型定义 ====================
 

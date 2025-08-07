@@ -7,7 +7,25 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import type { ReviewCountResponse } from '@ai-voca/shared';
+
+// ==================== 内联类型定义 ====================
+
+/**
+ * 复习计数响应接口
+ */
+interface ReviewCountResponse {
+  /** 成功状态 */
+  success: boolean;
+  /** 计数数据 */
+  data?: {
+    /** 今日需要复习的词汇数量 */
+    today_count: number;
+    /** 总收藏词汇数量 */
+    total_count: number;
+  };
+  /** 错误信息 */
+  error?: string;
+}
 
 // ==================== 类型定义 ====================
 

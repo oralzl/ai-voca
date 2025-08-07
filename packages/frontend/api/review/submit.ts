@@ -7,8 +7,197 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { fsrsUpdate, initializeWordState } from '@ai-voca/review-engine';
-import type { ReviewSubmitRequest, ReviewSubmitResponse, WordState, UserPrefs, Rating, DifficultyFeedback } from '@ai-voca/shared';
+
+// ==================== 内联类型定义 ====================
+
+/**
+ * 复习结果评分类型
+ */
+type Rating = 'again' | 'hard' | 'good' | 'easy';
+
+/**
+ * 难度反馈类型
+ */
+type DifficultyFeedback = 'too_easy' | 'ok' | 'too_hard';
+
+/**
+ * CEFR等级类型
+ */
+type CEFRLevel = 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+
+/**
+ * 生成风格类型
+ */
+type GenerationStyle = 'neutral' | 'news' | 'dialog' | 'academic';
+
+/**
+ * 词汇状态接口
+ */
+interface WordState {
+  /** 熟悉度等级 0-5 */
+  familiarity: number;
+  /** 难度等级 1-5 */
+  difficulty: number;
+  /** 稳定性（天） */
+  stability?: number;
+  /** 回忆概率 */
+  recall_p?: number;
+  /** 成功次数 */
+  successes: number;
+  /** 失败次数 */
+  lapses: number;
+  /** 最后复习时间 */
+  last_seen_at?: string;
+  /** 下次复习时间 */
+  next_due_at?: string;
+}
+
+/**
+ * 用户复习偏好接口
+ */
+interface UserPrefs {
+  /** CEFR等级 */
+  level_cefr: CEFRLevel;
+  /** 是否允许顺带学习 */
+  allow_incidental: boolean;
+  /** 每句允许新词数 0-4 */
+  unknown_budget: number;
+  /** 生成风格 */
+  style: GenerationStyle;
+  /** 难度偏置 -1.5到+1.5 */
+  difficulty_bias: number;
+}
+
+/**
+ * 复习提交请求接口
+ */
+interface ReviewSubmitRequest {
+  /** 词汇 */
+  word: string;
+  /** 复习结果 */
+  rating: Rating;
+  /** 难度反馈 */
+  difficulty_feedback?: DifficultyFeedback;
+  /** 响应延迟（毫秒） */
+  latency_ms?: number;
+  /** 元数据 */
+  meta?: {
+    /** 交付ID */
+    delivery_id?: string;
+    /** 预测的CEFR等级 */
+    predicted_cefr?: CEFRLevel;
+    /** 估计的新词汇数量 */
+    estimated_new_terms_count?: number;
+    /** 变体信息 */
+    variant?: string;
+  };
+}
+
+/**
+ * 复习提交响应接口
+ */
+interface ReviewSubmitResponse {
+  /** 成功状态 */
+  success: boolean;
+  /** 更新后的词汇状态 */
+  data?: {
+    /** 词汇状态 */
+    word_state: WordState;
+    /** 用户偏好 */
+    user_prefs: UserPrefs;
+  };
+  /** 错误信息 */
+  error?: string;
+}
+
+// ==================== 内联FSRS算法 ====================
+
+/**
+ * FSRS-lite 间隔映射（天）
+ * 基于熟悉度等级确定下次复习间隔
+ */
+const INTERVALS = [1, 3, 7, 14, 30, 60] as const;
+
+/**
+ * 熟悉度等级范围
+ */
+const FAMILIARITY_MIN = 0;
+const FAMILIARITY_MAX = 5;
+
+/**
+ * FSRS 算法更新函数
+ * 基于用户的评分更新单词的复习状态
+ * 
+ * @param prev - 当前词汇状态
+ * @param rating - 用户评分
+ * @param now - 当前时间
+ * @returns 更新后的词汇状态
+ */
+function fsrsUpdate(prev: WordState, rating: Rating, now: Date): { next: WordState } {
+  // 获取当前熟悉度
+  const currentFamiliarity = prev.familiarity ?? 0;
+  
+  // 根据评分调整熟悉度
+  let newFamiliarity = currentFamiliarity;
+  
+  switch (rating) {
+    case 'again':
+      // 降低熟悉度，但不低于最小值
+      newFamiliarity = Math.max(FAMILIARITY_MIN, currentFamiliarity - 1);
+      break;
+      
+    case 'hard':
+      // 保持当前熟悉度
+      newFamiliarity = currentFamiliarity;
+      break;
+      
+    case 'good':
+    case 'easy':
+      // 提高熟悉度，但不高于最大值
+      newFamiliarity = Math.min(FAMILIARITY_MAX, currentFamiliarity + 1);
+      break;
+  }
+  
+  // 计算下次复习间隔
+  const intervalDays = INTERVALS[newFamiliarity] ?? INTERVALS[INTERVALS.length - 1];
+  const nextDueAt = new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000);
+  
+  // 更新成功/失败计数
+  const isSuccess = rating === 'good' || rating === 'easy';
+  const isFailure = rating === 'again';
+  
+  const newSuccesses = (prev.successes ?? 0) + (isSuccess ? 1 : 0);
+  const newLapses = (prev.lapses ?? 0) + (isFailure ? 1 : 0);
+  
+  // 构建更新后的状态
+  const next: WordState = {
+    ...prev,
+    familiarity: newFamiliarity,
+    last_seen_at: now.toISOString(),
+    next_due_at: nextDueAt.toISOString(),
+    successes: newSuccesses,
+    lapses: newLapses,
+  };
+  
+  return { next };
+}
+
+/**
+ * 初始化新词汇的状态
+ * 
+ * @param now - 当前时间
+ * @returns 初始词汇状态
+ */
+function initializeWordState(now: Date): WordState {
+  return {
+    familiarity: 0,
+    difficulty: 2.5,
+    successes: 0,
+    lapses: 0,
+    last_seen_at: now.toISOString(),
+    next_due_at: new Date(now.getTime() + INTERVALS[0] * 24 * 60 * 60 * 1000).toISOString(),
+  };
+}
 
 interface AuthUser {
   id: string;

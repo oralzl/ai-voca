@@ -8,12 +8,87 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-import type { 
-  CandidatesResponse, 
-  CandidateWord, 
-  UserPrefs, 
-  WordState 
-} from '@ai-voca/shared';
+
+// ==================== 内联类型定义 ====================
+
+/**
+ * 词汇状态接口
+ */
+interface WordState {
+  /** 熟悉度等级 0-5 */
+  familiarity: number;
+  /** 难度等级 1-5 */
+  difficulty: number;
+  /** 稳定性（天） */
+  stability?: number;
+  /** 回忆概率 */
+  recall_p?: number;
+  /** 成功次数 */
+  successes: number;
+  /** 失败次数 */
+  lapses: number;
+  /** 最后复习时间 */
+  last_seen_at?: string;
+  /** 下次复习时间 */
+  next_due_at?: string;
+}
+
+/**
+ * 用户复习偏好接口
+ */
+interface UserPrefs {
+  /** CEFR等级 */
+  level_cefr: 'A1' | 'A2' | 'B1' | 'B2' | 'C1' | 'C2';
+  /** 是否允许顺带学习 */
+  allow_incidental: boolean;
+  /** 每句允许新词数 0-4 */
+  unknown_budget: number;
+  /** 生成风格 */
+  style: 'neutral' | 'news' | 'dialog' | 'academic';
+  /** 难度偏置 -1.5到+1.5 */
+  difficulty_bias: number;
+}
+
+/**
+ * 候选词接口
+ */
+interface CandidateWord {
+  /** 词汇 */
+  word: string;
+  /** 当前状态 */
+  state: WordState;
+  /** 下次复习时间 */
+  next_due_at: string;
+}
+
+/**
+ * 候选词获取响应接口
+ */
+interface CandidatesResponse {
+  /** 成功状态 */
+  success: boolean;
+  /** 候选词数据 */
+  data?: {
+    /** 候选词列表 */
+    candidates: CandidateWord[];
+    /** 生成参数 */
+    generation_params: {
+      /** 目标词汇 */
+      targets: string[];
+      /** 用户偏好 */
+      profile: UserPrefs;
+      /** 生成约束 */
+      constraints: {
+        /** 句长范围 [最小, 最大] */
+        sentence_length_range: [number, number];
+        /** 每句最大目标词数 */
+        max_targets_per_sentence: number;
+      };
+    };
+  };
+  /** 错误信息 */
+  error?: string;
+}
 
 // ==================== 类型定义 ====================
 

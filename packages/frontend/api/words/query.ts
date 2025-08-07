@@ -310,7 +310,7 @@ function parseExamples(examplesXml: string): WordExample[] {
 
 function parseWordExplanationXml(xmlContent: string): WordExplanation | null {
   try {
-    const regex = /<word>(.*?)<\/word>/gs;
+    const regex = /<word>([\s\S]*?)<\/word>/gi;
     const match = regex.exec(xmlContent);
     if (!match) {
       throw new Error('未找到word标签');
