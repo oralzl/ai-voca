@@ -33,16 +33,11 @@ interface SentenceDisplayProps {
   className?: string;
 }
 
-interface HighlightedTextProps {
-  text: string;
-  targets: TargetPosition[];
-  className?: string;
-}
 
 /**
  * 显示文本组件（不再高亮目标词）
  */
-function HighlightedText({ text, targets, className = '' }: HighlightedTextProps) {
+function HighlightedText({ text, className = '' }: { text: string; className?: string }) {
   // 直接显示文本，不再高亮任何内容
   return <span className={className}>{text}</span>;
 }
@@ -137,7 +132,6 @@ export function SentenceDisplay({
           <div className="text-lg leading-relaxed">
             <HighlightedText
               text={item.text}
-              targets={item.targets}
               className="text-foreground"
             />
           </div>
