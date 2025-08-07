@@ -218,18 +218,26 @@ function buildPrompt(targets: string[], profile: UserPrefs, constraints: any): s
   
   return `# SYSTEM
 You are an English sentence generator for vocabulary review. 
-You must produce short, natural English text that includes ALL target words. 
-You must control difficulty by CEFR level and limit the number of potentially new terms.
+You must produce natural, contextually-rich English text that includes ALL target words in a single coherent narrative.
+You must control difficulty by CEFR level and create engaging, story-like content that connects the target words meaningfully.
 Return STRICT JSON ONLY that matches the provided schema. DO NOT include any extra commentary.
 
 # DEVELOPER
 Goals:
-- Include every target word once (or at most once) in contextually correct usage.
+- Create a single, cohesive narrative that naturally incorporates ALL target words within meaningful context.
+- Target sentence length: 25-35 tokens for 3-5 words, 35-50 tokens for 6-8 words to ensure adequate context and engagement.
+- Build logical connections between target words to create memorable learning experiences.
 - Overall difficulty ~= ${profile.level_cefr} (consider ${profile.difficulty_bias} as a soft signal).
 - Allow incidental learning ONLY if ${profile.allow_incidental} is true, with at most ${profile.unknown_budget} potentially-new terms.
-- Respect style: ${profile.style}.
-- Respect length: total tokens between ${constraints.sentence_length_range[0]} and ${constraints.sentence_length_range[1]}; ≤ ${constraints.max_targets_per_sentence} targets per sentence.
+- Respect style: ${profile.style} - create engaging narratives with natural flow.
 - Avoid sensitive topics: politics, explicit sexual content, hate, self-harm, illegal acts, personal data.
+
+Narrative Structure Guidelines:
+- Begin with an engaging scenario that provides context
+- Weave target words into a logical sequence of events or descriptions
+- Use connecting phrases and transitional elements for smooth flow
+- End with a satisfying conclusion or observation
+- Ensure each target word serves a meaningful purpose in the narrative
 
 Definitions:
 - "Potentially-new terms" = words that are likely above ${profile.level_cefr}. You will self-estimate them and list them in new_terms[] with a brief gloss.
@@ -255,26 +263,35 @@ Output Contract:
   }
 
 Hard Requirements:
-- Include ALL targets: ${targetsJson}.
-- Use each target in a natural, common sense; avoid obscure idioms or rare collocations.
-- Keep overall style: ${profile.style}.
-- Keep length within ${constraints.sentence_length_range[0]}..${constraints.sentence_length_range[1]} tokens.
-- Focus on generating high-quality, natural sentences that meet the requirements.
+- Include ALL targets: ${targetsJson} in a SINGLE coherent narrative.
+- Create meaningful connections between target words - they should relate to each other within the story context.
+- Achieve target length of 25-50 tokens depending on word count (25-35 for 3-5 words, 35-50 for 6-8 words).
+- Ensure natural, flowing narrative that feels complete and satisfying to read.
+- Use varied sentence structures and descriptive elements appropriate for ${profile.level_cefr}.
+
+Quality Guidelines:
+- Avoid simple lists or disconnected statements
+- Create scenarios that help users remember word relationships
+- Use descriptive language and sensory details when appropriate
+- Ensure grammatical complexity matches the target CEFR level
+- Make the narrative engaging enough to encourage re-reading
 
 Examples for style (not to copy verbatim):
-- neutral: everyday neutral tone, clear and concise.
-- news: informative, objective.
-- dialog: simple two-person exchange, clearly marked turns.
-- academic: formal but plain; avoid heavy jargon.
+- neutral: everyday situations with relatable scenarios and natural dialogue
+- news: informative articles with clear context and relevant examples
+- dialog: character interactions that showcase word usage in realistic conversations
+- academic: explanatory texts with clear examples and logical progression
 
 # USER
-Targets: ${targetsJson}
+Target Words: ${targetsJson}
 
 Profile:
 ${profileJson}
 
 Constraints:
 ${constraintsJson}
+
+Create ONE engaging narrative that naturally incorporates all target words in meaningful context. Focus on creating memorable connections between the words.
 
 Return STRICT JSON ONLY.`;
 }
@@ -418,6 +435,16 @@ export default async function handler(
         success: false,
         error: 'Maximum 8 targets allowed'
       });
+    }
+    
+    // 根据目标词数量动态调整长度约束
+    const targetCount = requestBody.targets.length;
+    if (targetCount <= 3) {
+      requestBody.constraints.sentence_length_range = [20, 30];
+    } else if (targetCount <= 5) {
+      requestBody.constraints.sentence_length_range = [25, 40];
+    } else {
+      requestBody.constraints.sentence_length_range = [35, 55];
     }
     
     // 3. 获取LLM配置
