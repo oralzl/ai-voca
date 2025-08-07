@@ -225,7 +225,7 @@ Return STRICT JSON ONLY that matches the provided schema. DO NOT include any ext
 # DEVELOPER
 Goals:
 - Create a single, cohesive narrative that naturally incorporates ALL target words within meaningful context.
-- Target sentence length: 25-35 tokens for 3-5 words, 35-50 tokens for 6-8 words to ensure adequate context and engagement.
+- Target sentence length: 12-18 tokens for 1 word, 15-22 tokens for 2 words, 18-25 tokens for 3 words, 25-35 tokens for 4-5 words, 35-50 tokens for 6-8 words to ensure appropriate context and engagement.
 - Build logical connections between target words to create memorable learning experiences.
 - Overall difficulty ~= ${profile.level_cefr} (consider ${profile.difficulty_bias} as a soft signal).
 - Allow incidental learning ONLY if ${profile.allow_incidental} is true, with at most ${profile.unknown_budget} potentially-new terms.
@@ -265,7 +265,7 @@ Output Contract:
 Hard Requirements:
 - Include ALL targets: ${targetsJson} in a SINGLE coherent narrative.
 - Create meaningful connections between target words - they should relate to each other within the story context.
-- Achieve target length of 25-50 tokens depending on word count (25-35 for 3-5 words, 35-50 for 6-8 words).
+- Achieve target length of 12-50 tokens depending on word count (12-18 for 1 word, 15-22 for 2 words, 18-25 for 3 words, 25-35 for 4-5 words, 35-50 for 6-8 words).
 - Ensure natural, flowing narrative that feels complete and satisfying to read.
 - Use varied sentence structures and descriptive elements appropriate for ${profile.level_cefr}.
 
@@ -439,12 +439,16 @@ export default async function handler(
     
     // 根据目标词数量动态调整长度约束
     const targetCount = requestBody.targets.length;
-    if (targetCount <= 3) {
-      requestBody.constraints.sentence_length_range = [20, 30];
+    if (targetCount === 1) {
+      requestBody.constraints.sentence_length_range = [12, 18];
+    } else if (targetCount === 2) {
+      requestBody.constraints.sentence_length_range = [15, 22];
+    } else if (targetCount === 3) {
+      requestBody.constraints.sentence_length_range = [18, 25];
     } else if (targetCount <= 5) {
-      requestBody.constraints.sentence_length_range = [25, 40];
+      requestBody.constraints.sentence_length_range = [25, 35];
     } else {
-      requestBody.constraints.sentence_length_range = [35, 55];
+      requestBody.constraints.sentence_length_range = [35, 50];
     }
     
     // 3. 获取LLM配置
