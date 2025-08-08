@@ -250,12 +250,11 @@
   - 实现网格布局
   - 引用需求：4.1, 4.2, 8.4
 
-- [ ] **5.4 实现难度反馈组件**
-  - 创建 `packages/frontend/src/components/DifficultyFeedback.tsx`
-  - 实现整体难度评价
-  - 添加按钮状态管理
-  - 实现响应式布局
-  - 引用需求：4.2, 4.3, 4.4, 4.5, 8.4
+- [ ] **5.4 使用现有 ReviewFeedbackPanel.tsx 实现难度反馈**
+  - 文件：`packages/frontend/src/components/ReviewFeedbackPanel.tsx`
+  - 覆盖整体难度评价（`sentence_*` 事件）、按钮状态管理与响应式布局
+  - 如后续需要再拆分 `DifficultyFeedback.tsx`，当前不强制
+  - 引用需求：4.2, 4.3, 4.4, 4.5, 8.4（与 design.md 的事件规范一致）
 
 - [ ] **5.5 实现复习进度组件**
   - 创建 `packages/frontend/src/components/ReviewProgress.tsx`
