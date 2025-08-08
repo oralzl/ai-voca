@@ -101,7 +101,8 @@ interface AuthUser {
 }
 
 interface CandidateSelectionParams {
-  n?: number; // 候选词数量，默认15
+  n?: number; // 候选词数量
+  exclude?: string[]; // 需要排除的词（逗号分隔解析后）
 }
 
 // ==================== 认证函数 ====================
@@ -222,7 +223,8 @@ async function getCandidateWords(
   supabase: any, 
   userId: string, 
   limit: number,
-  notDueCap: number = 2
+  notDueCap: number = 2,
+  excludeSet: Set<string> = new Set()
 ): Promise<{ candidates: CandidateWord[]; backfill_mode: boolean }> {
   const nowDate = new Date();
   const endOfDay = new Date(nowDate);
@@ -231,7 +233,7 @@ async function getCandidateWords(
   const eod = endOfDay.toISOString();
   
   try {
-    // 1) overdue：next_due_at <= now
+    // 1) overdue：next_due_at <= now（过取3倍，过滤后再截断）
     let { data: overdueWords, error: overdueError } = await supabase
       .from('user_word_state')
       .select(`
@@ -247,17 +249,17 @@ async function getCandidateWords(
       .eq('user_id', userId)
       .lte('next_due_at', now)
       .order('next_due_at', { ascending: true })
-      .limit(limit);
+      .limit(limit * 3);
     
     if (overdueError) {
       console.error('Error fetching overdue words:', overdueError);
       overdueWords = [];
     }
     
-    // 2) today-due：now < next_due_at <= EOD
+    // 2) today-due：now < next_due_at <= EOD（过取3倍，过滤后再截断）
     let todayDueWords: any[] = [];
     if ((overdueWords?.length || 0) < limit) {
-      const remaining = limit - (overdueWords?.length || 0);
+      const remaining = limit * 3; // 先过取，后过滤
       const { data, error } = await supabase
         .from('user_word_state')
         .select(`
@@ -284,7 +286,16 @@ async function getCandidateWords(
 
     // 3) not-due pool（scheduled in future or new words），最终只取 ≤ notDueCap
     let notDuePool: any[] = [];
-    const taken = (overdueWords?.length || 0) + (todayDueWords?.length || 0);
+    // 先过滤排除集
+    const filterExcluded = (arr: any[]) => (arr || []).filter(w => !excludeSet.has(w.word));
+    const overdueFiltered = filterExcluded(overdueWords || []);
+    const todayFiltered = filterExcluded(todayDueWords || []);
+    // 逐段截断到 limit
+    const selectedOverdue = overdueFiltered.slice(0, limit);
+    let remainingLimit = Math.max(0, limit - selectedOverdue.length);
+    const selectedToday = todayFiltered.slice(0, remainingLimit);
+    remainingLimit = Math.max(0, remainingLimit - selectedToday.length);
+    const taken = selectedOverdue.length + selectedToday.length;
     if (taken < limit && notDueCap > 0) {
       const remainForNotDue = Math.min(notDueCap, limit - taken);
       // 3.1 scheduled in future (> EOD)
@@ -328,7 +339,9 @@ async function getCandidateWords(
       if (newError) {
         console.error('Error fetching new words (not-due pool):', newError);
       }
-      const pool = [ ...(futureScheduled || []), ...(newWords || []) ];
+      const pool = filterExcluded([ ...(futureScheduled || []), ...(newWords || []) ]).filter(w =>
+        !selectedOverdue.find(s => s.word === w.word) && !selectedToday.find(s => s.word === w.word)
+      );
       // 易忘优先 S = (5 - familiarity) + daysSinceLastSeen/7 （overdue/today标志为0）
       const scored = pool.map(w => {
         const fam = typeof w.familiarity === 'number' ? w.familiarity : 0;
@@ -340,8 +353,8 @@ async function getCandidateWords(
       notDuePool = scored.slice(0, remainForNotDue).map(s => s.w);
     }
     
-    // 合并（overdue > today-due > not-due≤cap）
-    const allWords = [ ...(overdueWords || []), ...(todayDueWords || []), ...notDuePool ];
+    // 合并（overdue > today-due > not-due≤cap），并再次确保排除
+    const allWords = [ ...selectedOverdue, ...selectedToday, ...notDuePool ].filter(w => !excludeSet.has(w.word));
     
     // 转换为CandidateWord格式
     const candidates = allWords.map(word => ({
@@ -358,7 +371,7 @@ async function getCandidateWords(
       next_due_at: word.next_due_at || now
     }));
 
-    const backfill_mode = ((overdueWords?.length || 0) + (todayDueWords?.length || 0)) === 0;
+    const backfill_mode = (selectedOverdue.length + selectedToday.length) === 0;
     return { candidates, backfill_mode };
   } catch (error) {
     console.error('Error in getCandidateWords:', error);
@@ -460,14 +473,19 @@ export default async function handler(
     
     // 解析请求参数
     const params: CandidateSelectionParams = {
-      n: req.query.n ? parseInt(req.query.n as string) : 15
+      n: req.query.n ? parseInt(req.query.n as string) : 15,
+      exclude: typeof req.query.exclude === 'string'
+        ? (req.query.exclude as string).split(',').map(s => s.trim()).filter(Boolean)
+        : Array.isArray(req.query.exclude)
+          ? (req.query.exclude as string[]).flatMap(s => s.split(',')).map(s => s.trim()).filter(Boolean)
+          : []
     };
     
     // 验证参数
-    if (params.n && (params.n < 1 || params.n > 50)) {
+    if (params.n && (params.n < 0 || params.n > 50)) {
       res.status(400).json({
         success: false,
-        error: '候选词数量必须在1-50之间'
+        error: '候选词数量必须在0-50之间'
       });
       return;
     }
@@ -498,7 +516,14 @@ export default async function handler(
     userPrefs.difficulty_bias = Math.max(-1.5, Math.min(1.5, userPrefs.difficulty_bias + biasAdjustment));
     
     // 获取候选词汇
-    const { candidates, backfill_mode } = await getCandidateWords(supabase, user.id, params.n || 15, 2);
+    const excludeSet = new Set((params.exclude || []).map(w => w.toLowerCase()));
+    const { candidates, backfill_mode } = await getCandidateWords(
+      supabase,
+      user.id,
+      params.n || 15,
+      2,
+      excludeSet
+    );
     
     // 生成交付ID
     const deliveryId = uuidv4();

@@ -19,7 +19,8 @@ interface UseReviewDataReturn {
   candidates: CandidateWord[];
   candidatesLoading: boolean;
   candidatesError: string | null;
-  refreshCandidates: () => Promise<void>;
+  refreshCandidates: (opts?: { n?: number; exclude?: string[] }) => Promise<void>;
+  getCandidates: (opts?: { n?: number; exclude?: string[] }) => Promise<CandidateWord[]>;
   
   // 生成数据
   generatedItems: GeneratedItem[];
@@ -56,7 +57,7 @@ export function useReviewData(): UseReviewDataReturn {
   /**
    * 获取候选词数据
    */
-  const fetchCandidates = useCallback(async () => {
+  const fetchCandidates = useCallback(async (opts?: { n?: number; exclude?: string[] }) => {
     if (!user) {
       setCandidatesError('用户未登录');
       return;
@@ -71,7 +72,11 @@ export function useReviewData(): UseReviewDataReturn {
         throw new Error('无法获取访问令牌');
       }
 
-      const response = await fetch('/api/review/candidates', {
+      const params = new URLSearchParams();
+      if (opts?.n !== undefined) params.set('n', String(opts.n));
+      if (opts?.exclude && opts.exclude.length > 0) params.set('exclude', opts.exclude.join(','));
+
+      const response = await fetch(`/api/review/candidates${params.toString() ? `?${params.toString()}` : ''}` , {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -99,6 +104,33 @@ export function useReviewData(): UseReviewDataReturn {
     } finally {
       setCandidatesLoading(false);
     }
+  }, [user, getAccessToken]);
+
+  /**
+   * 仅获取候选词（不落地到全局 candidates 状态），用于自动选词预取
+   */
+  const getCandidates = useCallback(async (opts?: { n?: number; exclude?: string[] }) => {
+    if (!user) {
+      throw new Error('用户未登录');
+    }
+    const token = await getAccessToken();
+    if (!token) throw new Error('无法获取访问令牌');
+
+    const params = new URLSearchParams();
+    if (opts?.n !== undefined) params.set('n', String(opts.n));
+    if (opts?.exclude && opts.exclude.length > 0) params.set('exclude', opts.exclude.join(','));
+
+    const response = await fetch(`/api/review/candidates${params.toString() ? `?${params.toString()}` : ''}` , {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error(`获取候选词失败: ${response.status}`);
+    const data: CandidatesResponse = await response.json();
+    if (!data.success || !data.data) throw new Error(data.error || '获取候选词失败');
+    return data.data.candidates;
   }, [user, getAccessToken]);
 
   /**
@@ -159,8 +191,8 @@ export function useReviewData(): UseReviewDataReturn {
   /**
    * 刷新候选词
    */
-  const refreshCandidates = useCallback(async () => {
-    await fetchCandidates();
+  const refreshCandidates = useCallback(async (opts?: { n?: number; exclude?: string[] }) => {
+    await fetchCandidates(opts);
   }, [fetchCandidates]);
 
   /**
@@ -188,6 +220,7 @@ export function useReviewData(): UseReviewDataReturn {
     candidatesLoading,
     candidatesError,
     refreshCandidates,
+    getCandidates,
     generatedItems,
     generatedLoading,
     generatedError,

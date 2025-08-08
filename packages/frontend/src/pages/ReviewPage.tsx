@@ -28,12 +28,13 @@ interface ReviewPageProps {
 }
 
 export function ReviewPage({ onBack }: ReviewPageProps) {
-  const { user } = useAuth();
+  const { user, getAccessToken } = useAuth();
   const {
     candidates,
     candidatesLoading,
     candidatesError,
     refreshCandidates,
+    getCandidates,
     generatedItems,
     generatedError,
     generateSentences,
@@ -44,8 +45,13 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   const { isSubmitting, submitError, submitFeedback, reset: resetFeedback } = useReviewFeedback();
 
   const [currentStep, setCurrentStep] = useState<'loading' | 'candidates' | 'reviewing' | 'completed'>('loading');
+  const [autoMode, setAutoMode] = useState<boolean>(true);
+  const [batchSize, setBatchSize] = useState<number>(2);
   const [selectedTargets, setSelectedTargets] = useState<string[]>([]);
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
+  const [prefetchTargets, setPrefetchTargets] = useState<string[] | null>(null);
+  const [todayCount, setTodayCount] = useState<number | null>(null);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
 
   // 处理候选词选择
   const handleTargetToggle = (word: string) => {
@@ -58,21 +64,97 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     });
   };
 
-  const handleStartReview = () => {
-    if (selectedTargets.length > 0) {
+  const handleStartReview = async () => {
+    if (autoMode) {
+      const trySizes = [batchSize, 2, 1].filter((v, i, a) => a.indexOf(v) === i);
+      let autoTargets: string[] = [];
+      for (const size of trySizes) {
+        if (size <= 0) continue;
+        const cand = await getCandidates({ n: size });
+        if (cand.length > 0) {
+          autoTargets = cand.slice(0, size).map(c => c.word);
+          break;
+        }
+      }
+      if (autoTargets.length === 0) {
+        alert('当前没有可用的复习词汇，请稍后再试或切换手动选词');
+        return;
+      }
+      setSelectedTargets(autoTargets);
       setCurrentStep('reviewing');
-      generateSentences(selectedTargets);
+      generateSentences(autoTargets);
+      prefetchNext(autoTargets);
+    } else {
+      if (selectedTargets.length > 0) {
+        setCurrentStep('reviewing');
+        generateSentences(selectedTargets);
+        prefetchNext(selectedTargets);
+      }
     }
   };
+
+  async function prefetchNext(currentTargets: string[]) {
+    try {
+      const next = await getCandidates({ n: batchSize, exclude: currentTargets });
+      setPrefetchTargets(next.map(c => c.word));
+    } catch {
+      setPrefetchTargets(null);
+    }
+  }
 
   // 处理句子切换
   const handleNextSentence = () => {
     if (currentSentenceIndex < generatedItems.length - 1) {
       setCurrentSentenceIndex(currentSentenceIndex + 1);
     } else {
-      setCurrentStep('completed');
+      if (prefetchTargets && prefetchTargets.length > 0) {
+        setSelectedTargets(prefetchTargets);
+        setPrefetchTargets(null);
+        setCurrentSentenceIndex(0);
+        generateSentences(prefetchTargets);
+      } else {
+        setCurrentStep('completed');
+      }
     }
   };
+  // 首次加载：读本地偏好（模式/批次）
+  useEffect(() => {
+    try {
+      const m = localStorage.getItem('review:autoMode');
+      if (m) setAutoMode(m !== 'manual');
+      const b = localStorage.getItem('review:batchSize');
+      if (b) {
+        const n = Math.max(1, Math.min(8, parseInt(b)));
+        if (!Number.isNaN(n)) setBatchSize(n);
+      }
+    } catch {}
+  }, []);
+
+  // 写本地偏好
+  useEffect(() => {
+    try { localStorage.setItem('review:autoMode', autoMode ? 'auto' : 'manual'); } catch {}
+  }, [autoMode]);
+  useEffect(() => {
+    try { localStorage.setItem('review:batchSize', String(batchSize)); } catch {}
+  }, [batchSize]);
+
+  // 获取今日/总计计数
+  useEffect(() => {
+    (async () => {
+      if (!user) return;
+      try {
+        const token = await getAccessToken();
+        const resp = await fetch('/api/review/count', { headers: { Authorization: `Bearer ${token}` } });
+        if (!resp.ok) return;
+        const json = await resp.json();
+        if (json?.success && json?.data) {
+          setTodayCount(json.data.today_count);
+          setTotalCount(json.data.total_count);
+        }
+      } catch {}
+    })();
+  }, [user, getAccessToken]);
+
 
   // 处理反馈提交
   const handleSubmitFeedback = async (feedback: any) => {
@@ -156,7 +238,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   返回
                 </Button>
-                <Button onClick={submitError ? () => ({}) : refreshCandidates} variant="outline">
+                <Button onClick={submitError ? () => ({}) : () => refreshCandidates()} variant="outline">
                   <RefreshCw className="w-4 h-4 mr-2" />
                   重试
                 </Button>
@@ -193,15 +275,15 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
           </div>
         </div>
 
-        {/* 主要内容 */}
+          {/* 主要内容 */}
         <div className="p-4 space-y-4">
           {/* 统计信息 */}
           <Card>
             <CardContent className="pt-6">
               <div className="text-center space-y-2">
-                <h2 className="text-xl font-semibold">今日复习</h2>
+                <h2 className="text-xl font-semibold">复习信息</h2>
                 <p className="text-muted-foreground">
-                  发现 {candidates.length} 个需要复习的词汇
+                  今日待复习：{todayCount ?? '-'} 词　　总计待复习：{totalCount ?? '-'} 词
                 </p>
                 {userPrefs && (
                   <div className="flex justify-center gap-2">
@@ -217,7 +299,39 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
             </CardContent>
           </Card>
 
-          {/* 候选词列表 */}
+          {/* 模式与批次 */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-6">
+                  <button
+                    className={`px-3 py-1 rounded border ${autoMode ? 'bg-primary text-white border-primary' : 'border-border'}`}
+                    onClick={() => setAutoMode(true)}
+                  >自动选词</button>
+                  <button
+                    className={`px-3 py-1 rounded border ${!autoMode ? 'bg-primary text-white border-primary' : 'border-border'}`}
+                    onClick={() => setAutoMode(false)}
+                  >手动选词</button>
+                </div>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-sm text-muted-foreground">每轮目标词数</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={8}
+                    value={batchSize}
+                    onChange={(e) => setBatchSize(Math.max(1, Math.min(8, Number(e.target.value) || 2)))}
+                    className="w-20 border rounded px-2 py-1 text-center"
+                  />
+                </div>
+                <div className="text-center">
+                  <Button onClick={handleStartReview} className="inline-flex items-center gap-2">开始复习</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 候选词列表（仅手动模式显示） */}
           <Card>
             <CardContent className="pt-6">
               <div className="space-y-4">
@@ -228,7 +342,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                       已选择 {selectedTargets.length}/8 个词汇
                     </p>
                   </div>
-                  {selectedTargets.length > 0 && (
+                  {!autoMode && selectedTargets.length > 0 && (
                     <Button 
                       onClick={handleStartReview}
                       className="flex items-center gap-2"
@@ -238,18 +352,20 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                   )}
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {candidates.slice(0, 12).map((candidate) => (
-                    <CandidateWordCard
-                      key={candidate.word}
-                      candidate={candidate}
-                      isSelected={selectedTargets.includes(candidate.word)}
-                      onToggle={() => handleTargetToggle(candidate.word)}
-                    />
-                  ))}
-                </div>
+                {!autoMode && (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {candidates.slice(0, 12).map((candidate) => (
+                      <CandidateWordCard
+                        key={candidate.word}
+                        candidate={candidate}
+                        isSelected={selectedTargets.includes(candidate.word)}
+                        onToggle={() => handleTargetToggle(candidate.word)}
+                      />
+                    ))}
+                  </div>
+                )}
 
-                {candidates.length > 12 && (
+                {!autoMode && candidates.length > 12 && (
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground">
                       还有 {candidates.length - 12} 个词汇...
