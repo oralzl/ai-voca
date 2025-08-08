@@ -7,6 +7,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { v4 as uuidv4, validate as uuidValidate } from 'uuid';
 
 // ==================== 内联类型定义 ====================
 
@@ -209,6 +210,7 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('Authentication failed: Missing or invalid Authorization header');
       return null;
     }
     
@@ -218,6 +220,7 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
     const supabaseAnonKey = rawAnonKey ? rawAnonKey.replace(/\s/g, '').trim() : rawAnonKey;
     
     if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Authentication failed: Missing SUPABASE_URL or SUPABASE_ANON_KEY');
       return null;
     }
     
@@ -229,6 +232,7 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
     });
     
     if (!response.ok) {
+      console.error('Authentication failed: Supabase auth endpoint returned', response.status, response.statusText);
       return null;
     }
     
@@ -239,6 +243,7 @@ async function authenticateUser(req: VercelRequest): Promise<AuthUser | null> {
       user_metadata: user.user_metadata || {}
     };
   } catch (error) {
+    console.error('Authentication error:', error);
     return null;
   }
 }
@@ -267,6 +272,10 @@ async function getUserWordState(supabase: any, userId: string, word: string): Pr
       .single();
     
     if (error) {
+      // 正常的"未找到"错误不需要当成异常打印
+      if (error.code !== 'PGRST116') {
+        console.error('getUserWordState error:', error);
+      }
       return null;
     }
     
@@ -281,6 +290,7 @@ async function getUserWordState(supabase: any, userId: string, word: string): Pr
       next_due_at: data.next_due_at
     };
   } catch (error) {
+    console.error('getUserWordState exception:', error);
     return null;
   }
 }
@@ -302,8 +312,13 @@ async function updateUserWordState(supabase: any, userId: string, word: string, 
         updated_at: new Date().toISOString()
       });
     
-    return !error;
+    if (error) {
+      console.error('updateUserWordState error:', error);
+      return false;
+    }
+    return true;
   } catch (error) {
+    console.error('updateUserWordState exception:', error);
     return false;
   }
 }
@@ -311,8 +326,13 @@ async function updateUserWordState(supabase: any, userId: string, word: string, 
 async function recordReviewEvent(supabase: any, event: any): Promise<boolean> {
   try {
     const { error } = await supabase.from('review_events').insert(event);
-    return !error;
+    if (error) {
+      console.error('recordReviewEvent error:', error, 'event:', event);
+      return false;
+    }
+    return true;
   } catch (error) {
+    console.error('recordReviewEvent exception:', error, 'event:', event);
     return false;
   }
 }
@@ -351,8 +371,13 @@ async function updateUserReviewPrefs(supabase: any, userId: string, difficultyFe
         updated_at: new Date().toISOString()
       });
     
-    return error ? null : prefs;
+    if (error) {
+      console.error('updateUserReviewPrefs error:', error);
+      return null;
+    }
+    return prefs;
   } catch (error) {
+    console.error('updateUserReviewPrefs exception:', error);
     return null;
   }
 }
@@ -370,18 +395,23 @@ async function processReviewSubmit(supabase: any, userId: string, request: Revie
     
     const updateSuccess = await updateUserWordState(supabase, userId, request.word, newState);
     if (!updateSuccess) {
+      console.error('processReviewSubmit: Failed to update user word state');
       return null;
     }
     
+    // 规范化 delivery_id：后端表字段为 UUID，前端传入的 sid/fallback_1 可能不是 UUID
+    const rawDeliveryId = request.meta?.delivery_id;
+    const deliveryId = rawDeliveryId && uuidValidate(rawDeliveryId) ? rawDeliveryId : uuidv4();
+
     const reviewEvent = {
       user_id: userId,
-      delivery_id: request.meta?.delivery_id || 'unknown',
+      delivery_id: deliveryId,
       event_type: 'word_' + request.rating,
       word: request.word,
       rating: ratingToDbValue(request.rating),
       response_time_ms: request.latency_ms,
       meta: {
-        delivery_id: request.meta?.delivery_id,
+        delivery_id: rawDeliveryId,
         predicted_cefr: request.meta?.predicted_cefr,
         estimated_new_terms_count: request.meta?.estimated_new_terms_count,
         variant: request.meta?.variant
@@ -390,6 +420,7 @@ async function processReviewSubmit(supabase: any, userId: string, request: Revie
     
     const eventRecorded = await recordReviewEvent(supabase, reviewEvent);
     if (!eventRecorded) {
+      console.error('processReviewSubmit: Failed to record word review event');
       return null;
     }
     
@@ -397,11 +428,11 @@ async function processReviewSubmit(supabase: any, userId: string, request: Revie
     if (request.difficulty_feedback) {
       const sentenceEvent = {
         user_id: userId,
-        delivery_id: request.meta?.delivery_id || 'unknown',
+        delivery_id: deliveryId,
         event_type: difficultyToEventType(request.difficulty_feedback),
         sentence_text: 'review_session',
         meta: {
-          delivery_id: request.meta?.delivery_id,
+          delivery_id: rawDeliveryId,
           predicted_cefr: request.meta?.predicted_cefr,
           estimated_new_terms_count: request.meta?.estimated_new_terms_count
         }
@@ -428,11 +459,13 @@ async function processReviewSubmit(supabase: any, userId: string, request: Revie
     }
     
     if (!userPrefs) {
+      console.error('processReviewSubmit: Missing userPrefs after attempts');
       return null;
     }
     
     return { wordState: newState, userPrefs };
   } catch (error) {
+    console.error('processReviewSubmit exception:', error);
     return null;
   }
 }
@@ -453,20 +486,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   try {
+    console.log('Review submit API called', { timestamp: new Date().toISOString() });
     const user = await authenticateUser(req);
     if (!user) {
+      console.error('Review submit: Unauthorized');
       res.status(401).json({ success: false, error: '请先登录' });
       return;
     }
     
     const requestBody = req.body as ReviewSubmitRequest;
     if (!requestBody.word || !requestBody.rating) {
+       console.error('Review submit: Missing required params', { body: requestBody });
       res.status(400).json({ success: false, error: '缺少必要参数：word 和 rating' });
       return;
     }
     
     const validRatings: Rating[] = ['again', 'hard', 'good', 'easy'];
     if (!validRatings.includes(requestBody.rating)) {
+      console.error('Review submit: Invalid rating', { rating: requestBody.rating });
       res.status(400).json({ success: false, error: '无效的rating值' });
       return;
     }
@@ -474,6 +511,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (requestBody.difficulty_feedback) {
       const validFeedbacks: DifficultyFeedback[] = ['too_easy', 'ok', 'too_hard'];
       if (!validFeedbacks.includes(requestBody.difficulty_feedback)) {
+        console.error('Review submit: Invalid difficulty_feedback', { difficulty_feedback: requestBody.difficulty_feedback });
         res.status(400).json({ success: false, error: '无效的difficulty_feedback值' });
         return;
       }
@@ -484,6 +522,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const supabaseServiceKey = rawServiceKey ? rawServiceKey.replace(/\s/g, '').trim() : rawServiceKey;
     
     if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Review submit: Missing Supabase configuration');
       res.status(500).json({ success: false, error: '服务器配置错误' });
       return;
     }
@@ -495,6 +534,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const result = await processReviewSubmit(supabase, user.id, requestBody);
     
     if (!result) {
+      console.error('Review submit: processReviewSubmit returned null');
       res.status(500).json({ success: false, error: '处理复习提交失败' });
       return;
     }
@@ -510,6 +550,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.json(response);
     
   } catch (error: any) {
+    console.error('Review submit handler exception:', error);
     res.status(500).json({
       success: false,
       error: error.message || '服务器内部错误'
