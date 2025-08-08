@@ -95,8 +95,9 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   useEffect(() => {
     if (syncStatus.isSyncing || candidatesLoading) {
       setCurrentStep('loading');
-    } else if (candidates.length > 0 && selectedTargets.length === 0) {
-      // 只有在首次加载候选词且未选择时才设置为candidates状态
+    } else if (selectedTargets.length === 0) {
+      // 无论候选词是否为空，只要不在加载/同步中且未选择目标词，就进入 candidates 界面
+      // 避免在候选词为空时卡在“准备复习”界面
       setCurrentStep('candidates');
     }
   }, [syncStatus.isSyncing, candidatesLoading, candidates.length, selectedTargets.length]);
