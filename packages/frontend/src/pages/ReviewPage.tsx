@@ -39,6 +39,8 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     generatedError,
     generateSentences,
     userPrefs,
+    saveAutoPrefs,
+    loadAutoPrefs,
     reset
   } = useReviewData();
   const { syncStatus } = useReviewSync();
@@ -119,24 +121,39 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   };
   // 首次加载：读本地偏好（模式/批次）
   useEffect(() => {
-    try {
-      const m = localStorage.getItem('review:autoMode');
-      if (m) setAutoMode(m !== 'manual');
-      const b = localStorage.getItem('review:batchSize');
-      if (b) {
-        const n = Math.max(1, Math.min(8, parseInt(b)));
-        if (!Number.isNaN(n)) setBatchSize(n);
-      }
-    } catch {}
-  }, []);
+    (async () => {
+      // 先读服务端偏好
+      try {
+        const prefs = await loadAutoPrefs();
+        if (prefs) {
+          setAutoMode(prefs.auto);
+          setBatchSize(prefs.batchSize);
+          return;
+        }
+      } catch {}
+      // 兜底读本地
+      try {
+        const m = localStorage.getItem('review:autoMode');
+        if (m) setAutoMode(m !== 'manual');
+        const b = localStorage.getItem('review:batchSize');
+        if (b) {
+          const n = Math.max(1, Math.min(8, parseInt(b)));
+          if (!Number.isNaN(n)) setBatchSize(n);
+        }
+      } catch {}
+    })();
+  }, [loadAutoPrefs]);
 
   // 写本地偏好
   useEffect(() => {
     try { localStorage.setItem('review:autoMode', autoMode ? 'auto' : 'manual'); } catch {}
-  }, [autoMode]);
+    // 同步到服务端
+    (async () => { try { await saveAutoPrefs({ auto: autoMode, batchSize }); } catch {} })();
+  }, [autoMode, batchSize, saveAutoPrefs]);
   useEffect(() => {
     try { localStorage.setItem('review:batchSize', String(batchSize)); } catch {}
-  }, [batchSize]);
+    (async () => { try { await saveAutoPrefs({ auto: autoMode, batchSize }); } catch {} })();
+  }, [batchSize, autoMode, saveAutoPrefs]);
 
   // 获取今日/总计计数
   useEffect(() => {

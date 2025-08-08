@@ -30,6 +30,9 @@ interface UseReviewDataReturn {
   
   // 用户偏好
   userPrefs: UserPrefs | null;
+  // 持久化自动模式与批次
+  saveAutoPrefs: (opts: { auto: boolean; batchSize: number }) => Promise<void>;
+  loadAutoPrefs: () => Promise<{ auto: boolean; batchSize: number } | null>;
   
   // 重置状态
   reset: () => void;
@@ -195,6 +198,28 @@ export function useReviewData(): UseReviewDataReturn {
     await fetchCandidates(opts);
   }, [fetchCandidates]);
 
+  // ===== 用户偏好：自动/批次（落库） =====
+  const saveAutoPrefs = useCallback(async (opts: { auto: boolean; batchSize: number }) => {
+    const token = await getAccessToken();
+    if (!token) throw new Error('无法获取访问令牌');
+    const resp = await fetch('/api/user/prefs', {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ auto_select_mode: opts.auto, auto_batch_size: opts.batchSize })
+    });
+    if (!resp.ok) throw new Error('保存偏好失败');
+  }, [getAccessToken]);
+
+  const loadAutoPrefs = useCallback(async () => {
+    const token = await getAccessToken();
+    if (!token) throw new Error('无法获取访问令牌');
+    const resp = await fetch('/api/user/prefs', { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!resp.ok) return null;
+    const json = await resp.json();
+    if (!json?.success || !json?.data) return null;
+    return { auto: !!json.data.auto_select_mode, batchSize: Math.max(1, Math.min(8, json.data.auto_batch_size ?? 2)) };
+  }, [getAccessToken]);
+
   /**
    * 重置状态
    */
@@ -226,6 +251,8 @@ export function useReviewData(): UseReviewDataReturn {
     generatedError,
     generateSentences,
     userPrefs,
+    saveAutoPrefs,
+    loadAutoPrefs,
     reset,
   };
 } 
