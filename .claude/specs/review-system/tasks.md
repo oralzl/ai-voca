@@ -356,6 +356,57 @@
   - 配置错误监控
   - 引用需求：技术约束（Supabase、Vercel部署）
 
+### 10. 连续复习模式与 not-due 0.25 累计进度（新增）
+
+- [ ] **10.1 数据库迁移：新增累计字段**
+  - 添加迁移脚本：`docs/configurations/database/migrations/add-familiarity-progress.sql`
+  - SQL：`ALTER TABLE public.user_word_state ADD COLUMN IF NOT EXISTS familiarity_progress DECIMAL(4,2) NOT NULL DEFAULT 0.00;`
+  - 预览/生产执行与回滚预案
+  - 引用需求：11.1；设计：A
+
+- [x] **10.2 事件与 API 行为规范（已完成）**
+  - `/api/review/submit`：难度反馈仅记 `sentence_*`，不写占位 `word_*`
+  - `delivery_id` UUID 归一化，原始值入 `meta.delivery_id`
+  - upsert 冲突列：`user_word_state(user_id,word)` 与 `user_review_prefs(user_id)`
+  - 引用需求：12.1, 12.2, 12.3；设计：D
+  - 完成文件：`packages/frontend/api/review/submit.ts`
+
+- [ ] **10.3 not-due 0.25 累计逻辑实现**
+  - 按设计 B：not-due good/easy `familiarity_progress += 0.25`，满 1.00 → `familiarity += 1; familiarity_progress -= 1.00`
+  - 保护性排期：`next_due_at = max(old_next_due_at, now + INTERVAL[familiarity])`
+  - again 清零进度并降级；hard 轻微或不变（交由 ease_factor）
+  - 引用需求：11.2, 11.3；设计：B（含伪代码）
+  - 完成文件：`packages/frontend/api/review/submit.ts`
+
+- [ ] **10.4 候选策略支持连续模式**
+  - 服务器候选优先级：overdue > today-due > not-due（每批 not-due ≤ 2）
+  - 提供“回填模式”提示（到期为空时仍可继续）
+  - 引用需求：10.3, 10.8；设计：C
+  - 相关文件：`packages/frontend/api/review/candidates.ts`
+
+- [ ] **10.5 前端：连续复习 UX 与预取**
+  - 复习页新增“连续复习”开关与入口
+  - 评分期间预取下一句，失败兜底不阻断
+  - 进度显示与暂停/结束控制
+  - 引用需求：10.1, 10.2, 10.5, 10.6, 10.7；设计：C
+  - 相关文件：`packages/frontend/src/pages/ReviewPage.tsx` 及相关组件
+
+- [x] **10.6 前端：首页卡在“准备复习”修复（已完成）**
+  - 候选为空时不再卡住，进入候选/回填流程
+  - 引用需求：12.4；设计：C
+  - 完成文件：`packages/frontend/src/pages/ReviewPage.tsx`
+
+- [ ] **10.7 测试与验收**
+  - 单元测试：fsrs-lite not-due 累计与边界
+  - API 测试：submit not-due 分支（again/hard/good/easy）
+  - E2E：连续复习流（候选为空→回填、预取与自动推进）
+  - 引用需求：测试策略与成功指标
+
+- [x] **10.8 文档同步（已完成）**
+  - requirements.md：新增连续模式与 not-due 0.25 累计进度
+  - design.md：新增字段、规则与伪代码、接口与事件规范
+  - tasks.md：新增本节并标记完成项
+
 ## 实施优先级
 
 1. **第一阶段（核心功能）**：任务 1.1-1.3, 2.1-2.3, 3.1-3.3, 4.1-4.4
