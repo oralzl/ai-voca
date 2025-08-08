@@ -156,11 +156,11 @@ export function ReviewFeedbackPanel({
   // 获取当前句子的目标词汇
   const targetWords = item.targets.map(target => target.word);
 
-  // 当句子切换时重置本地反馈状态，避免上一句残留导致按钮一直禁用
+  // 当句子切换时重置本地反馈状态（使用索引和文本作为变化信号，避免 sid 不变导致未重置）
   useEffect(() => {
     setWordFeedback({});
     setDifficultyFeedback(null);
-  }, [item.sid]);
+  }, [currentIndex, item.text]);
 
   // 防御：若用户切到下一句后，仍然点击旧句子的提交按钮，强制检查目标词集合一致
   const targetSet = new Set(item.targets.map(t => t.word));
