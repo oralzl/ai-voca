@@ -1380,3 +1380,106 @@ chat_completion = client.chat.completions.create(
 ---
 
 如需更多模型ID和功能支持，详见 [AiHubMix官方文档](https://docs.aihubmix.com/cn/api/OpenAI-library)。 
+
+---
+
+## 新增设计：连续复习模式与 not-due 0.25 累计进度
+
+本节对应 requirements 中第 10–12 条，约定连续复习的交互与调度策略，并完善 not-due 时的累计进度与事件/API 一致性。
+
+### A. 表结构与数据字段变更
+
+- 保持 `user_word_state.familiarity` 为整数 0..5。
+- 新增累计字段（预览库已采用，生产上线前统一迁移）：
+
+```sql
+ALTER TABLE public.user_word_state
+ADD COLUMN IF NOT EXISTS familiarity_progress DECIMAL(4,2) NOT NULL DEFAULT 0.00;
+```
+
+说明：
+- `familiarity_progress` 用于记录 not-due 的轻量巩固进度，范围建议 0.00..0.99。
+- 满 1.00 即“进 1 级”，随后 `familiarity_progress -= 1.00`。
+
+### B. 调度与更新逻辑（FSRS-lite 延伸）
+
+间隔映射（天）仍为 `[1,3,7,14,30,60]`，以整数级别的 `familiarity` 为索引。
+
+统一规则：
+- `last_seen_at = now`；
+- 计算 `candidate_due = now + INTERVAL[familiarity_after_update]`；
+- not-due 场景下采用保护性策略：`next_due_at = max(old_next_due_at, candidate_due)`；
+- due/overdue 场景下：`next_due_at = candidate_due`（保持既有节奏）。
+
+分支规则：
+- due/overdue（`next_due_at <= now`）：
+  - again/unknown: `familiarity = max(0, f-1)`，`lapses += 1`；
+  - hard: `familiarity = f`；
+  - good/easy: `familiarity = min(5, f+1)`，`successes += 1`。
+- not-due：
+  - again/unknown: `familiarity = max(0, f-1)`；`lapses += 1`；`familiarity_progress = 0`；
+  - hard: `familiarity` 不变（或极轻微微调留给 `ease_factor`），不动进度；
+  - good/easy: `familiarity_progress += 0.25`；若 `>= 1.00` 则 `familiarity += 1` 且 `familiarity_progress -= 1.00`；`successes += 1`。
+
+伪代码：
+
+```ts
+const intervals = [1,3,7,14,30,60];
+const isDue = !old.next_due_at || new Date(old.next_due_at) <= now;
+let f = old.familiarity ?? 0;
+let fp = old.familiarity_progress ?? 0.0;
+
+switch (rating) {
+  case 'again':
+  case 'unknown':
+    f = Math.max(0, f - 1);
+    fp = 0;
+    lapses += 1;
+    break;
+  case 'hard':
+    // 保持 f；可选轻微难度微调交给 ease_factor
+    break;
+  case 'good':
+  case 'easy':
+    if (isDue) {
+      f = Math.min(5, f + 1);
+    } else {
+      fp = Math.min(1.0, fp + 0.25);
+      if (fp >= 1.0) { f = Math.min(5, f + 1); fp -= 1.0; }
+    }
+    successes += 1;
+    break;
+}
+
+const candidateDue = addDays(now, intervals[f]);
+next_due_at = isDue ? candidateDue : new Date(Math.max(
+  old.next_due_at ? new Date(old.next_due_at).getTime() : 0,
+  candidateDue.getTime()
+)).toISOString();
+```
+
+### C. 连续复习模式（前端与接口协同）
+
+- 批次与预取：每批 1–3 词；用户评分期间预取下一句；生成失败重试与兜底不阻断。
+- 候选优先级：overdue > today-due > not-due 填充（每批 not-due ≤ 2）。
+- 进度显示：已完成数、正确率、预计剩余时长（可选）。
+- 控制：暂停/结束按钮随时可退出；退出时保留已提交进度。
+
+接口一致性：
+- GET `/review/candidates`：当到期为空时，返回“回填模式”候选，前端提示但不中断。
+- POST `/review/generate`：不感知“连续模式”，正常按输入生成；前端负责预取与切换。
+- POST `/review/submit`：按 B 节规则更新状态。
+
+### D. 事件记录与 API 行为规范
+
+- 难度反馈仅记录 `sentence_*` 事件（如 `sentence_ok`, `sentence_too_easy`, `sentence_too_hard`）。
+- 不再写入任何占位 `word_*` 事件（如 `word_good(sentence_difficulty)`）。
+- `delivery_id` UUID 归一化：若前端传入值非 UUID（如 `sid`, `fallback_1`），后端生成 UUID 存入主字段，原始值进入 `meta.delivery_id`。
+- upsert 冲突列：
+  - `user_word_state`：`onConflict: (user_id, word)`；
+  - `user_review_prefs`：`onConflict: (user_id)`。
+
+### E. 迁移与兼容
+
+- 预发布/预览：先执行 `ALTER TABLE` 增加 `familiarity_progress`，观测事件与计划迁移效果。
+- 生产上线：灰度启用 not-due 累计逻辑；保留回滚开关（关闭后仅记录事件，不动计划）。

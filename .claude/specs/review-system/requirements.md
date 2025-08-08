@@ -117,3 +117,41 @@ Vocabulary Review System是一个基于LLM生成的个性化词汇复习系统�
 - 不落地句子，不维护大词表
 - 不进行用户验收测试或用户反馈收集（作为此需求文档的一部分）
 - 不使用预定义的兜底模板，LLM生成失败时直接重试或报错 
+
+---
+
+## 新增需求：连续复习模式与未到期累计进度
+
+### 10. 作为学习者，我希望开启“连续复习模式”，可以不间断地持续刷题，直到我手动暂停或真的没有可复习内容
+
+**验收标准：**
+- 10.1. 在复习页提供“连续复习”开关与“开始连续复习”按钮。
+- 10.2. 进入连续模式后，系统自动循环：候选词获取 → 句子生成 → 反馈提交 → 下一轮，无需用户额外点击“下一题”。
+- 10.3. 候选选择策略（优先级由高到低）：
+  - 已过期（overdue: next_due_at < now）
+  - 今日到期（今天 23:59 前到期）
+  - 回填（not-due）：按“易忘优先”规则补足本轮批次，单批回填最多2个。
+- 10.4. “易忘优先”评分S（用于 not-due 排序）：\( S = 2\times overdue\_flag + 1\times due\_today\_flag + (5 - familiarity) + \frac{time\_since\_last\_seen\_days}{7} \)。
+- 10.5. 批次大小为1–3个词，生成失败可重试与兜底，不阻断流程。
+- 10.6. 前台在用户评分时后台预取下一句，减少等待时间。
+- 10.7. 提供顶部小进度条（本次完成数/正确率/估算时长）及“暂停/结束”控制。
+- 10.8. 当到期候选为空时，自动进入“回填模式”，仍然可以继续复习（见 11 的 not-due 规则）。
+
+### 11. 作为学习者，我希望在“未到期(not-due)”时也能进行轻量巩固，但需要累计四次良好反馈才提升1级熟悉度
+
+**验收标准：**
+- 11.1. 保持 `user_word_state.familiarity` 为整数（0..5），新增字段 `familiarity_progress DECIMAL(4,2) NOT NULL DEFAULT 0.00` 用于累计进度。
+- 11.2. 当 not-due 时：
+  - again：`familiarity = max(0, familiarity - 1)`；`lapses += 1`；`familiarity_progress = 0`；`last_seen_at = now`；`next_due_at = max(old_next_due_at, now + INTERVAL[familiarity])`。
+  - hard：不变或极轻微调整；`last_seen_at = now`；`next_due_at = max(old_next_due_at, now + INTERVAL[familiarity])`。
+  - good/easy：`familiarity_progress += 0.25`；若 `familiarity_progress >= 1.0` 则执行 `familiarity += 1` 且 `familiarity_progress -= 1.0`；`successes += 1`；`last_seen_at = now`；`next_due_at = max(old_next_due_at, now + INTERVAL[familiarity])`。
+- 11.3. 当 due（含 overdue）时，沿用现有规则（again -1，hard 0，good/easy +1），`next_due_at = now + INTERVAL[new_familiarity]`。
+- 11.4. 所有评分都记录 `review_events`，用于事后分析与监控。
+
+### 12. 事件记录一致性与API行为约束
+
+**验收标准：**
+- 12.1. 整体难度反馈仅记录 `sentence_*` 事件，不再写入任何占位 `word_*` 事件（如 `word_good(sentence_difficulty)`）。
+- 12.2. `/review/submit` 入参中的 `delivery_id` 进行 UUID 归一化：若前端传入的 `sid` 或 `fallback_*` 非 UUID，则后端生成 UUID 存入主字段，同时将原始值保存到 `meta.delivery_id`。
+- 12.3. `user_word_state` 使用 upsert，`onConflict: (user_id, word)`；`user_review_prefs` 使用 upsert，`onConflict: (user_id)`，确保幂等与避免重复键冲突。
+- 12.4. 前端在首次成功提交后，若候选为空，复习首页不再卡在“准备复习”，而是正常进入候选/回填流程（见 10.8 与 11）。
