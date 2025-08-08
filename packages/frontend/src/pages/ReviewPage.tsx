@@ -54,6 +54,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   const [prefetchTargets, setPrefetchTargets] = useState<string[] | null>(null);
   const [todayCount, setTodayCount] = useState<number | null>(null);
   const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [startingReview, setStartingReview] = useState<boolean>(false);
 
   // 处理候选词选择
   const handleTargetToggle = (word: string) => {
@@ -67,6 +68,8 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   };
 
   const handleStartReview = async () => {
+    if (startingReview) return;
+    setStartingReview(true);
     if (autoMode) {
       const trySizes = [batchSize, 2, 1].filter((v, i, a) => a.indexOf(v) === i);
       let autoTargets: string[] = [];
@@ -80,17 +83,28 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
       }
       if (autoTargets.length === 0) {
         alert('当前没有可用的复习词汇，请稍后再试或切换手动选词');
+        setStartingReview(false);
         return;
       }
       setSelectedTargets(autoTargets);
       setCurrentStep('reviewing');
-      generateSentences(autoTargets);
-      prefetchNext(autoTargets);
+      try {
+        await generateSentences(autoTargets);
+      } finally {
+        prefetchNext(autoTargets);
+        setStartingReview(false);
+      }
     } else {
       if (selectedTargets.length > 0) {
         setCurrentStep('reviewing');
-        generateSentences(selectedTargets);
-        prefetchNext(selectedTargets);
+        try {
+          await generateSentences(selectedTargets);
+        } finally {
+          prefetchNext(selectedTargets);
+          setStartingReview(false);
+        }
+      } else {
+        setStartingReview(false);
       }
     }
   };
@@ -344,7 +358,9 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                   />
                 </div>
                 <div className="text-center">
-                  <Button onClick={handleStartReview} className="inline-flex items-center gap-2">开始复习</Button>
+                  <Button onClick={handleStartReview} disabled={startingReview} className="inline-flex items-center gap-2">
+                    {startingReview ? (<><Loader2 className="w-4 h-4 animate-spin" /> 正在开始...</>) : '开始复习'}
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -364,9 +380,10 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                   {!autoMode && selectedTargets.length > 0 && (
                     <Button 
                       onClick={handleStartReview}
+                      disabled={startingReview}
                       className="flex items-center gap-2"
                     >
-                      开始复习 ({selectedTargets.length})
+                      {startingReview ? (<><Loader2 className="w-4 h-4 animate-spin" /> 正在开始...</>) : `开始复习 (${selectedTargets.length})`}
                     </Button>
                   )}
                 </div>
