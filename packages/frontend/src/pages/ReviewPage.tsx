@@ -367,28 +367,28 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
           </Card>
 
           {/* 候选词列表（仅手动模式显示） */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">选择要复习的词汇</h3>
-                    <p className="text-sm text-muted-foreground">
-                      已选择 {selectedTargets.length}/8 个词汇
-                    </p>
+          {!autoMode && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-semibold">选择要复习的词汇</h3>
+                      <p className="text-sm text-muted-foreground">
+                        已选择 {selectedTargets.length}/8 个词汇
+                      </p>
+                    </div>
+                    {selectedTargets.length > 0 && (
+                      <Button 
+                        onClick={handleStartReview}
+                        disabled={startingReview}
+                        className="flex items-center gap-2"
+                      >
+                        {startingReview ? (<><Loader2 className="w-4 h-4 animate-spin" /> 正在开始...</>) : `开始复习 (${selectedTargets.length})`}
+                      </Button>
+                    )}
                   </div>
-                  {!autoMode && selectedTargets.length > 0 && (
-                    <Button 
-                      onClick={handleStartReview}
-                      disabled={startingReview}
-                      className="flex items-center gap-2"
-                    >
-                      {startingReview ? (<><Loader2 className="w-4 h-4 animate-spin" /> 正在开始...</>) : `开始复习 (${selectedTargets.length})`}
-                    </Button>
-                  )}
-                </div>
-                
-                {!autoMode && (
+                  
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {candidates.slice(0, 12).map((candidate) => (
                       <CandidateWordCard
@@ -399,18 +399,18 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                       />
                     ))}
                   </div>
-                )}
-
-                {!autoMode && candidates.length > 12 && (
-                  <div className="text-center">
-                    <p className="text-sm text-muted-foreground">
-                      还有 {candidates.length - 12} 个词汇...
-                    </p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                  
+                  {candidates.length > 12 && (
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground">
+                        还有 {candidates.length - 12} 个词汇...
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     );
