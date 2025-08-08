@@ -384,6 +384,40 @@ async function updateUserReviewPrefs(supabase: any, userId: string, difficultyFe
 
 async function processReviewSubmit(supabase: any, userId: string, request: ReviewSubmitRequest): Promise<{ wordState: WordState; userPrefs: UserPrefs } | null> {
   try {
+    const isPlaceholderDifficulty = request.word === 'sentence_difficulty';
+
+    // 规范化 delivery_id：后端表字段为 UUID，前端传入的 sid/fallback_1 可能不是 UUID
+    const rawDeliveryIdPre = request.meta?.delivery_id;
+    const deliveryIdPre = rawDeliveryIdPre && uuidValidate(rawDeliveryIdPre) ? rawDeliveryIdPre : uuidv4();
+
+    // 占位难度事件：不写 user_word_state、不写词条事件，仅写句子事件 + 更新偏好
+    if (isPlaceholderDifficulty) {
+      if (request.difficulty_feedback) {
+        const sentenceEventOnly = {
+          user_id: userId,
+          delivery_id: deliveryIdPre,
+          event_type: difficultyToEventType(request.difficulty_feedback),
+          sentence_text: 'review_session',
+          meta: {
+            delivery_id: rawDeliveryIdPre,
+            predicted_cefr: request.meta?.predicted_cefr,
+            estimated_new_terms_count: request.meta?.estimated_new_terms_count
+          }
+        };
+        await recordReviewEvent(supabase, sentenceEventOnly);
+        const prefsOnly = await updateUserReviewPrefs(supabase, userId, request.difficulty_feedback);
+        if (!prefsOnly) {
+          console.error('processReviewSubmit: Failed to update prefs for difficulty-only');
+          return null;
+        }
+        // 返回占位的 word_state（不被前端使用），以满足返回结构
+        return { wordState: initializeWordState(new Date()), userPrefs: prefsOnly };
+      }
+      // 没有 difficulty_feedback 时，直接返回失败
+      console.error('processReviewSubmit: Placeholder difficulty request missing difficulty_feedback');
+      return null;
+    }
+
     let currentState = await getUserWordState(supabase, userId, request.word);
     if (!currentState) {
       // 为新词汇初始化状态
@@ -399,7 +433,6 @@ async function processReviewSubmit(supabase: any, userId: string, request: Revie
       return null;
     }
     
-    // 规范化 delivery_id：后端表字段为 UUID，前端传入的 sid/fallback_1 可能不是 UUID
     const rawDeliveryId = request.meta?.delivery_id;
     const deliveryId = rawDeliveryId && uuidValidate(rawDeliveryId) ? rawDeliveryId : uuidv4();
 
