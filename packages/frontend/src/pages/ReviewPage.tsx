@@ -114,6 +114,8 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
         setPrefetchTargets(null);
         setCurrentSentenceIndex(0);
         generateSentences(prefetchTargets);
+        // 进入新一轮后，立即为下一轮预取，避免只进行两轮后结束
+        prefetchNext(prefetchTargets);
       } else {
         setCurrentStep('completed');
       }
