@@ -389,6 +389,13 @@ async function updateUserReviewPrefs(supabase: any, userId: string, difficultyFe
 async function processReviewSubmit(supabase: any, userId: string, request: ReviewSubmitRequest): Promise<{ wordState: WordState; userPrefs: UserPrefs } | null> {
   try {
     const isPlaceholderDifficulty = request.word === 'sentence_difficulty';
+    if (isPlaceholderDifficulty) {
+      console.log('Processing sentence_difficulty payload', {
+        hasDifficulty: Boolean((request as any).difficulty_feedback),
+        difficulty: (request as any).difficulty_feedback,
+        metaHasDelivery: Boolean(request.meta?.delivery_id)
+      });
+    }
 
     // 规范化 delivery_id：后端表字段为 UUID，前端传入的 sid/fallback_1 可能不是 UUID
     const rawDeliveryIdPre = request.meta?.delivery_id;
@@ -569,6 +576,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   try {
     console.log('Review submit API called', { timestamp: new Date().toISOString() });
+    // 调试：打印关键请求体（避免敏感信息）
+    try {
+      const peek = typeof req.body === 'object' ? req.body : {};
+      console.log('Review submit payload peek', {
+        word: (peek as any)?.word,
+        rating: (peek as any)?.rating,
+        has_difficulty_feedback: Boolean((peek as any)?.difficulty_feedback),
+        has_meta: Boolean((peek as any)?.meta),
+      });
+    } catch {}
     const user = await authenticateUser(req);
     if (!user) {
       console.error('Review submit: Unauthorized');
@@ -576,7 +593,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
     
-    const requestBody = req.body as ReviewSubmitRequest;
+    // 兼容某些客户端/网关将 body 作为字符串传递的情况
+    const requestBody = (typeof req.body === 'string' ? JSON.parse(req.body) : req.body) as ReviewSubmitRequest;
     if (!requestBody.word || !requestBody.rating) {
        console.error('Review submit: Missing required params', { body: requestBody });
       res.status(400).json({ success: false, error: '缺少必要参数：word 和 rating' });
@@ -590,9 +608,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return;
     }
     
-    if (requestBody.difficulty_feedback) {
+    if (requestBody && (requestBody as any).difficulty_feedback) {
       const validFeedbacks: DifficultyFeedback[] = ['too_easy', 'ok', 'too_hard'];
-      if (!validFeedbacks.includes(requestBody.difficulty_feedback)) {
+      if (!validFeedbacks.includes((requestBody as any).difficulty_feedback)) {
         console.error('Review submit: Invalid difficulty_feedback', { difficulty_feedback: requestBody.difficulty_feedback });
         res.status(400).json({ success: false, error: '无效的difficulty_feedback值' });
         return;
