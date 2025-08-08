@@ -4,7 +4,7 @@
  * @description 集成词汇反馈卡片到句子展示界面，实现完整的复习反馈闭环
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { SentenceDisplay } from './SentenceDisplay';
@@ -156,8 +156,14 @@ export function ReviewFeedbackPanel({
   // 获取当前句子的目标词汇
   const targetWords = item.targets.map(target => target.word);
 
-  // 计算完成度
-  const isWordFeedbackComplete = Object.keys(wordFeedback).length === targetWords.length && targetWords.every(word => wordFeedback[word] !== undefined);
+  // 当句子切换时重置本地反馈状态，避免上一句残留导致按钮一直禁用
+  useEffect(() => {
+    setWordFeedback({});
+    setDifficultyFeedback(null);
+  }, [item.sid]);
+
+  // 计算完成度（仅要求当前句子的目标词都已评分，不限制额外键）
+  const isWordFeedbackComplete = targetWords.every(word => wordFeedback[word] !== undefined);
   const isDifficultyFeedbackComplete = difficultyFeedback !== null;
   const isFeedbackComplete = isWordFeedbackComplete && isDifficultyFeedbackComplete;
 
