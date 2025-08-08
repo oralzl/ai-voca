@@ -37,6 +37,8 @@ type GenerationStyle = 'neutral' | 'news' | 'dialog' | 'academic';
 interface WordState {
   /** 熟悉度等级 0-5 */
   familiarity: number;
+  /** 未到期累计进度 0.0..1.0 */
+  familiarity_progress?: number;
   /** 难度等级 1-5 */
   difficulty: number;
   /** 稳定性（天） */
@@ -281,6 +283,7 @@ async function getUserWordState(supabase: any, userId: string, word: string): Pr
     
     return {
       familiarity: data.familiarity || 0,
+      familiarity_progress: typeof data.familiarity_progress === 'number' ? data.familiarity_progress : 0.0,
       difficulty: data.ease_factor || 2.5,
       stability: data.interval_days,
       recall_p: undefined,
@@ -303,6 +306,7 @@ async function updateUserWordState(supabase: any, userId: string, word: string, 
         user_id: userId,
         word: word,
         familiarity: newState.familiarity,
+        familiarity_progress: typeof newState.familiarity_progress === 'number' ? newState.familiarity_progress : 0.0,
         ease_factor: newState.difficulty,
         interval_days: newState.stability || 1,
         review_count: newState.successes,
@@ -419,13 +423,58 @@ async function processReviewSubmit(supabase: any, userId: string, request: Revie
     }
 
     let currentState = await getUserWordState(supabase, userId, request.word);
-    if (!currentState) {
-      // 为新词汇初始化状态
-      currentState = initializeWordState(new Date());
-    }
-    
     const now = new Date();
-    const { next: newState } = fsrsUpdate(currentState, request.rating, now);
+    if (!currentState) {
+      // 新词：初始化后按 due 分支处理（视为到期）
+      currentState = initializeWordState(now);
+    }
+    // 10.3 not-due 0.25 累计与 next_due_at = max(old, candidate)
+    const isDue = !currentState.next_due_at || new Date(currentState.next_due_at) <= now;
+    let f = currentState.familiarity ?? 0;
+    let fp = typeof currentState.familiarity_progress === 'number' ? currentState.familiarity_progress : 0.0;
+    let successes = currentState.successes || 0;
+    let lapses = currentState.lapses || 0;
+
+    switch (request.rating) {
+      case 'again':
+        f = Math.max(FAMILIARITY_MIN, f - 1);
+        fp = 0.0;
+        lapses += 1;
+        break;
+      case 'hard':
+        // 保持 f，不动进度（必要时后续用 ease_factor 微调）
+        break;
+      case 'good':
+      case 'easy':
+        if (isDue) {
+          f = Math.min(FAMILIARITY_MAX, f + 1);
+        } else {
+          fp = Math.min(1.0, fp + 0.25);
+          if (fp >= 1.0) {
+            f = Math.min(FAMILIARITY_MAX, f + 1);
+            fp = Math.max(0, fp - 1.0);
+          }
+        }
+        successes += 1;
+        break;
+    }
+
+    const intervalDays = INTERVALS[f] ?? INTERVALS[INTERVALS.length - 1];
+    const candidateDue = new Date(now.getTime() + intervalDays * 24 * 60 * 60 * 1000);
+    const oldDue = currentState.next_due_at ? new Date(currentState.next_due_at) : null;
+    const next_due_at = (isDue || !oldDue)
+      ? candidateDue.toISOString()
+      : new Date(Math.max(oldDue.getTime(), candidateDue.getTime())).toISOString();
+
+    const newState: WordState = {
+      ...currentState,
+      familiarity: f,
+      familiarity_progress: fp,
+      successes,
+      lapses,
+      last_seen_at: now.toISOString(),
+      next_due_at
+    };
     
     const updateSuccess = await updateUserWordState(supabase, userId, request.word, newState);
     if (!updateSuccess) {
