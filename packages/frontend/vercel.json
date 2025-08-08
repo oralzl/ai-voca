@@ -21,8 +21,7 @@
     "api/favorites/toggle.ts",
     "api/user/prefs.ts",
     "api/user/stats.ts",
-    "api/health.ts",
-    "api/words/query.ts"
+    "api/health.ts"
   ],
   "rewrites": [
     {
