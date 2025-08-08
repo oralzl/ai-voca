@@ -310,7 +310,7 @@ async function updateUserWordState(supabase: any, userId: string, word: string, 
         last_seen_at: newState.last_seen_at,
         next_due_at: newState.next_due_at,
         updated_at: new Date().toISOString()
-      });
+      }, { onConflict: 'user_id,word' });
     
     if (error) {
       console.error('updateUserWordState error:', error);
@@ -369,7 +369,7 @@ async function updateUserReviewPrefs(supabase: any, userId: string, difficultyFe
         preferred_style: prefs.style,
         allow_incidental_learning: prefs.allow_incidental,
         updated_at: new Date().toISOString()
-      });
+      }, { onConflict: 'user_id' });
     
     if (error) {
       console.error('updateUserReviewPrefs error:', error);
