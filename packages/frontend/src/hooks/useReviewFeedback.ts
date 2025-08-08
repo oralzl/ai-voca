@@ -96,11 +96,11 @@ export function useReviewFeedback(): UseReviewFeedbackReturn {
     try {
       // 仅提交当前目标词的反馈，避免残留键造成异常
       const targetSet = new Set(feedback.targets || []);
-      const wordPromises = Object.entries(feedback.wordFeedback)
-        .filter(([word]) => targetSet.size === 0 || targetSet.has(word))
-        .map(([word, rating]) =>
+      const wordsToSubmit = Object.entries(feedback.wordFeedback)
+        .filter(([word]) => targetSet.size === 0 || targetSet.has(word));
+      const wordPromises = wordsToSubmit.map(([word, rating]) =>
         submitWordFeedback(word, rating, feedback.sentenceId, {
-          predicted_cefr: 'B1', // 这里可以根据实际数据传递
+          predicted_cefr: 'B1',
           estimated_new_terms_count: 0
         })
       );
@@ -135,10 +135,13 @@ export function useReviewFeedback(): UseReviewFeedbackReturn {
 
       // 等待所有词汇反馈完成
       const results = await Promise.all(wordPromises);
-      const allSuccess = results.every(result => result === true);
-
-      if (!allSuccess) {
-        throw new Error('部分词汇反馈提交失败');
+      const failedWords = wordsToSubmit
+        .map(([w], idx) => ({ word: w, ok: results[idx] === true }))
+        .filter(x => !x.ok)
+        .map(x => x.word);
+      if (failedWords.length > 0) {
+        console.error('部分词汇反馈提交失败: ', failedWords);
+        throw new Error(`部分词汇反馈提交失败: ${failedWords.join(', ')}`);
       }
 
       return true;
