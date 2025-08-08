@@ -290,15 +290,8 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
         {/* 顶部导航 */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
           <div className="flex items-center justify-between px-4 py-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onBack}
-              className="flex items-center space-x-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>返回</span>
-            </Button>
+            {/* 复习为一级页面：移除返回按钮 */}
+            <div className="w-16" />
             
             <div className="flex-1 text-center">
               <h1 className="text-lg font-semibold">词汇复习</h1>
@@ -324,7 +317,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                       等级: {userPrefs.level_cefr}
                     </Badge>
                     <Badge variant="outline">
-                      风格: {userPrefs.style}
+                      风格: {userPrefs.style as any || 'neutral'}
                     </Badge>
                   </div>
                 )}
