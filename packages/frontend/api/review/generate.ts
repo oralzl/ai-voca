@@ -6,8 +6,8 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient } from '@supabase/supabase-js';
-import { v4 as uuidv4 } from 'uuid';
+// import { createClient } from '@supabase/supabase-js';
+// import { v4 as uuidv4 } from 'uuid';
 
 // ==================== 内联类型定义 ====================
 

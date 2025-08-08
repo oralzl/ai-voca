@@ -149,7 +149,7 @@ async function getReviewStats(supabase: any, userId: string) {
     }
 
     const now = new Date().toISOString();
-    const dueToday = stats?.filter(word => 
+    const dueToday = stats?.filter((word: any) => 
       word.next_due_at && word.next_due_at <= now
     ).length || 0;
 

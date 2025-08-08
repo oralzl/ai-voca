@@ -400,11 +400,11 @@ async function adjustDifficultyBias(supabase: any, userId: string): Promise<numb
     }
     
     // 计算too_hard反馈的比例
-    const tooHardCount = recentEvents.filter(event => 
+    const tooHardCount = recentEvents.filter((event: any) => 
       event.meta?.reading_feedback === 'too_hard'
     ).length;
     
-    const totalFeedbackCount = recentEvents.filter(event => 
+    const totalFeedbackCount = recentEvents.filter((event: any) => 
       event.meta?.reading_feedback
     ).length;
     
