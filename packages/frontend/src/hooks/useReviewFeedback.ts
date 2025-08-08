@@ -48,6 +48,15 @@ export function useReviewFeedback(): UseReviewFeedbackReturn {
         setSubmitError('无法获取访问令牌');
         return false;
       }
+      const payload = {
+        word,
+        rating,
+        meta: {
+          delivery_id: sentenceId,
+          ...meta
+        }
+      };
+      console.log('Submitting word feedback payload:', payload);
 
       const response = await fetch('/api/review/submit', {
         method: 'POST',
@@ -55,20 +64,13 @@ export function useReviewFeedback(): UseReviewFeedbackReturn {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          word,
-          rating,
-          meta: {
-            delivery_id: sentenceId,
-            ...meta
-          }
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data: ReviewSubmitResponse = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.error || '提交失败');
+      if (!response.ok || !data.success) {
+        console.error('Word feedback submit failed:', { status: response.status, data });
+        throw new Error(data.error || `提交失败(${response.status})`);
       }
 
       return true;
