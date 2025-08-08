@@ -243,32 +243,20 @@
     - 更新 `packages/frontend/src/pages/ReviewPage.tsx` 集成真实数据
     - 更新 `packages/frontend/src/components/README.md` 添加组件文档
 
-- [ ] **5.3 实现词汇反馈卡片**
+- [x] **5.3 实现词汇反馈卡片**✅
   - 创建 `packages/frontend/src/components/WordFeedbackCard.tsx`
   - 实现评分按钮组件
   - 添加状态管理和动画效果
   - 实现网格布局
   - 引用需求：4.1, 4.2, 8.4
 
-- [ ] **5.4 使用现有 ReviewFeedbackPanel.tsx 实现难度反馈**
+- [x] **5.4 使用现有 ReviewFeedbackPanel.tsx 实现难度反馈**✅
   - 文件：`packages/frontend/src/components/ReviewFeedbackPanel.tsx`
   - 覆盖整体难度评价（`sentence_*` 事件）、按钮状态管理与响应式布局
   - 如后续需要再拆分 `DifficultyFeedback.tsx`，当前不强制
   - 引用需求：4.2, 4.3, 4.4, 4.5, 8.4（与 design.md 的事件规范一致）
 
-- [ ] **5.5 实现复习进度组件**
-  - 创建 `packages/frontend/src/components/ReviewProgress.tsx`
-  - 实现进度条显示
-  - 添加完成按钮
-  - 实现动画效果
-  - 引用需求：8.5, 8.6
 
-- [ ] **5.6 实现复习 Tab 组件**
-  - 创建 `packages/frontend/src/components/layout/ReviewTab.tsx`
-  - 实现导航标签组件
-  - 添加未读数量显示
-  - 实现激活状态管理
-  - 引用需求：8.1, 8.2, 8.7, 8.8
 
 ### 6. 导航和布局更新
 
@@ -290,12 +278,7 @@
   - **完成文件**：
     - `packages/frontend/src/components/layout/AppSidebar.tsx`
 
-- [ ] **6.3 实现复习计数 Hook**
-  - 创建 `packages/frontend/src/hooks/useReviewCount.ts`
-  - 实现复习数量获取逻辑
-  - 添加自动刷新机制
-  - 实现错误处理
-  - 引用需求：8.2, 8.3
+
 
 ### 7. 集成和测试
 
@@ -309,35 +292,6 @@
     - `packages/frontend/src/App.tsx`
     - `packages/frontend/src/components/layout/AppLayout.tsx`
 
-- [ ] **7.2 实现端到端测试**
-  - 创建 `packages/frontend/src/tests/review.e2e.test.ts`
-  - 测试完整复习流程
-  - 验证用户交互和状态更新
-  - 测试错误处理场景
-  - 引用需求：成功指标（质量保证、用户体验）
-
-- [ ] **7.3 实现单元测试覆盖**
-  - 为 FSRS 算法添加测试
-  - 为难度控制器添加测试
-  - 为校验器添加测试
-  - 为 LLM 工具添加测试
-  - 引用需求：成功指标（测试覆盖率80%以上）
-
-### 8. 错误处理和监控
-
-- [ ] **8.1 实现错误处理机制**
-  - 添加 LLM 生成失败处理
-  - 实现校验失败兜底机制
-  - 添加数据库操作错误处理
-  - 实现权限验证错误处理
-  - 引用需求：5.1, 5.2, 5.3, 5.4, 5.5, 成功指标（稳定性）
-
-- [ ] **8.2 添加监控和日志**
-  - 实现关键指标收集
-  - 添加性能监控
-  - 实现错误日志记录
-  - 添加用户行为追踪
-  - 引用需求：9.1, 9.2, 9.3, 9.4, 9.5
 
 ### 9. 性能优化和部署
 
@@ -357,7 +311,7 @@
 
 ### 10. 连续复习模式与 not-due 0.25 累计进度（新增）
 
-- [ ] **10.1 数据库迁移：新增累计字段**
+- [x] **10.1 数据库迁移：新增累计字段**
   - 添加迁移脚本：`docs/configurations/database/migrations/add-familiarity-progress.sql`
   - SQL：`ALTER TABLE public.user_word_state ADD COLUMN IF NOT EXISTS familiarity_progress DECIMAL(4,2) NOT NULL DEFAULT 0.00;`
   - 预览/生产执行与回滚预案
@@ -370,14 +324,14 @@
   - 引用需求：12.1, 12.2, 12.3；设计：D
   - 完成文件：`packages/frontend/api/review/submit.ts`
 
-- [ ] **10.3 not-due 0.25 累计逻辑实现**
+- [x] **10.3 not-due 0.25 累计逻辑实现**
   - 按设计 B：not-due good/easy `familiarity_progress += 0.25`，满 1.00 → `familiarity += 1; familiarity_progress -= 1.00`
   - 保护性排期：`next_due_at = max(old_next_due_at, now + INTERVAL[familiarity])`
   - again 清零进度并降级；hard 轻微或不变（交由 ease_factor）
   - 引用需求：11.2, 11.3；设计：B（含伪代码）
   - 完成文件：`packages/frontend/api/review/submit.ts`
 
-- [ ] **10.4 候选策略支持连续模式**
+- [x] **10.4 候选策略支持连续模式**
   - 服务器候选优先级：overdue > today-due > not-due（每批 not-due ≤ 2）
   - 提供“回填模式”提示（到期为空时仍可继续）
   - 引用需求：10.3, 10.8；设计：C
@@ -386,9 +340,46 @@
 - [ ] **10.5 前端：连续复习 UX 与预取**
   - 复习页新增“连续复习”开关与入口
   - 评分期间预取下一句，失败兜底不阻断
-  - 进度显示与暂停/结束控制
+  - 首页不展示“本次会话进度”；复习进行中提供暂停/结束控制
   - 引用需求：10.1, 10.2, 10.5, 10.6, 10.7；设计：C
   - 相关文件：`packages/frontend/src/pages/ReviewPage.tsx` 及相关组件
+
+  - 原型（首页：自动/手动选词）
+
+    - 复习首页（自动选词模式）
+
+      ```
+      ┌──────────────────────────────────────────────┐
+      │ ← 返回                   词汇复习              │
+      │                                              │
+      │ 今日待复习： 12 词      总计待复习： 87 词       │
+      │                                              │
+      │ 复习模式：  (●) 自动选词    (○) 手动选词         │
+      │ 说明：系统将自动选择到期/回填词汇开始复习       │
+      │                                              │
+      │                      [ 开始复习 ]             │
+      └──────────────────────────────────────────────┘
+      ```
+
+    - 复习首页（手动选词模式）
+
+      ```
+      ┌──────────────────────────────────────────────┐
+      │ ← 返回                   词汇复习              │
+      │                                              │
+      │ 今日待复习： 12 词      总计待复习： 87 词       │
+      │                                              │
+      │ 复习模式：  (○) 自动选词    (●) 手动选词         │
+      │ 说明：仅在“手动选词”模式下显示候选词控件         │
+      │                                              │
+      │ ┌──────── 候选词（可多选） ───────────────────┐
+      │ │  [ ] apple   [ ] offset   [ ] adequate     │
+      │ │  [ ] dog     [ ] some     [ ] staggering   │
+      │ └───────────────────────────────────────────┘
+      │                                              │
+      │                      [ 开始复习 ]             │
+      └──────────────────────────────────────────────┘
+      ```
 
 - [x] **10.6 前端：首页卡在“准备复习”修复（已完成）**
   - 候选为空时不再卡住，进入候选/回填流程
