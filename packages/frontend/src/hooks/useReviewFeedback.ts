@@ -105,21 +105,24 @@ export function useReviewFeedback(): UseReviewFeedbackReturn {
 
       // 如果有整体难度反馈，也提交
       if (feedback.difficultyFeedback) {
+        const difficultyPayload = {
+          word: 'sentence_difficulty',
+          rating: 'good',
+          difficulty_feedback: feedback.difficultyFeedback,
+          meta: {
+            delivery_id: feedback.sentenceId,
+            targets: feedback.targets
+          }
+        } as const;
+        console.log('Submitting sentence difficulty payload:', difficultyPayload);
+
         const difficultyResponse = await fetch('/api/review/submit', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${await getAccessToken()}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            word: 'sentence_difficulty',
-            rating: 'good', // 难度反馈使用good作为占位符
-            difficulty_feedback: feedback.difficultyFeedback,
-            meta: {
-              delivery_id: feedback.sentenceId,
-              targets: feedback.targets
-            }
-          }),
+          body: JSON.stringify(difficultyPayload),
         });
 
         const difficultyData: ReviewSubmitResponse = await difficultyResponse.json();
