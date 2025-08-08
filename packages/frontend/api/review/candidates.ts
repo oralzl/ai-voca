@@ -71,6 +71,8 @@ interface CandidatesResponse {
   data?: {
     /** 候选词列表 */
     candidates: CandidateWord[];
+    /** 是否处于回填模式（无到期词，使用 not-due 回填） */
+    backfill_mode: boolean;
     /** 生成参数 */
     generation_params: {
       /** 目标词汇 */
@@ -219,13 +221,18 @@ async function getUserReviewPrefs(supabase: any, userId: string): Promise<UserPr
 async function getCandidateWords(
   supabase: any, 
   userId: string, 
-  limit: number
-): Promise<CandidateWord[]> {
-  const now = new Date().toISOString();
+  limit: number,
+  notDueCap: number = 2
+): Promise<{ candidates: CandidateWord[]; backfill_mode: boolean }> {
+  const nowDate = new Date();
+  const endOfDay = new Date(nowDate);
+  endOfDay.setHours(23, 59, 59, 999);
+  const now = nowDate.toISOString();
+  const eod = endOfDay.toISOString();
   
   try {
-    // 首先获取今天需要复习的词汇（next_due_at <= now）
-    let { data: dueWords, error: dueError } = await supabase
+    // 1) overdue：next_due_at <= now
+    let { data: overdueWords, error: overdueError } = await supabase
       .from('user_word_state')
       .select(`
         word,
@@ -242,17 +249,16 @@ async function getCandidateWords(
       .order('next_due_at', { ascending: true })
       .limit(limit);
     
-    if (dueError) {
-      console.error('Error fetching due words:', dueError);
-      dueWords = [];
+    if (overdueError) {
+      console.error('Error fetching overdue words:', overdueError);
+      overdueWords = [];
     }
     
-    // 如果今天需要复习的词汇不足，补充新收藏的词汇
-    let additionalWords: any[] = [];
-    if (!dueWords || dueWords.length < limit) {
-      const remainingCount = limit - (dueWords?.length || 0);
-      
-      const { data: newWords, error: newError } = await supabase
+    // 2) today-due：now < next_due_at <= EOD
+    let todayDueWords: any[] = [];
+    if ((overdueWords?.length || 0) < limit) {
+      const remaining = limit - (overdueWords?.length || 0);
+      const { data, error } = await supabase
         .from('user_word_state')
         .select(`
           word,
@@ -265,28 +271,85 @@ async function getCandidateWords(
           next_due_at
         `)
         .eq('user_id', userId)
-        .is('next_due_at', null)
-        .order('created_at', { ascending: false })
-        .limit(remainingCount);
-      
-      if (newError) {
-        console.error('Error fetching new words:', newError);
+        .gt('next_due_at', now)
+        .lte('next_due_at', eod)
+        .order('next_due_at', { ascending: true })
+        .limit(remaining);
+      if (error) {
+        console.error('Error fetching today-due words:', error);
       } else {
-        additionalWords = newWords || [];
+        todayDueWords = data || [];
       }
     }
+
+    // 3) not-due pool（scheduled in future or new words），最终只取 ≤ notDueCap
+    let notDuePool: any[] = [];
+    const taken = (overdueWords?.length || 0) + (todayDueWords?.length || 0);
+    if (taken < limit && notDueCap > 0) {
+      const remainForNotDue = Math.min(notDueCap, limit - taken);
+      // 3.1 scheduled in future (> EOD)
+      const { data: futureScheduled, error: futureError } = await supabase
+        .from('user_word_state')
+        .select(`
+          word,
+          familiarity,
+          interval_days,
+          ease_factor,
+          review_count,
+          lapse_count,
+          last_seen_at,
+          next_due_at
+        `)
+        .eq('user_id', userId)
+        .gt('next_due_at', eod)
+        .order('next_due_at', { ascending: true })
+        .limit(remainForNotDue * 5); // 拉一个小池，后续按优先级选 topN
+      if (futureError) {
+        console.error('Error fetching future scheduled words:', futureError);
+      }
+      // 3.2 new words (next_due_at is null)
+      const { data: newWords, error: newError } = await supabase
+        .from('user_word_state')
+        .select(`
+          word,
+          familiarity,
+          interval_days,
+          ease_factor,
+          review_count,
+          lapse_count,
+          last_seen_at,
+          next_due_at,
+          created_at
+        `)
+        .eq('user_id', userId)
+        .is('next_due_at', null)
+        .order('created_at', { ascending: false })
+        .limit(remainForNotDue * 5);
+      if (newError) {
+        console.error('Error fetching new words (not-due pool):', newError);
+      }
+      const pool = [ ...(futureScheduled || []), ...(newWords || []) ];
+      // 易忘优先 S = (5 - familiarity) + daysSinceLastSeen/7 （overdue/today标志为0）
+      const scored = pool.map(w => {
+        const fam = typeof w.familiarity === 'number' ? w.familiarity : 0;
+        const lastSeen = w.last_seen_at ? new Date(w.last_seen_at) : null;
+        const days = lastSeen ? Math.max(0, (nowDate.getTime() - lastSeen.getTime()) / 86400000) : 999;
+        const score = (5 - fam) + days / 7;
+        return { w, score };
+      }).sort((a, b) => b.score - a.score);
+      notDuePool = scored.slice(0, remainForNotDue).map(s => s.w);
+    }
     
-    // 合并词汇列表
-    const allWords = [...(dueWords || []), ...additionalWords];
+    // 合并（overdue > today-due > not-due≤cap）
+    const allWords = [ ...(overdueWords || []), ...(todayDueWords || []), ...notDuePool ];
     
     // 转换为CandidateWord格式
-    return allWords.map(word => ({
+    const candidates = allWords.map(word => ({
       word: word.word,
       state: {
         familiarity: word.familiarity || 0,
         difficulty: word.ease_factor || 2.5,
         stability: word.interval_days,
-        recall_p: null,
         successes: word.review_count || 0,
         lapses: word.lapse_count || 0,
         last_seen_at: word.last_seen_at,
@@ -294,9 +357,12 @@ async function getCandidateWords(
       },
       next_due_at: word.next_due_at || now
     }));
+
+    const backfill_mode = ((overdueWords?.length || 0) + (todayDueWords?.length || 0)) === 0;
+    return { candidates, backfill_mode };
   } catch (error) {
     console.error('Error in getCandidateWords:', error);
-    return [];
+    return { candidates: [], backfill_mode: false };
   }
 }
 
@@ -432,7 +498,7 @@ export default async function handler(
     userPrefs.difficulty_bias = Math.max(-1.5, Math.min(1.5, userPrefs.difficulty_bias + biasAdjustment));
     
     // 获取候选词汇
-    const candidates = await getCandidateWords(supabase, user.id, params.n || 15);
+    const { candidates, backfill_mode } = await getCandidateWords(supabase, user.id, params.n || 15, 2);
     
     // 生成交付ID
     const deliveryId = uuidv4();
@@ -442,6 +508,7 @@ export default async function handler(
       success: true,
       data: {
         candidates,
+        backfill_mode,
         generation_params: {
           targets: candidates.map(c => c.word).slice(0, 8), // 最多8个目标词
           profile: userPrefs,
