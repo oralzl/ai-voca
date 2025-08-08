@@ -10,8 +10,7 @@ import { Button } from './ui/button';
 import { SentenceDisplay } from './SentenceDisplay';
 import { 
   Send,
-  ArrowLeft,
-  ArrowRight
+  ArrowLeft
 } from 'lucide-react';
 import type { GeneratedItem } from '@ai-voca/shared';
 
@@ -147,7 +146,7 @@ export function ReviewFeedbackPanel({
   totalSentences,
   isSubmitting = false,
   onSubmitFeedback,
-  onNextSentence,
+  // onNextSentence,
   onPreviousSentence
 }: ReviewFeedbackPanelProps) {
   const [wordFeedback, setWordFeedback] = useState<Record<string, Rating>>({});
@@ -202,29 +201,13 @@ export function ReviewFeedbackPanel({
             </p>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onNextSentence}
-              disabled={!isFeedbackComplete}
-              className="flex items-center space-x-1"
-            >
-              <span>下一句</span>
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
+          {/* 右侧“下一句”按钮已移除 */}
         </div>
       </div>
 
       {/* 主要内容 */}
       <div className="p-4 space-y-4 max-w-4xl mx-auto">
-        {/* 进度显示 */}
-        <div className="text-center">
-          <div className="text-sm text-muted-foreground">
-            句子 {currentIndex + 1} / {totalSentences}
-          </div>
-        </div>
+        {/* 进度显示已移除 */}
 
         {/* 句子展示 - 去除额外边框 */}
         <SentenceDisplay
