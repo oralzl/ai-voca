@@ -162,8 +162,13 @@ export function ReviewFeedbackPanel({
     setDifficultyFeedback(null);
   }, [item.sid]);
 
+  // 防御：若用户切到下一句后，仍然点击旧句子的提交按钮，强制检查目标词集合一致
+  const sanitizedFeedback = Object.fromEntries(
+    Object.entries(wordFeedback).filter(([w]) => item.targets.map(t => t.word).includes(w))
+  );
+
   // 计算完成度（仅要求当前句子的目标词都已评分，不限制额外键）
-  const isWordFeedbackComplete = targetWords.every(word => wordFeedback[word] !== undefined);
+  const isWordFeedbackComplete = targetWords.every(word => sanitizedFeedback[word] !== undefined);
   const isDifficultyFeedbackComplete = difficultyFeedback !== null;
   const isFeedbackComplete = isWordFeedbackComplete && isDifficultyFeedbackComplete;
 

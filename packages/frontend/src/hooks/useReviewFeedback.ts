@@ -92,8 +92,11 @@ export function useReviewFeedback(): UseReviewFeedbackReturn {
     setSubmitError(null);
 
     try {
-      // 并行提交所有词汇的反馈
-      const wordPromises = Object.entries(feedback.wordFeedback).map(([word, rating]) =>
+      // 仅提交当前目标词的反馈，避免残留键造成异常
+      const targetSet = new Set(feedback.targets || []);
+      const wordPromises = Object.entries(feedback.wordFeedback)
+        .filter(([word]) => targetSet.size === 0 || targetSet.has(word))
+        .map(([word, rating]) =>
         submitWordFeedback(word, rating, feedback.sentenceId, {
           predicted_cefr: 'B1', // 这里可以根据实际数据传递
           estimated_new_terms_count: 0
