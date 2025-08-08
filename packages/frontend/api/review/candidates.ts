@@ -232,6 +232,9 @@ async function getCandidateWords(
   const now = nowDate.toISOString();
   const eod = endOfDay.toISOString();
   
+  // 系统保留词，永不作为候选词返回
+  const RESERVED_WORDS = new Set<string>(['sentence_difficulty']);
+
   try {
     // 1) overdue：next_due_at <= now（过取3倍，过滤后再截断）
     let { data: overdueWords, error: overdueError } = await supabase
@@ -247,6 +250,7 @@ async function getCandidateWords(
         next_due_at
       `)
       .eq('user_id', userId)
+      .neq('word', 'sentence_difficulty')
       .lte('next_due_at', now)
       .order('next_due_at', { ascending: true })
       .limit(limit * 3);
@@ -273,6 +277,7 @@ async function getCandidateWords(
           next_due_at
         `)
         .eq('user_id', userId)
+        .neq('word', 'sentence_difficulty')
         .gt('next_due_at', now)
         .lte('next_due_at', eod)
         .order('next_due_at', { ascending: true })
@@ -312,6 +317,7 @@ async function getCandidateWords(
           next_due_at
         `)
         .eq('user_id', userId)
+        .neq('word', 'sentence_difficulty')
         .gt('next_due_at', eod)
         .order('next_due_at', { ascending: true })
         .limit(remainForNotDue * 5); // 拉一个小池，后续按优先级选 topN
@@ -333,6 +339,7 @@ async function getCandidateWords(
           created_at
         `)
         .eq('user_id', userId)
+        .neq('word', 'sentence_difficulty')
         .is('next_due_at', null)
         .order('created_at', { ascending: false })
         .limit(remainForNotDue * 5);
@@ -354,7 +361,9 @@ async function getCandidateWords(
     }
     
     // 合并（overdue > today-due > not-due≤cap），并再次确保排除
-    const allWords = [ ...selectedOverdue, ...selectedToday, ...notDuePool ].filter(w => !excludeSet.has(w.word));
+    const allWords = [ ...selectedOverdue, ...selectedToday, ...notDuePool ]
+      .filter(w => !excludeSet.has(w.word))
+      .filter(w => !RESERVED_WORDS.has(String(w.word).toLowerCase()));
     
     // 转换为CandidateWord格式
     const candidates = allWords.map(word => ({
