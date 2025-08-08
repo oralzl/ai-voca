@@ -10,19 +10,6 @@
       "maxDuration": 30
     }
   },
-  "includeFiles": [
-    "api/review/candidates.ts",
-    "api/review/submit.ts",
-    "api/review/generate.ts",
-    "api/review/count.ts",
-    "api/review/init.ts",
-    "api/favorites/check.ts",
-    "api/favorites/list.ts",
-    "api/favorites/toggle.ts",
-    "api/user/prefs.ts",
-    "api/user/stats.ts",
-    "api/health.ts"
-  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
