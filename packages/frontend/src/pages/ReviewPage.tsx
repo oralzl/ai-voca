@@ -58,6 +58,8 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [prefetchTargets, setPrefetchTargets] = useState<string[] | null>(null);
   const [todayCount, setTodayCount] = useState<number | null>(null);
+  // 自动选词“可能遇到的总量”（近似：一次取大N的候选数）
+  const [availablePoolCount, setAvailablePoolCount] = useState<number | null>(null);
   
   const [startingReview, setStartingReview] = useState<boolean>(false);
 
@@ -178,7 +180,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     (async () => { try { await saveAutoPrefs({ auto: autoMode, batchSize }); } catch {} })();
   }, [batchSize, autoMode, saveAutoPrefs]);
 
-  // 获取今日/总计计数
+  // 获取今日计数
   useEffect(() => {
     (async () => {
       if (!user) return;
@@ -189,6 +191,22 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
         const json = await resp.json();
         if (json?.success && json?.data) {
           setTodayCount(json.data.today_count);
+        }
+      } catch {}
+    })();
+  }, [user, getAccessToken]);
+
+  // 获取“自动选词可用池”数量（取大N作为近似，受 not-due cap 限制，符合当下算法能取到的规模）
+  useEffect(() => {
+    (async () => {
+      if (!user) return;
+      try {
+        const token = await getAccessToken();
+        const resp = await fetch('/api/review/candidates?n=50', { headers: { Authorization: `Bearer ${token}` } });
+        if (!resp.ok) return;
+        const json = await resp.json();
+        if (json?.success && json?.data?.candidates) {
+          setAvailablePoolCount(Array.isArray(json.data.candidates) ? json.data.candidates.length : null);
         }
       } catch {}
     })();
@@ -298,7 +316,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     return (
       <div className="min-h-screen bg-background">
         <header className="container py-8">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{todayCount ?? '-'} 个单词可以复习</h1>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{availablePoolCount ?? todayCount ?? '-'} 个单词可以复习</h1>
           <div className="mt-4">
             <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
               <span>今日完成度 {completedToday}/{todayTotal}</span>
