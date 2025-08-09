@@ -345,6 +345,24 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                   </div>
                 )}
 
+                {/* 手动选词：放入同一卡片内，贴合层级结构 */}
+                {!autoMode && (
+                  <div className="space-y-3">
+                    {/* 说明文案已在 TabsContent 中呈现，这里直接展示 Chips 与计数 */}
+                    <div className="flex flex-wrap gap-3">
+                      {candidates.slice(0, 50).map((candidate) => (
+                        <CandidateWordChip
+                          key={candidate.word}
+                          text={candidate.word}
+                          selected={selectedTargets.includes(candidate.word)}
+                          onClick={() => handleTargetToggle(candidate.word)}
+                        />
+                      ))}
+                    </div>
+                    <div className="text-sm text-muted-foreground">已选择 {selectedTargets.length} 个</div>
+                  </div>
+                )}
+
                 {/* 高级设置：等级/风格 */}
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-1">
@@ -387,42 +405,6 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                 </div>
               </CardContent>
             </Card>
-
-            {/* 候选词列表（仅手动模式显示） */}
-            {!autoMode && (
-              <Card className="mt-4">
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold">选择要复习的词汇</h3>
-                        <p className="text-sm text-muted-foreground">已选择 {selectedTargets.length} 个</p>
-                      </div>
-                      {selectedTargets.length > 0 && (
-                        <Button
-                          onClick={handleStartReview}
-                          disabled={startingReview}
-                          className="flex items-center gap-2"
-                        >
-                          {startingReview ? (<><Loader2 className="w-4 h-4 animate-spin" /> 正在开始...</>) : `开始复习 (${selectedTargets.length})`}
-                        </Button>
-                      )}
-                    </div>
-                    {/* 胶囊 Chip 列表 */}
-                    <div className="flex flex-wrap gap-3">
-                      {candidates.slice(0, 50).map((candidate) => (
-                        <CandidateWordChip
-                          key={candidate.word}
-                          text={candidate.word}
-                          selected={selectedTargets.includes(candidate.word)}
-                          onClick={() => handleTargetToggle(candidate.word)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </section>
         </main>
       </div>
