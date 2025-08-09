@@ -30,6 +30,8 @@ interface UseReviewDataReturn {
   
   // 用户偏好
   userPrefs: UserPrefs | null;
+  // 更新用户偏好（仅本地内存，供生成使用）
+  updateUserPrefs: (partial: Partial<UserPrefs>) => void;
   // 持久化自动模式与批次
   saveAutoPrefs: (opts: { auto: boolean; batchSize: number }) => Promise<void>;
   loadAutoPrefs: () => Promise<{ auto: boolean; batchSize: number } | null>;
@@ -233,6 +235,11 @@ export function useReviewData(): UseReviewDataReturn {
     setUserPrefs(null);
   }, []);
 
+  // 仅本地更新用户偏好（供生成接口实时使用）
+  const updateUserPrefs = useCallback((partial: Partial<UserPrefs>) => {
+    setUserPrefs(prev => prev ? { ...prev, ...partial } : prev);
+  }, []);
+
   // 自动获取候选词 - 只在用户登录且候选词为空时获取
   useEffect(() => {
     if (user && candidates.length === 0) {
@@ -251,6 +258,7 @@ export function useReviewData(): UseReviewDataReturn {
     generatedError,
     generateSentences,
     userPrefs,
+    updateUserPrefs,
     saveAutoPrefs,
     loadAutoPrefs,
     reset,

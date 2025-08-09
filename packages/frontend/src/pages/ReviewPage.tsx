@@ -42,6 +42,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     generatedItems,
     generatedError,
     generateSentences,
+    updateUserPrefs,
     saveAutoPrefs,
     loadAutoPrefs,
     reset
@@ -339,6 +340,36 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                       className="w-24 text-center"
                     />
                     <Button type="button" variant="secondary" size="sm" aria-label="增加目标词数" onClick={() => setBatchSize(Math.min(8, batchSize + 1))}>+</Button>
+                  </div>
+                </div>
+
+                {/* 高级设置：等级/风格 */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label>等级（CEFR）</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {(['A2','B1','B2','C1'] as const).map(level => (
+                        <Button
+                          key={level}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateUserPrefs({ level_cefr: level })}
+                        >{level}</Button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>风格</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {(['neutral','news','dialog','academic'] as const).map(style => (
+                        <Button
+                          key={style}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => updateUserPrefs({ style })}
+                        >{style}</Button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
