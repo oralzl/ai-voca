@@ -12,7 +12,7 @@ import { useReviewFeedback } from '../hooks/useReviewFeedback';
 import { ReviewFeedbackPanel } from '../components/ReviewFeedbackPanel';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
+// import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -25,7 +25,7 @@ import {
   RefreshCw,
   Play
 } from 'lucide-react';
-import type { CandidateWord } from '@ai-voca/shared';
+// import type { CandidateWord } from '@ai-voca/shared';
 
 interface ReviewPageProps {
   onBack: () => void;
@@ -396,7 +396,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="text-lg font-semibold">选择要复习的词汇</h3>
-                        <p className="text-sm text-muted-foreground">已选择 {selectedTargets.length}/8 个词汇</p>
+                        <p className="text-sm text-muted-foreground">已选择 {selectedTargets.length} 个</p>
                       </div>
                       {selectedTargets.length > 0 && (
                         <Button
@@ -408,21 +408,17 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                         </Button>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {candidates.slice(0, 12).map((candidate) => (
-                        <CandidateWordCard
+                    {/* 胶囊 Chip 列表 */}
+                    <div className="flex flex-wrap gap-3">
+                      {candidates.slice(0, 50).map((candidate) => (
+                        <CandidateWordChip
                           key={candidate.word}
-                          candidate={candidate}
-                          isSelected={selectedTargets.includes(candidate.word)}
-                          onToggle={() => handleTargetToggle(candidate.word)}
+                          text={candidate.word}
+                          selected={selectedTargets.includes(candidate.word)}
+                          onClick={() => handleTargetToggle(candidate.word)}
                         />
                       ))}
                     </div>
-                    {candidates.length > 12 && (
-                      <div className="text-center">
-                        <p className="text-sm text-muted-foreground">还有 {candidates.length - 12} 个词汇...</p>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -498,41 +494,31 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   return null;
 }
 
+// 旧的卡片样式已弃用
+
 /**
- * 候选词卡片组件（支持多选）
+ * 胶囊样式的候选词Chip
  */
-function CandidateWordCard({ 
-  candidate, 
-  isSelected,
-  onToggle 
-}: { 
-  candidate: CandidateWord; 
-  isSelected: boolean;
-  onToggle: () => void;
+function CandidateWordChip({
+  text,
+  selected,
+  onClick,
+}: {
+  text: string;
+  selected: boolean;
+  onClick: () => void;
 }) {
   return (
-    <Card 
-      className={`cursor-pointer transition-all ${
-        isSelected 
-          ? 'ring-2 ring-primary bg-primary/10' 
-          : 'hover:bg-accent/50'
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 rounded-full border text-sm transition-colors select-none ${
+        selected
+          ? 'bg-primary text-primary-foreground border-primary'
+          : 'bg-muted/40 hover:bg-accent border-border text-foreground'
       }`}
-      onClick={onToggle}
     >
-      <CardContent className="p-3">
-        <div className="text-center space-y-2">
-          <div className={`font-semibold text-sm ${isSelected ? 'text-primary' : ''}`}>
-            {candidate.word}
-          </div>
-          <div className="flex justify-center gap-1">
-            <Badge variant="outline" className="text-xs">
-              熟悉度: {candidate.state.familiarity}/5
-            </Badge>
-            {isSelected && <Badge variant="default" className="text-xs bg-primary">已选</Badge>}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+      {text}
+    </button>
   );
 }
 
