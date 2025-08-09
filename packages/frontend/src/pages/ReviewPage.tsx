@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Progress } from '../components/ui/progress';
+import { Dialog, DialogContent, DialogHeader as ModalHeader, DialogTitle as ModalTitle, DialogTrigger } from '../components/ui/dialog';
 import { 
   ArrowLeft,
   Loader2,
@@ -308,7 +309,47 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
           <section aria-labelledby="review-settings">
             <Card>
               <CardHeader>
-                <CardTitle id="review-settings" className="text-xl">复习设置</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle id="review-settings" className="text-xl">复习设置</CardTitle>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button className="text-right text-lg text-primary hover:underline">高级设置</button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <ModalHeader>
+                        <ModalTitle>高级设置</ModalTitle>
+                      </ModalHeader>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-1">
+                          <Label>等级（CEFR）</Label>
+                          <div className="flex gap-2 flex-wrap">
+                            {(['A2','B1','B2','C1'] as const).map(level => (
+                              <Button
+                                key={level}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateUserPrefs({ level_cefr: level })}
+                              >{level}</Button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>风格</Label>
+                          <div className="flex gap-2 flex-wrap">
+                            {(['neutral','news','dialog','academic'] as const).map(style => (
+                              <Button
+                                key={style}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateUserPrefs({ style })}
+                              >{style}</Button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent className="space-y-6 pt-2">
                 <div className="space-y-2">
@@ -363,35 +404,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                   </div>
                 )}
 
-                {/* 高级设置：等级/风格 */}
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-1">
-                    <Label>等级（CEFR）</Label>
-                    <div className="flex gap-2 flex-wrap">
-                      {(['A2','B1','B2','C1'] as const).map(level => (
-                        <Button
-                          key={level}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateUserPrefs({ level_cefr: level })}
-                        >{level}</Button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label>风格</Label>
-                    <div className="flex gap-2 flex-wrap">
-                      {(['neutral','news','dialog','academic'] as const).map(style => (
-                        <Button
-                          key={style}
-                          variant="outline"
-                          size="sm"
-                          onClick={() => updateUserPrefs({ style })}
-                        >{style}</Button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                {/* 高级设置已移入弹窗 */}
 
                 <div className="pt-2">
                   <Button
