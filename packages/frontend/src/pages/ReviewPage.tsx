@@ -81,10 +81,12 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
       for (const size of trySizes) {
         if (size <= 0) continue;
         const cand = await getCandidates({ n: size });
-        if (cand.length > 0) {
+        // 必须满足 cand 数量 >= 期望 size，避免返回不足导致批次数与实际不符
+        if (cand.length >= size) {
           autoTargets = cand.slice(0, size).map(c => c.word);
           break;
         }
+        // 不足时继续尝试更小的 size（例如 3->2->1）
       }
       if (autoTargets.length === 0) {
         alert('当前没有可用的复习词汇，请稍后再试或切换手动选词');
