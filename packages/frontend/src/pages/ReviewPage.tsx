@@ -11,8 +11,12 @@ import { useReviewSync } from '../hooks/useReviewSync';
 import { useReviewFeedback } from '../hooks/useReviewFeedback';
 import { ReviewFeedbackPanel } from '../components/ReviewFeedbackPanel';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Progress } from '../components/ui/progress';
 import { 
   ArrowLeft,
   Loader2,
@@ -38,7 +42,6 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     generatedItems,
     generatedError,
     generateSentences,
-    userPrefs,
     saveAutoPrefs,
     loadAutoPrefs,
     reset
@@ -53,7 +56,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
   const [prefetchTargets, setPrefetchTargets] = useState<string[] | null>(null);
   const [todayCount, setTodayCount] = useState<number | null>(null);
-  const [totalCount, setTotalCount] = useState<number | null>(null);
+  
   const [startingReview, setStartingReview] = useState<boolean>(false);
 
   // 处理候选词选择
@@ -182,7 +185,6 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
         const json = await resp.json();
         if (json?.success && json?.data) {
           setTodayCount(json.data.today_count);
-          setTotalCount(json.data.total_count);
         }
       } catch {}
     })();
@@ -283,128 +285,117 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
     );
   }
 
-  // 候选词选择界面
+  // 候选词选择界面（重设计样式）
   if (currentStep === 'candidates') {
+    const todayTotal = todayCount ?? 0;
+    const completedToday = todayTotal > 0 ? todayTotal : 0; // 暂无完成度数据，先显示满进度
+    const progressPercent = todayTotal > 0 ? Math.round((completedToday / todayTotal) * 100) : 0;
+
     return (
       <div className="min-h-screen bg-background">
-        {/* 顶部导航 */}
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
-          <div className="flex items-center justify-between px-4 py-3">
-            {/* 复习为一级页面：移除返回按钮 */}
-            <div className="w-16" />
-            
-            <div className="flex-1 text-center">
-              <h1 className="text-lg font-semibold">词汇复习</h1>
+        <header className="container py-8">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{todayCount ?? '-'} 个单词可以复习</h1>
+          <div className="mt-4">
+            <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
+              <span>今日完成度 {completedToday}/{todayTotal}</span>
             </div>
-            
-            <div className="w-16" /> {/* 占位 */}
+            <Progress value={progressPercent} />
           </div>
-        </div>
+        </header>
 
-          {/* 主要内容 */}
-        <div className="p-4 space-y-4">
-          {/* 统计信息 */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center space-y-2">
-                <h2 className="text-xl font-semibold">复习信息</h2>
-                <p className="text-muted-foreground">
-                  今日待复习：{todayCount ?? '-'} 词　　总计待复习：{totalCount ?? '-'} 词
-                </p>
-                {userPrefs && (
-                  <div className="flex justify-center gap-2">
-                    <Badge variant="outline">
-                      等级: {userPrefs.level_cefr}
-                    </Badge>
-                    <Badge variant="outline">
-                      风格: {userPrefs.style as any || 'neutral'}
-                    </Badge>
+        <main className="container pb-12 grid gap-6 md:grid-cols-1">
+          <section aria-labelledby="review-settings">
+            <Card>
+              <CardHeader>
+                <CardTitle id="review-settings" className="text-xl">复习设置</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6 pt-2">
+                <div className="space-y-2">
+                  <Label>选择模式</Label>
+                  <Tabs value={autoMode ? 'auto' : 'manual'} onValueChange={(v) => setAutoMode(v === 'auto')}>
+                    <TabsList className="w-full">
+                      <TabsTrigger value="auto" className="w-full">自动选词</TabsTrigger>
+                      <TabsTrigger value="manual" className="w-full">手动选词</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="auto" className="text-sm text-muted-foreground">
+                      系统将按算法自动挑选合适的单词。
+                    </TabsContent>
+                    <TabsContent value="manual" className="text-sm text-muted-foreground">
+                      你可以自行从词库中挑选将要复习的单词。
+                    </TabsContent>
+                  </Tabs>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="target">每轮目标词数</Label>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" variant="secondary" size="sm" aria-label="减少目标词数" onClick={() => setBatchSize(Math.max(1, batchSize - 1))}>-</Button>
+                    <Input
+                      id="target"
+                      inputMode="numeric"
+                      value={batchSize}
+                      onChange={(e) => setBatchSize(Math.max(1, Math.min(8, Number(e.target.value) || 1)))}
+                      aria-label="每轮目标词数"
+                      className="w-24 text-center"
+                    />
+                    <Button type="button" variant="secondary" size="sm" aria-label="增加目标词数" onClick={() => setBatchSize(Math.min(8, batchSize + 1))}>+</Button>
                   </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                </div>
 
-          {/* 模式与批次 */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-center gap-6">
-                  <button
-                    className={`px-3 py-1 rounded border ${autoMode ? 'bg-primary text-white border-primary' : 'border-border'}`}
-                    onClick={() => setAutoMode(true)}
-                  >自动选词</button>
-                  <button
-                    className={`px-3 py-1 rounded border ${!autoMode ? 'bg-primary text-white border-primary' : 'border-border'}`}
-                    onClick={() => setAutoMode(false)}
-                  >手动选词</button>
-                </div>
-                <div className="flex items-center justify-center gap-3">
-                  <span className="text-sm text-muted-foreground">每轮目标词数</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={8}
-                    value={batchSize}
-                    onChange={(e) => setBatchSize(Math.max(1, Math.min(8, Number(e.target.value) || 2)))}
-                    className="w-20 border rounded px-2 py-1 text-center"
-                  />
-                </div>
-                <div className="text-center">
-                  <Button onClick={handleStartReview} disabled={startingReview} className="inline-flex items-center gap-2">
+                <div className="pt-2">
+                  <Button
+                    size="lg"
+                    className="w-full inline-flex items-center justify-center gap-2"
+                    onClick={handleStartReview}
+                    disabled={startingReview || (!autoMode && selectedTargets.length === 0)}
+                  >
                     {startingReview ? (<><Loader2 className="w-4 h-4 animate-spin" /> 正在开始...</>) : '开始复习'}
                   </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 候选词列表（仅手动模式显示） */}
-          {!autoMode && (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold">选择要复习的词汇</h3>
-                      <p className="text-sm text-muted-foreground">
-                        已选择 {selectedTargets.length}/8 个词汇
-                      </p>
-                    </div>
-                    {selectedTargets.length > 0 && (
-                      <Button 
-                        onClick={handleStartReview}
-                        disabled={startingReview}
-                        className="flex items-center gap-2"
-                      >
-                        {startingReview ? (<><Loader2 className="w-4 h-4 animate-spin" /> 正在开始...</>) : `开始复习 (${selectedTargets.length})`}
-                      </Button>
-                    )}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {candidates.slice(0, 12).map((candidate) => (
-                      <CandidateWordCard
-                        key={candidate.word}
-                        candidate={candidate}
-                        isSelected={selectedTargets.includes(candidate.word)}
-                        onToggle={() => handleTargetToggle(candidate.word)}
-                      />
-                    ))}
-                  </div>
-                  
-                  {candidates.length > 12 && (
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground">
-                        还有 {candidates.length - 12} 个词汇...
-                      </p>
-                    </div>
-                  )}
-                </div>
               </CardContent>
             </Card>
-          )}
-        </div>
+
+            {/* 候选词列表（仅手动模式显示） */}
+            {!autoMode && (
+              <Card className="mt-4">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-semibold">选择要复习的词汇</h3>
+                        <p className="text-sm text-muted-foreground">已选择 {selectedTargets.length}/8 个词汇</p>
+                      </div>
+                      {selectedTargets.length > 0 && (
+                        <Button
+                          onClick={handleStartReview}
+                          disabled={startingReview}
+                          className="flex items-center gap-2"
+                        >
+                          {startingReview ? (<><Loader2 className="w-4 h-4 animate-spin" /> 正在开始...</>) : `开始复习 (${selectedTargets.length})`}
+                        </Button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {candidates.slice(0, 12).map((candidate) => (
+                        <CandidateWordCard
+                          key={candidate.word}
+                          candidate={candidate}
+                          isSelected={selectedTargets.includes(candidate.word)}
+                          onToggle={() => handleTargetToggle(candidate.word)}
+                        />
+                      ))}
+                    </div>
+                    {candidates.length > 12 && (
+                      <div className="text-center">
+                        <p className="text-sm text-muted-foreground">还有 {candidates.length - 12} 个词汇...</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </section>
+        </main>
       </div>
     );
   }
