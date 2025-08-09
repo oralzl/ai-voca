@@ -327,21 +327,23 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
                   </Tabs>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="target">每轮目标词数</Label>
-                  <div className="flex items-center gap-2">
-                    <Button type="button" variant="secondary" size="sm" aria-label="减少目标词数" onClick={() => setBatchSize(Math.max(1, batchSize - 1))}>-</Button>
-                    <Input
-                      id="target"
-                      inputMode="numeric"
-                      value={batchSize}
-                      onChange={(e) => setBatchSize(Math.max(1, Math.min(8, Number(e.target.value) || 1)))}
-                      aria-label="每轮目标词数"
-                      className="w-24 text-center"
-                    />
-                    <Button type="button" variant="secondary" size="sm" aria-label="增加目标词数" onClick={() => setBatchSize(Math.min(8, batchSize + 1))}>+</Button>
+                {autoMode && (
+                  <div className="space-y-2">
+                    <Label htmlFor="target">每轮目标词数</Label>
+                    <div className="flex items-center gap-2">
+                      <Button type="button" variant="secondary" size="sm" aria-label="减少目标词数" onClick={() => setBatchSize(Math.max(1, batchSize - 1))}>-</Button>
+                      <Input
+                        id="target"
+                        inputMode="numeric"
+                        value={batchSize}
+                        onChange={(e) => setBatchSize(Math.max(1, Math.min(8, Number(e.target.value) || 1)))}
+                        aria-label="每轮目标词数"
+                        className="w-24 text-center"
+                      />
+                      <Button type="button" variant="secondary" size="sm" aria-label="增加目标词数" onClick={() => setBatchSize(Math.min(8, batchSize + 1))}>+</Button>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* 高级设置：等级/风格 */}
                 <div className="grid gap-4 md:grid-cols-2">
