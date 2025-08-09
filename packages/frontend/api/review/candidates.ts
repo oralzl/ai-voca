@@ -526,11 +526,14 @@ export default async function handler(
     
     // 获取候选词汇
     const excludeSet = new Set((params.exclude || []).map(w => w.toLowerCase()));
+    // 动态 not-due 上限：默认与请求 n 对齐（1-8 之间），避免当日无到期词时只能回填 2 个的限制
+    const limit = params.n || 15;
+    const dynamicNotDueCap = Math.max(1, Math.min(8, limit));
     const { candidates, backfill_mode } = await getCandidateWords(
       supabase,
       user.id,
-      params.n || 15,
-      2,
+      limit,
+      dynamicNotDueCap,
       excludeSet
     );
     
@@ -557,6 +560,9 @@ export default async function handler(
     console.log('Review candidates response generated', {
       candidateCount: candidates.length,
       targetCount: response.data?.generation_params.targets.length,
+      backfill_mode,
+      limit,
+      notDueCap: dynamicNotDueCap,
       deliveryId
     });
     
