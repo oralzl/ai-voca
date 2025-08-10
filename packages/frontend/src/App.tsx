@@ -259,7 +259,7 @@ function AppContent() {
   return (
     <AppLayout 
       currentPage={currentPage === 'wordResult' ? 'search' : currentPage} 
-      onPageChange={handlePageChange as any}
+      onPageChange={handlePageChange}
       hideBottomNavigation={currentPage === 'wordResult' || currentPage === 'review'} // 结果与复习页面隐藏底部导航
     >
       {currentPage === 'search' ? (
