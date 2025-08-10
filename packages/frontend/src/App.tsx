@@ -260,7 +260,7 @@ function AppContent() {
     <AppLayout 
       currentPage={currentPage === 'wordResult' ? 'search' : currentPage} 
       onPageChange={handlePageChange}
-      hideBottomNavigation={currentPage === 'wordResult'} // 结果页面隐藏底部导航
+      hideBottomNavigation={currentPage === 'wordResult' || currentPage === 'review'} // 结果与复习页面隐藏底部导航
     >
       {currentPage === 'search' ? (
         <div className="flex-1 flex flex-col">

@@ -178,9 +178,9 @@ function CompactWordFeedback({
 
   return (
     <div className="py-2 px-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-      <div className="flex items-center justify-between">
-        <span className="font-medium text-sm">{word}</span>
-        <div className="flex gap-1">
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-medium text-sm whitespace-nowrap">{word}</span>
+        <div className="flex gap-1 flex-wrap justify-end">
           {ratingOptions.map((option) => (
             <Button
               key={option.value}
