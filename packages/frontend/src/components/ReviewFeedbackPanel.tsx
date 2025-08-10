@@ -429,24 +429,20 @@ export function ReviewFeedbackPanel({
                     disabled={!isFeedbackComplete || isSubmitting}
                     className="w-full flex items-center justify-center gap-2 hover-scale transition-all duration-300 shadow-lg"
                   >
-                    {isSubmitting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        提交中...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        {currentIndex === totalSentences - 1 ? '完成复习' : '提交并继续'}
-                      </>
-                    )}
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      提交中...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      提交
+                    </>
+                  )}
                   </Button>
                 </div>
-                {!isFeedbackComplete && !isWordFeedbackComplete && (
-                  <div className="text-right text-sm text-muted-foreground mt-1">
-                    {`请完成所有 ${targetWords.length} 个词汇的评分`}
-                  </div>
-                )}
+                {/* 提示信息已移除 */}
               </div>
             </CardContent>
           </Card>
