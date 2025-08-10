@@ -331,7 +331,7 @@ export function ReviewFeedbackPanel({
 
 
   return (
-    <div className="h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* 顶部导航 */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
         <div className="flex items-center justify-between px-4 py-3">
@@ -361,29 +361,29 @@ export function ReviewFeedbackPanel({
         </div>
       </div>
 
-      {/* 主要内容：移动端单列，桌面端两列布局；使用flex填满视口剩余高度，内部滚动 */}
-      <div className="flex-1 overflow-hidden">
-        <div className="p-4 max-w-6xl mx-auto h-full">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch h-full">
+      {/* 主要内容：移动端单列，桌面端两列布局；仅在桌面端占满剩余高度并内部滚动 */}
+      <div className="lg:flex-1 lg:overflow-hidden">
+        <div className="p-4 max-w-6xl mx-auto lg:h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-stretch lg:h-full">
           {/* 左列：句子展示 */}
-          <div className="space-y-4 h-full overflow-visible">
+          <div className="space-y-4 lg:h-full lg:overflow-visible">
             <SentenceDisplay
               item={item}
               showNewTerms={true}
               expandable={true}
-              className="glass hover-lift border-0 shadow-lg h-full flex flex-col"
+              className="glass hover-lift border-0 shadow-lg lg:h-full flex flex-col"
             />
           </div>
 
           {/* 右列：合并为单张反馈卡片（词汇反馈 + 整体反馈 + 提交） */}
-          <Card className="glass hover-lift border-0 shadow-lg h-full flex flex-col">
-            <CardContent className="p-3 sm:p-4 flex-1 flex flex-col overflow-hidden">
+          <Card className="glass hover-lift border-0 shadow-lg lg:h-full flex flex-col">
+            <CardContent className="p-3 sm:p-4 lg:flex-1 flex flex-col lg:overflow-hidden">
               <div className="text-sm font-medium text-foreground mb-2">
                 反馈
               </div>
 
               {/* 内容区域可滚动：词汇反馈列表 */}
-              <div className="flex-1 overflow-auto pr-1 space-y-1">
+              <div className="lg:flex-1 lg:overflow-auto pr-1 space-y-1">
                 {targetWords.map((word) => (
                   <CompactWordFeedback
                     key={word}
