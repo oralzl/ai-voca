@@ -473,6 +473,7 @@ export function ReviewPage({ onBack }: ReviewPageProps) {
         onSubmitFeedback={handleSubmitFeedback}
         onNextSentence={handleNextSentence}
         onPreviousSentence={currentSentenceIndex > 0 ? () => setCurrentSentenceIndex(currentSentenceIndex - 1) : undefined}
+        onExit={() => setCurrentStep('candidates')}
       />
     );
   }

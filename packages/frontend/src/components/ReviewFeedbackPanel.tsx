@@ -10,7 +10,8 @@ import { Button } from './ui/button';
 import { SentenceDisplay } from './SentenceDisplay';
 import { 
   Send,
-  ArrowLeft
+  ArrowLeft,
+  X
 } from 'lucide-react';
 import type { GeneratedItem, WordExplanation } from '@ai-voca/shared';
 import { wordApi } from '../utils/api';
@@ -93,6 +94,8 @@ interface ReviewFeedbackPanelProps {
   onNextSentence: () => void;
   /** 上一句 */
   onPreviousSentence?: () => void;
+  /** 退出本次练习 */
+  onExit?: () => void;
 }
 
 export interface ReviewFeedback {
@@ -271,7 +274,8 @@ export function ReviewFeedbackPanel({
   isSubmitting = false,
   onSubmitFeedback,
   // onNextSentence,
-  onPreviousSentence
+  onPreviousSentence,
+  onExit
 }: ReviewFeedbackPanelProps) {
   const [wordFeedback, setWordFeedback] = useState<Record<string, Rating>>({});
   const [difficultyFeedback, setDifficultyFeedback] = useState<'too_easy' | 'ok' | 'too_hard' | null>(null);
@@ -336,6 +340,15 @@ export function ReviewFeedbackPanel({
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onExit && onExit()}
+              className="flex items-center space-x-1"
+              aria-label="退出练习"
+            >
+              <X className="w-4 h-4" />
+            </Button>
             {onPreviousSentence && (
               <Button
                 variant="ghost"
