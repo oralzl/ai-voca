@@ -12,7 +12,8 @@ import {
   Send,
   ArrowLeft
 } from 'lucide-react';
-import type { GeneratedItem } from '@ai-voca/shared';
+import type { GeneratedItem, WordExplanation } from '@ai-voca/shared';
+import { wordApi } from '../utils/api';
 
 type Rating = 'again' | 'hard' | 'good' | 'easy';
 
@@ -98,12 +99,16 @@ function CompactWordFeedback({
   word,
   feedback,
   onFeedback,
-  disabled
+  disabled,
+  details,
+  detailsLoading
 }: {
   word: string;
   feedback: Rating | undefined;
   onFeedback: (rating: Rating) => void;
   disabled?: boolean;
+  details?: WordExplanation;
+  detailsLoading?: boolean;
 }) {
   const ratingOptions = [
     { value: 'again' as const, label: '完全不记得' },
@@ -113,26 +118,90 @@ function CompactWordFeedback({
   ];
 
   return (
-    <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
-      <span className="font-medium text-sm">{word}</span>
-      <div className="flex gap-1">
-        {ratingOptions.map((option) => (
-          <Button
-            key={option.value}
-            variant={feedback === option.value ? 'default' : 'ghost'}
-            size="sm"
-            className={`h-7 px-3 text-xs transition-all ${
-              feedback === option.value
-                ? 'ring-1 ring-primary shadow-sm bg-primary text-primary-foreground'
-                : 'hover:bg-background border'
-            }`}
-            onClick={() => onFeedback(option.value)}
-            disabled={disabled}
-          >
-            {option.label}
-          </Button>
-        ))}
+    <div className="py-2 px-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+      <div className="flex items-center justify-between">
+        <span className="font-medium text-sm">{word}</span>
+        <div className="flex gap-1">
+          {ratingOptions.map((option) => (
+            <Button
+              key={option.value}
+              variant={feedback === option.value ? 'default' : 'ghost'}
+              size="sm"
+              className={`h-7 px-3 text-xs transition-all ${
+                feedback === option.value
+                  ? 'ring-1 ring-primary shadow-sm bg-primary text-primary-foreground'
+                  : 'hover:bg-background border'
+              }`}
+              onClick={() => onFeedback(option.value)}
+              disabled={disabled}
+            >
+              {option.label}
+            </Button>
+          ))}
+        </div>
       </div>
+
+      {feedback !== undefined && (
+        <div className="mt-2 pl-1 text-xs text-muted-foreground space-y-1">
+          {detailsLoading && (
+            <div className="opacity-80">加载中…</div>
+          )}
+          {details && (
+            <div className="space-y-1">
+              {details.definition && (
+                <div>
+                  <span className="font-medium mr-1">释义：</span>
+                  <span className="leading-snug">{details.definition}</span>
+                </div>
+              )}
+
+              {Array.isArray(details.synonyms) && details.synonyms.length > 0 && (
+                <div className="flex items-start gap-1 flex-wrap">
+                  <span className="font-medium">同义：</span>
+                  <div className="flex gap-1 flex-wrap">
+                    {details.synonyms.slice(0, 6).map((s) => (
+                      <span key={s} className="rounded bg-muted px-1 py-0.5 text-[11px] text-foreground/90">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {Array.isArray(details.antonyms) && details.antonyms.length > 0 && (
+                <div className="flex items-start gap-1 flex-wrap">
+                  <span className="font-medium">反义：</span>
+                  <div className="flex gap-1 flex-wrap">
+                    {details.antonyms.slice(0, 6).map((s) => (
+                      <span key={s} className="rounded bg-muted px-1 py-0.5 text-[11px] text-foreground/90">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {details.etymology && (
+                <div>
+                  <span className="font-medium mr-1">词源：</span>
+                  <span className="leading-snug">
+                    {details.etymology.length > 120 ? `${details.etymology.slice(0, 120)}…` : details.etymology}
+                  </span>
+                </div>
+              )}
+
+              {details.memoryTips && (
+                <div>
+                  <span className="font-medium mr-1">记忆：</span>
+                  <span className="leading-snug">
+                    {details.memoryTips.length > 120 ? `${details.memoryTips.slice(0, 120)}…` : details.memoryTips}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -151,6 +220,7 @@ export function ReviewFeedbackPanel({
 }: ReviewFeedbackPanelProps) {
   const [wordFeedback, setWordFeedback] = useState<Record<string, Rating>>({});
   const [difficultyFeedback, setDifficultyFeedback] = useState<'too_easy' | 'ok' | 'too_hard' | null>(null);
+  const [wordDetails, setWordDetails] = useState<Record<string, { loading: boolean; data?: WordExplanation }>>({});
 
   // 获取当前句子的目标词汇
   const targetWords = item.targets.map(target => target.word);
@@ -159,6 +229,37 @@ export function ReviewFeedbackPanel({
   useEffect(() => {
     setWordFeedback({});
     setDifficultyFeedback(null);
+  }, [currentIndex, item.text]);
+
+  // 预取目标词的详细信息（异步后台加载）
+  useEffect(() => {
+    let cancelled = false;
+    // 初始化加载状态
+    setWordDetails((prev) => {
+      const next = { ...prev };
+      targetWords.forEach((w) => {
+        if (!next[w]) next[w] = { loading: true };
+      });
+      return next;
+    });
+
+    // 逐个异步查询，减少单点失败影响
+    (async () => {
+      for (const w of targetWords) {
+        try {
+          const res = await wordApi.queryWord({ word: w, includeExample: false });
+          if (cancelled) return;
+          setWordDetails((prev) => ({ ...prev, [w]: { loading: false, data: res.data } }));
+        } catch {
+          if (cancelled) return;
+          setWordDetails((prev) => ({ ...prev, [w]: { loading: false } }));
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [currentIndex, item.text]);
 
   // 防御：若用户切到下一句后，仍然点击旧句子的提交按钮，强制检查目标词集合一致
@@ -235,6 +336,8 @@ export function ReviewFeedbackPanel({
                   }));
                 }}
                 disabled={isSubmitting}
+                details={wordDetails[word]?.data}
+                detailsLoading={wordDetails[word]?.loading}
               />
             ))}
           </div>
