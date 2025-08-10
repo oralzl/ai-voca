@@ -331,7 +331,7 @@ export function ReviewFeedbackPanel({
 
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="h-screen bg-background flex flex-col">
       {/* 顶部导航 */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
         <div className="flex items-center justify-between px-4 py-3">
@@ -361,16 +361,17 @@ export function ReviewFeedbackPanel({
         </div>
       </div>
 
-      {/* 主要内容：移动端单列，桌面端两列布局；下方区域锁定视口高度，内部滚动 */}
-      <div className="p-4 max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch h-[calc(100vh-64px)]">
+      {/* 主要内容：移动端单列，桌面端两列布局；使用flex填满视口剩余高度，内部滚动 */}
+      <div className="flex-1 overflow-hidden">
+        <div className="p-4 max-w-6xl mx-auto h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch h-full">
           {/* 左列：句子展示 */}
           <div className="space-y-4 h-full overflow-auto">
             <SentenceDisplay
               item={item}
               showNewTerms={true}
               expandable={true}
-              className="glass hover-lift border-0 shadow-lg"
+              className="glass hover-lift border-0 shadow-lg h-full flex flex-col"
             />
           </div>
 
@@ -453,6 +454,7 @@ export function ReviewFeedbackPanel({
               </div>
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
     </div>
