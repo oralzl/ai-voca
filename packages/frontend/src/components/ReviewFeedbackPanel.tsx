@@ -114,7 +114,7 @@ interface DifficultyFeedbackProps {
 /**
  * 整体难度反馈组件
  */
-function DifficultyFeedback({ feedback, onFeedback }: DifficultyFeedbackProps) {
+function DifficultyFeedback({ feedback, onFeedback, compact = false }: DifficultyFeedbackProps & { compact?: boolean }) {
   const options = [
     { value: 'too_easy' as const, label: '太简单' },
     { value: 'ok' as const, label: '合适' },
@@ -122,26 +122,22 @@ function DifficultyFeedback({ feedback, onFeedback }: DifficultyFeedbackProps) {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          整体难度反馈
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          您觉得这句话的整体难度如何？
-        </p>
-      </div>
+    <div className={compact ? 'space-y-2' : 'space-y-4'}>
+      {!compact && (
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-foreground mb-2">整体难度反馈</h3>
+          <p className="text-sm text-muted-foreground">您觉得这句话的整体难度如何？</p>
+        </div>
+      )}
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className={compact ? 'grid grid-cols-3 gap-1' : 'grid grid-cols-3 gap-3'}>
         {options.map((option) => (
           <Button
             key={option.value}
             variant={feedback === option.value ? 'default' : 'outline'}
             size="sm"
-            className={`flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium transition-all duration-200 ${
-              feedback === option.value
-                ? 'ring-2 ring-primary shadow-lg bg-primary text-primary-foreground'
-                : 'hover:scale-105'
+            className={`flex items-center justify-center ${compact ? 'h-7 px-2 text-xs' : 'h-9 px-4 text-sm'} font-medium transition-all duration-200 ${
+              feedback === option.value ? 'ring-2 ring-primary shadow-lg bg-primary text-primary-foreground' : 'hover:scale-105'
             }`}
             onClick={() => onFeedback(option.value)}
           >
@@ -365,11 +361,11 @@ export function ReviewFeedbackPanel({
         </div>
       </div>
 
-      {/* 主要内容：移动端单列，桌面端两列布局 */}
+      {/* 主要内容：移动端单列，桌面端两列布局；下方区域锁定视口高度，内部滚动 */}
       <div className="p-4 max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch h-[calc(100vh-64px)]">
           {/* 左列：句子展示 */}
-          <div className="space-y-4">
+          <div className="space-y-4 h-full overflow-auto">
             <SentenceDisplay
               item={item}
               showNewTerms={true}
@@ -378,14 +374,15 @@ export function ReviewFeedbackPanel({
             />
           </div>
 
-          {/* 右列：词汇反馈 + 整体反馈 + 提交 */}
-          <div className="space-y-4">
-            {/* 词汇反馈 */}
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-foreground">
-                词汇反馈 ({Object.keys(wordFeedback).length}/{targetWords.length})
+          {/* 右列：合并为单张反馈卡片（词汇反馈 + 整体反馈 + 提交） */}
+          <Card className="glass hover-lift border-0 shadow-lg h-full flex flex-col">
+            <CardContent className="p-3 sm:p-4 flex-1 flex flex-col overflow-hidden">
+              <div className="text-sm font-medium text-foreground mb-2">
+                反馈
               </div>
-              <div className="space-y-1">
+
+              {/* 内容区域可滚动：词汇反馈列表 */}
+              <div className="flex-1 overflow-auto pr-1 space-y-1">
                 {targetWords.map((word) => (
                   <CompactWordFeedback
                     key={word}
@@ -403,61 +400,59 @@ export function ReviewFeedbackPanel({
                   />
                 ))}
               </div>
-            </div>
 
-            {/* 整体难度反馈 */}
-            <Card className="glass hover-lift border-0 shadow-lg">
-              <CardContent className="p-4 sm:p-6">
+              {/* 紧凑的整体难度反馈 */}
+              <div className="mt-3">
                 <DifficultyFeedback
                   feedback={difficultyFeedback}
                   onFeedback={setDifficultyFeedback}
+                  compact
                 />
-              </CardContent>
-            </Card>
-
-            {/* 提交按钮与提示信息 */}
-            <div className="space-y-2">
-              <div className="flex justify-end">
-                <Button
-                  size="lg"
-                  onClick={() => {
-                    if (isFeedbackComplete) {
-                      onSubmitFeedback({
-                        wordFeedback,
-                        difficultyFeedback,
-                        sentenceId: item.sid,
-                        targets: targetWords
-                      });
-                    }
-                  }}
-                  disabled={!isFeedbackComplete || isSubmitting}
-                  className="flex items-center gap-2 hover-scale transition-all duration-300 shadow-lg"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      提交中...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      {currentIndex === totalSentences - 1 ? '完成复习' : '提交并继续'}
-                    </>
-                  )}
-                </Button>
               </div>
 
-              {!isFeedbackComplete && (
-                <div className="text-right text-sm text-muted-foreground">
-                  {isWordFeedbackComplete ? (
-                    '请选择整体难度反馈'
-                  ) : (
-                    `请完成所有 ${targetWords.length} 个词汇的评分`
-                  )}
+              {/* 底部提交区域 */}
+              <div className="pt-3 mt-auto">
+                <div className="flex justify-end">
+                  <Button
+                    size="lg"
+                    onClick={() => {
+                      if (isFeedbackComplete) {
+                        onSubmitFeedback({
+                          wordFeedback,
+                          difficultyFeedback,
+                          sentenceId: item.sid,
+                          targets: targetWords
+                        });
+                      }
+                    }}
+                    disabled={!isFeedbackComplete || isSubmitting}
+                    className="flex items-center gap-2 hover-scale transition-all duration-300 shadow-lg"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        提交中...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        {currentIndex === totalSentences - 1 ? '完成复习' : '提交并继续'}
+                      </>
+                    )}
+                  </Button>
                 </div>
-              )}
-            </div>
-          </div>
+                {!isFeedbackComplete && (
+                  <div className="text-right text-sm text-muted-foreground mt-1">
+                    {isWordFeedbackComplete ? (
+                      '请选择整体难度反馈'
+                    ) : (
+                      `请完成所有 ${targetWords.length} 个词汇的评分`
+                    )}
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
