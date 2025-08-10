@@ -338,7 +338,8 @@ export function ReviewFeedbackPanel({
     <div className="min-h-screen bg-background flex flex-col">
       {/* 顶部导航 */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border/40">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="relative flex items-center px-4 py-3">
+          {/* 左侧：退出 + 上一句 */}
           <div className="flex items-center space-x-2">
             <Button
               variant="ghost"
@@ -363,14 +364,18 @@ export function ReviewFeedbackPanel({
             )}
           </div>
 
-          <div className="flex-1 text-center">
-            <h1 className="text-lg font-semibold">词汇复习</h1>
-            <p className="text-xs text-muted-foreground">
-              句子 {currentIndex + 1} / {totalSentences}
-            </p>
+          {/* 居中标题：绝对定位保证视觉居中，不受左侧宽度影响 */}
+          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div className="text-center">
+              <h1 className="text-lg font-semibold">词汇复习</h1>
+              <p className="text-xs text-muted-foreground">
+                句子 {currentIndex + 1} / {totalSentences}
+              </p>
+            </div>
           </div>
 
-          {/* 右侧“下一句”按钮已移除 */}
+          {/* 右侧占位（如未来需要放更多按钮） */}
+          <div className="ml-auto" />
         </div>
       </div>
 
