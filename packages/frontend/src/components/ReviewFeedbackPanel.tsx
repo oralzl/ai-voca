@@ -15,6 +15,67 @@ import {
 import type { GeneratedItem, WordExplanation } from '@ai-voca/shared';
 import { wordApi } from '../utils/api';
 
+// 受限白名单渲染器：仅渲染少量安全标签，提升可读性
+function RichText({ html, className = '' }: { html: string; className?: string }) {
+  const allowed = new Set(['UL', 'OL', 'LI', 'STRONG', 'EM', 'B', 'I', 'BR', 'P']);
+
+  const renderNode = (node: Node, idx: number): any => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return (node.textContent || '').replace(/\s+/g, ' ');
+    }
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const el = node as HTMLElement;
+      const children = Array.from(el.childNodes).map((n, i) => renderNode(n, i));
+      if (!allowed.has(el.tagName)) {
+        return children;
+      }
+      switch (el.tagName) {
+        case 'UL':
+          return <ul key={idx} className="list-disc pl-4 space-y-1">{children}</ul>;
+        case 'OL':
+          return <ol key={idx} className="list-decimal pl-4 space-y-1">{children}</ol>;
+        case 'LI':
+          return <li key={idx} className="leading-snug">{children}</li>;
+        case 'STRONG':
+        case 'B':
+          return <strong key={idx}>{children}</strong>;
+        case 'EM':
+        case 'I':
+          return <em key={idx}>{children}</em>;
+        case 'BR':
+          return <br key={idx} />;
+        case 'P':
+          return <p key={idx} className="leading-snug">{children}</p>;
+        default:
+          return children;
+      }
+    }
+    return null;
+  };
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+    const container = doc.body.firstChild as HTMLElement | null;
+    const nodes = container ? Array.from(container.childNodes).map((n, i) => renderNode(n, i)) : html;
+    return <div className={className}>{nodes}</div>;
+  } catch {
+    return <div className={className}>{html}</div>;
+  }
+}
+
+// 从 definition 中剔除“同义/反义/词源/记忆”冗余段，交由专属区域展示
+function cleanupDefinition(raw?: string): string | undefined {
+  if (!raw) return raw;
+  const markers = ['同义：', '反义：', '词源：', '记忆：'];
+  const positions = markers
+    .map((m) => raw.indexOf(m))
+    .filter((i) => i >= 0);
+  if (positions.length === 0) return raw;
+  const cut = Math.min(...positions);
+  return raw.slice(0, cut).trim();
+}
+
 type Rating = 'again' | 'hard' | 'good' | 'easy';
 
 interface ReviewFeedbackPanelProps {
@@ -117,6 +178,8 @@ function CompactWordFeedback({
     { value: 'easy' as const, label: '熟练掌握' }
   ];
 
+  const cleanedDefinition = cleanupDefinition(details?.definition);
+
   return (
     <div className="py-2 px-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
       <div className="flex items-center justify-between">
@@ -148,10 +211,10 @@ function CompactWordFeedback({
           )}
           {details && (
             <div className="space-y-1">
-              {details.definition && (
+              {cleanedDefinition && (
                 <div>
                   <span className="font-medium mr-1">释义：</span>
-                  <span className="leading-snug">{details.definition}</span>
+                  <RichText html={cleanedDefinition} className="leading-snug inline-block align-top" />
                 </div>
               )}
 
@@ -184,18 +247,14 @@ function CompactWordFeedback({
               {details.etymology && (
                 <div>
                   <span className="font-medium mr-1">词源：</span>
-                  <span className="leading-snug">
-                    {details.etymology.length > 120 ? `${details.etymology.slice(0, 120)}…` : details.etymology}
-                  </span>
+                  <RichText html={details.etymology.length > 180 ? `${details.etymology.slice(0, 180)}…` : details.etymology} className="leading-snug inline" />
                 </div>
               )}
 
               {details.memoryTips && (
                 <div>
                   <span className="font-medium mr-1">记忆：</span>
-                  <span className="leading-snug">
-                    {details.memoryTips.length > 120 ? `${details.memoryTips.slice(0, 120)}…` : details.memoryTips}
-                  </span>
+                  <RichText html={details.memoryTips.length > 180 ? `${details.memoryTips.slice(0, 180)}…` : details.memoryTips} className="leading-snug inline" />
                 </div>
               )}
             </div>
