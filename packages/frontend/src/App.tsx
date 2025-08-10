@@ -10,6 +10,7 @@ import { WordQueryForm } from './components/WordQueryForm';
 import { FavoritesList } from './components/FavoritesList';
 import { UserProfile } from './components/UserProfile';
 import { WordResultPage } from './pages/WordResultPage';
+import { QuickFavoritePage } from './pages/QuickFavoritePage';
 import { ReviewPage } from './pages/ReviewPage';
 // 已移除调试页面入口
 import { useWordQuery } from './hooks/useWordQuery';
@@ -20,7 +21,7 @@ import { Card, CardContent } from './components/ui/card';
 import { AuthModal } from './components/Auth/AuthModal';
 import { Brain, Star, Users, Zap, Shield, Globe } from 'lucide-react';
 
-type PageType = 'search' | 'favorites' | 'review' | 'profile' | 'wordResult';
+type PageType = 'search' | 'quick_fav' | 'favorites' | 'review' | 'profile' | 'wordResult';
 
 // Features configuration for landing page
 const features = [
@@ -118,7 +119,7 @@ function AppContent() {
   };
 
   // 处理底部导航栏的页面切换（不包括wordResult）
-  const handlePageChange = (page: 'search' | 'favorites' | 'review' | 'profile') => {
+  const handlePageChange = (page: 'search' | 'quick_fav' | 'favorites' | 'review' | 'profile') => {
     setCurrentPage(page);
   };
 
@@ -258,7 +259,7 @@ function AppContent() {
   // 已登录状态的主应用内容
   return (
     <AppLayout 
-      currentPage={currentPage === 'wordResult' ? 'search' : currentPage} 
+      currentPage={(currentPage === 'wordResult' ? 'search' : currentPage) as 'search' | 'quick_fav' | 'favorites' | 'review' | 'profile'} 
       onPageChange={handlePageChange}
       hideBottomNavigation={currentPage === 'wordResult' || currentPage === 'review'} // 结果与复习页面隐藏底部导航
     >
@@ -297,6 +298,8 @@ function AppContent() {
           onRetry={retryQuery}
           loading={loading}
         />
+      ) : currentPage === 'quick_fav' ? (
+        <QuickFavoritePage />
       ) : currentPage === 'favorites' ? (
         <div className="flex-1 p-4 pb-20 md:pb-4">
           <FavoritesList onWordClick={handleWordClickFromFavorites} />

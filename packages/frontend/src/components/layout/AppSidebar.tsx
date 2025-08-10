@@ -19,12 +19,16 @@ import { AuthModal } from '@/components/Auth/AuthModal';
 const getNavigation = () => {
   const baseNavigation: Array<{
     name: string;
-    key: 'search' | 'favorites' | 'review';
+    key: 'search' | 'quick_fav' | 'favorites' | 'review';
     icon: React.ComponentType<{ className?: string }>;
   }> = [{
     name: '单词查询',
     key: 'search',
     icon: Search
+  }, {
+    name: '一键收藏',
+    key: 'quick_fav',
+    icon: Star
   }, {
     name: '我的收藏',
     key: 'favorites',
@@ -42,8 +46,8 @@ const getNavigation = () => {
 
 interface AppSidebarProps {
   className?: string;
-  currentPage: 'search' | 'favorites' | 'review' | 'profile';
-  onPageChange: (page: 'search' | 'favorites' | 'review' | 'profile') => void;
+  currentPage: 'search' | 'quick_fav' | 'favorites' | 'review' | 'profile';
+  onPageChange: (page: 'search' | 'quick_fav' | 'favorites' | 'review' | 'profile') => void;
 }
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({ 
@@ -54,7 +58,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   
-  const isActive = (key: 'search' | 'favorites' | 'review' | 'profile') => currentPage === key;
+  const isActive = (key: 'search' | 'quick_fav' | 'favorites' | 'review' | 'profile') => currentPage === key;
 
   return (
     <>
