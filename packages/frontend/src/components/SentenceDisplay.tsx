@@ -135,7 +135,7 @@ export function SentenceDisplay({
       <CardContent className="p-4 space-y-3 outline-none">
         {/* 句子内容 */}
         <div className="space-y-3">
-          <div className="text-lg leading-relaxed">
+          <div className="text-lg leading-7 lg:text-xl lg:leading-8">
             <HighlightedText
               text={item.text}
               className="text-foreground"
