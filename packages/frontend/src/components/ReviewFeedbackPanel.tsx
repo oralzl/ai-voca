@@ -427,7 +427,7 @@ export function ReviewFeedbackPanel({
                       }
                     }}
                     disabled={!isFeedbackComplete || isSubmitting}
-                    className="flex items-center gap-2 hover-scale transition-all duration-300 shadow-lg"
+                    className="w-full flex items-center justify-center gap-2 hover-scale transition-all duration-300 shadow-lg"
                   >
                     {isSubmitting ? (
                       <>
@@ -442,13 +442,9 @@ export function ReviewFeedbackPanel({
                     )}
                   </Button>
                 </div>
-                {!isFeedbackComplete && (
+                {!isFeedbackComplete && !isWordFeedbackComplete && (
                   <div className="text-right text-sm text-muted-foreground mt-1">
-                    {isWordFeedbackComplete ? (
-                      '请选择整体难度反馈'
-                    ) : (
-                      `请完成所有 ${targetWords.length} 个词汇的评分`
-                    )}
+                    {`请完成所有 ${targetWords.length} 个词汇的评分`}
                   </div>
                 )}
               </div>
