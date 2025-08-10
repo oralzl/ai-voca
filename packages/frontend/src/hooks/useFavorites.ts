@@ -31,6 +31,7 @@ interface UseFavoritesReturn {
   getFavoritesList: (page?: number, pageSize?: number, search?: string) => Promise<FavoriteListResponse>;
   refreshFavorites: () => Promise<void>;
   clearError: () => void;
+  syncToReview: () => Promise<void>;
 }
 
 export function useFavorites(): UseFavoritesReturn {
@@ -40,56 +41,12 @@ export function useFavorites(): UseFavoritesReturn {
     error: null
   });
   
-  const { } = useAuth(); // 保留认证上下文连接
+  const { getAccessToken } = useAuth();
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
   }, []);
 
-  // 切换收藏状态
-  const toggleFavorite = useCallback(async (
-    word: string,
-    originalQuery?: string,
-    queryData?: WordExplanation,
-    rawResponse?: string,
-    notes?: string
-  ): Promise<boolean> => {
-    setState(prev => ({ ...prev, loading: true, error: null }));
-
-    try {
-      const result = await favoritesApi.toggleFavorite({
-        word: word.toLowerCase().trim(),
-        originalQuery,
-        queryData,
-        rawResponse,
-        notes
-      });
-
-      // 更新本地状态
-      if (result.data?.isFavorited && result.data.favorite) {
-        // 添加到收藏
-        setState(prev => ({
-          ...prev,
-          favorites: [...prev.favorites, result.data!.favorite!],
-          loading: false
-        }));
-      } else {
-        // 从收藏中移除
-        setState(prev => ({
-          ...prev,
-          favorites: prev.favorites.filter(fav => fav.word !== word.toLowerCase().trim()),
-          loading: false
-        }));
-      }
-
-      return result.data?.isFavorited || false;
-
-    } catch (error: any) {
-      const errorMessage = error.message || '操作失败，请稍后重试';
-      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
-      throw error;
-    }
-  }, []);
 
   // 检查收藏状态
   const checkFavorite = useCallback(async (word: string): Promise<{ 
@@ -148,6 +105,93 @@ export function useFavorites(): UseFavoritesReturn {
     }
   }, [getFavoritesList]);
 
+  /**
+   * 同步收藏词汇到复习系统
+   */
+  const syncToReview = useCallback(async () => {
+    try {
+      const token = await getAccessToken();
+      if (!token) {
+        console.warn('无法获取访问令牌，跳过同步');
+        return;
+      }
+
+      const response = await fetch('/api/review/init', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.error('同步到复习系统失败:', response.status);
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        console.log('收藏词汇同步到复习系统完成:', {
+          syncedWords: data.data.syncedWords?.length || 0,
+          totalWords: data.data.totalWords || 0,
+          dueToday: data.data.dueToday || 0,
+        });
+      }
+
+    } catch (error) {
+      console.error('收藏词汇同步失败:', error);
+    }
+  }, [getAccessToken]);
+
+  // 切换收藏状态并自动同步到复习系统
+  const toggleFavorite = useCallback(async (
+    word: string,
+    originalQuery?: string,
+    queryData?: WordExplanation,
+    rawResponse?: string,
+    notes?: string
+  ): Promise<boolean> => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const result = await favoritesApi.toggleFavorite({
+        word: word.toLowerCase().trim(),
+        originalQuery,
+        queryData,
+        rawResponse,
+        notes
+      });
+
+      // 更新本地状态
+      if (result.data?.isFavorited && result.data.favorite) {
+        // 添加到收藏
+        setState(prev => ({
+          ...prev,
+          favorites: [...prev.favorites, result.data!.favorite!],
+          loading: false
+        }));
+        
+        // 添加到收藏后自动同步到复习系统
+        syncToReview();
+      } else {
+        // 从收藏中移除
+        setState(prev => ({
+          ...prev,
+          favorites: prev.favorites.filter(fav => fav.word !== word.toLowerCase().trim()),
+          loading: false
+        }));
+      }
+
+      return result.data?.isFavorited || false;
+
+    } catch (error: any) {
+      const errorMessage = error.message || '操作失败，请稍后重试';
+      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
+      throw error;
+    }
+  }, [syncToReview]);
+
   return {
     favorites: state.favorites,
     loading: state.loading,
@@ -156,6 +200,7 @@ export function useFavorites(): UseFavoritesReturn {
     checkFavorite,
     getFavoritesList,
     refreshFavorites,
-    clearError
+    clearError,
+    syncToReview
   };
 }

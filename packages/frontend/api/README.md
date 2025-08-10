@@ -11,6 +11,12 @@
 ### 👤 用户功能  
 - **`user/stats.ts`** - 用户统计信息
 
+### 📚 复习系统
+- **`review/candidates.ts`** - 候选词获取API
+- **`review/generate.ts`** - 句子生成API
+- **`review/submit.ts`** - 复习提交API
+- **`review/count.ts`** - 复习计数API
+
 ### 🏥 系统监控
 - **`health.ts`** - 系统健康检查
 
@@ -33,6 +39,10 @@ npm run dev
 ```
 http://localhost:3000/api/words/query
 http://localhost:3000/api/user/stats
+http://localhost:3000/api/review/candidates
+http://localhost:3000/api/review/generate
+http://localhost:3000/api/review/submit
+http://localhost:3000/api/review/count
 http://localhost:3000/health
 ```
 
@@ -40,6 +50,10 @@ http://localhost:3000/health
 ```
 https://ai-voca-frontend.vercel.app/api/words/query
 https://ai-voca-frontend.vercel.app/api/user/stats
+https://ai-voca-frontend.vercel.app/api/review/candidates
+https://ai-voca-frontend.vercel.app/api/review/generate
+https://ai-voca-frontend.vercel.app/api/review/submit
+https://ai-voca-frontend.vercel.app/api/review/count
 https://ai-voca-frontend.vercel.app/health
 ```
 

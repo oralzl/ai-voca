@@ -136,15 +136,42 @@ export default async function handler(
     
     console.log('User authenticated successfully:', user.id);
     
-    // 先返回一个简单的响应来测试基本功能
+    // 查询用户的单词查询统计
+    const queryResponse = await fetch(`${supabaseUrl}/rest/v1/word_queries?user_id=eq.${user.id}&select=created_at`, {
+      headers: {
+        'apikey': supabaseServiceKey,
+        'Authorization': `Bearer ${supabaseServiceKey}`
+      }
+    });
+    
+    if (!queryResponse.ok) {
+      console.error('Failed to fetch word queries:', queryResponse.status);
+      throw new Error('Failed to fetch user statistics');
+    }
+    
+    const queries = await queryResponse.json();
+    
+    // 计算统计数据
+    const totalQueries = queries?.length || 0;
+    const todayQueries = queries?.filter((q: any) => {
+      const queryDate = new Date(q.created_at);
+      const today = new Date();
+      return queryDate.toDateString() === today.toDateString();
+    }).length || 0;
+    const lastQueryDate = queries?.length > 0 
+      ? new Date(Math.max(...queries.map((q: any) => new Date(q.created_at).getTime()))).toISOString()
+      : null;
+    
+    console.log('User stats calculated:', { totalQueries, todayQueries, lastQueryDate });
+    
     res.json({
       success: true,
       data: {
-        totalQueries: 0,
-        todayQueries: 0,
+        totalQueries,
+        todayQueries,
         remainingQueries: 100,
         maxDailyQueries: 100,
-        lastQueryDate: null
+        lastQueryDate
       }
     });
     

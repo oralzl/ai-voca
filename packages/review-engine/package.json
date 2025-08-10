@@ -1,0 +1,44 @@
+{
+  "name": "@ai-voca/review-engine",
+  "version": "1.0.0",
+  "description": "复习系统核心引擎 - FSRS算法和LLM集成",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint src --ext .ts,.tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,json,md}\"",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-voca/shared": "^1.0.0",
+    "axios": "^1.6.0",
+    "zod": "^4.0.8"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitest/coverage-v8": "^0.34.0",
+    "eslint": "^8.57.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.2",
+    "vitest": "^0.34.0"
+  },
+  "keywords": [
+    "review",
+    "fsrs",
+    "spaced-repetition",
+    "llm",
+    "ai"
+  ],
+  "author": "thiskee",
+  "license": "MIT"
+}

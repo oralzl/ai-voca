@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Brain, Search, Star, LogIn, Bug } from 'lucide-react';
+import { Brain, Search, Star, BookOpen, LogIn, Bug } from 'lucide-react';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -17,21 +17,29 @@ import { AuthModal } from '@/components/Auth/AuthModal';
 
 // 根据环境决定是否显示调试功能
 const getNavigation = () => {
-  const baseNavigation = [{
+  const baseNavigation: Array<{
+    name: string;
+    key: 'search' | 'favorites' | 'review' | 'debug';
+    icon: React.ComponentType<{ className?: string }>;
+  }> = [{
     name: '单词查询',
-    key: 'search' as const,
+    key: 'search',
     icon: Search
   }, {
     name: '我的收藏',
-    key: 'favorites' as const,
+    key: 'favorites',
     icon: Star
+  }, {
+    name: '复习',
+    key: 'review',
+    icon: BookOpen
   }];
   
   // 只在开发环境显示调试功能
   if (import.meta.env.DEV) {
     baseNavigation.push({
       name: '调试',
-      key: 'debug' as const,
+      key: 'debug',
       icon: Bug
     });
   }
@@ -41,8 +49,8 @@ const getNavigation = () => {
 
 interface AppSidebarProps {
   className?: string;
-  currentPage: 'search' | 'favorites' | 'profile' | 'debug';
-  onPageChange: (page: 'search' | 'favorites' | 'profile' | 'debug') => void;
+  currentPage: 'search' | 'favorites' | 'review' | 'profile' | 'debug';
+  onPageChange: (page: 'search' | 'favorites' | 'review' | 'profile' | 'debug') => void;
 }
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({ 
@@ -53,7 +61,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   
-  const isActive = (key: 'search' | 'favorites' | 'profile' | 'debug') => currentPage === key;
+  const isActive = (key: 'search' | 'favorites' | 'review' | 'profile' | 'debug') => currentPage === key;
 
   return (
     <>

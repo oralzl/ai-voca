@@ -1,0 +1,20 @@
+/**
+ * @fileoverview Prettier 配置文件
+ * @description 复习系统核心引擎的代码格式化配置
+ * @author thiskee
+ * 
+ * 任务 1.3 完成文件
+ * 配置 Prettier 代码格式化规则
+ */
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false,
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "avoid",
+  "endOfLine": "lf"
+} 

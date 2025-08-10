@@ -4,11 +4,21 @@ import express from 'express';
 
 const app = express();
 
-// 移除API代理配置，让预览环境使用自己的API Routes
-// app.use('/api', createProxyMiddleware({
-//   target: 'https://ai-voca-frontend.vercel.app',
-//   changeOrigin: true,
-// }));
+// 启用API代理配置，将API请求代理到生产环境
+app.use('/api', createProxyMiddleware({
+  target: 'https://ai-voca-frontend.vercel.app',
+  changeOrigin: true,
+  logLevel: 'debug',
+  pathRewrite: {
+    '^/api': '/api'
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    console.log('Proxying API request:', req.method, req.url);
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log('Proxy response status:', proxyRes.statusCode);
+  }
+}));
 
 // 创建 Vite 开发服务器
 const vite = await createServer({

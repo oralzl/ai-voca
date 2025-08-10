@@ -16,6 +16,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: any }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error: any }>
+  getAccessToken: () => Promise<string | null>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -113,6 +114,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return { error }
   }
 
+  const getAccessToken = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token || null
+  }
+
   const value = {
     user,
     session,
@@ -121,6 +127,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signUp,
     signOut,
     resetPassword,
+    getAccessToken,
   }
 
   return (

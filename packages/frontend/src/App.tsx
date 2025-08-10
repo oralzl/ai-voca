@@ -10,6 +10,7 @@ import { WordQueryForm } from './components/WordQueryForm';
 import { FavoritesList } from './components/FavoritesList';
 import { UserProfile } from './components/UserProfile';
 import { WordResultPage } from './pages/WordResultPage';
+import { ReviewPage } from './pages/ReviewPage';
 import { DebugPage } from './pages/DebugPage';
 import { useWordQuery } from './hooks/useWordQuery';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -19,7 +20,7 @@ import { Card, CardContent } from './components/ui/card';
 import { AuthModal } from './components/Auth/AuthModal';
 import { Brain, Star, Users, Zap, Shield, Globe } from 'lucide-react';
 
-type PageType = 'search' | 'favorites' | 'profile' | 'wordResult' | 'debug';
+type PageType = 'search' | 'favorites' | 'review' | 'profile' | 'wordResult' | 'debug';
 
 // Features configuration for landing page
 const features = [
@@ -117,7 +118,7 @@ function AppContent() {
   };
 
   // 处理底部导航栏的页面切换（不包括wordResult）
-  const handlePageChange = (page: 'search' | 'favorites' | 'profile' | 'debug') => {
+  const handlePageChange = (page: 'search' | 'favorites' | 'review' | 'profile' | 'debug') => {
     setCurrentPage(page);
   };
 
@@ -300,6 +301,8 @@ function AppContent() {
         <div className="flex-1 p-4 pb-20 md:pb-4">
           <FavoritesList onWordClick={handleWordClickFromFavorites} />
         </div>
+      ) : currentPage === 'review' ? (
+        <ReviewPage onBack={() => setCurrentPage('search')} />
       ) : currentPage === 'debug' ? (
         <div className="flex-1">
           <DebugPage />

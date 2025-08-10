@@ -142,3 +142,6 @@ export interface AppConfig {
   model: string;
   timeout: number;
 }
+
+// 导出复习系统类型（避免重复导出）
+// export * from './review';
