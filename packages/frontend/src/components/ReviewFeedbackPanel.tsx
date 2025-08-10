@@ -366,7 +366,7 @@ export function ReviewFeedbackPanel({
         <div className="p-4 max-w-6xl mx-auto h-full">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch h-full">
           {/* 左列：句子展示 */}
-          <div className="space-y-4 h-full overflow-auto">
+          <div className="space-y-4 h-full overflow-visible">
             <SentenceDisplay
               item={item}
               showNewTerms={true}

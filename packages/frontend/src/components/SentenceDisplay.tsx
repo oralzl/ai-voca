@@ -131,8 +131,8 @@ export function SentenceDisplay({
   }, [item?.sid]);
 
   return (
-    <Card className={`${className}`}>
-      <CardContent className="p-4 space-y-3">
+    <Card className={`${className} focus-within:ring-0 focus-within:outline-none focus-visible:ring-0` }>
+      <CardContent className="p-4 space-y-3 outline-none">
         {/* 句子内容 */}
         <div className="space-y-3">
           <div className="text-lg leading-relaxed">
