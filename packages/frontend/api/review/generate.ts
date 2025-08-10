@@ -334,6 +334,16 @@ Goals:
 - Respect style: ${profile.style} - create engaging narratives with natural flow.
 - Avoid sensitive topics: politics, explicit sexual content, hate, self-harm, illegal acts, personal data.
 
+Difficulty Bias Policy (soft guidance):
+- difficulty_bias is a real number in [-1.5, 1.5].
+- Interpretations around the target CEFR level:
+  - -1.5: much simpler → prefer high‑frequency words, short plain sentences.
+  - -1.0: simpler → avoid rare/abstract words, reduce clause depth.
+  - -0.5: slightly simpler → use common synonyms, keep concrete wording.
+  -  0.0: neutral → match the target CEFR level.
+  - +0.5/+1.0/+1.5: increasingly more complex → only if appropriate.
+- Apply bias via lexical choice and sentence structure; do not exceed the new-term budget.
+
 Narrative Structure Guidelines:
 - Begin with an engaging scenario that provides context
 - Weave target words into a logical sequence of events or descriptions

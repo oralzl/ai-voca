@@ -128,6 +128,16 @@ Goals:
 - Respect length: total tokens between {{constraints.sentence_length_range.0}} and {{constraints.sentence_length_range.1}}; ≤ {{constraints.max_targets_per_sentence}} targets per sentence.
 - Avoid sensitive topics: politics, explicit sexual content, hate, self-harm, illegal acts, personal data.
 
+Difficulty Bias Policy (soft guidance):
+- difficulty_bias is a real number in [-1.5, 1.5].
+- Interpretations around the target CEFR level:
+  - -1.5: much simpler → prefer high‑frequency words, short plain sentences.
+  - -1.0: simpler → avoid rare/abstract words, reduce clause depth.
+  - -0.5: slightly simpler → use common synonyms, keep concrete wording.
+  -  0.0: neutral → match the target CEFR level.
+  - +0.5/+1.0/+1.5: increasingly more complex → only if appropriate.
+- Apply bias via lexical choice and sentence structure; do not exceed the new-term budget.
+
 Definitions:
 - "Potentially-new terms" = words that are likely above {{profile.level_cefr}}. You will self-estimate them and list them in new_terms[] with a brief gloss.
 - Token boundaries: split on whitespace and punctuation. Use simple, human-intuitive tokenization.
