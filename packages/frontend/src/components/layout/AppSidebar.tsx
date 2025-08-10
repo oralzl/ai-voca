@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Brain, Search, Star, BookOpen, LogIn, Bug } from 'lucide-react';
+import { Brain, Search, Star, BookOpen, LogIn } from 'lucide-react';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -19,7 +19,7 @@ import { AuthModal } from '@/components/Auth/AuthModal';
 const getNavigation = () => {
   const baseNavigation: Array<{
     name: string;
-    key: 'search' | 'favorites' | 'review' | 'debug';
+    key: 'search' | 'favorites' | 'review';
     icon: React.ComponentType<{ className?: string }>;
   }> = [{
     name: '单词查询',
@@ -35,22 +35,15 @@ const getNavigation = () => {
     icon: BookOpen
   }];
   
-  // 只在开发环境显示调试功能
-  if (import.meta.env.DEV) {
-    baseNavigation.push({
-      name: '调试',
-      key: 'debug',
-      icon: Bug
-    });
-  }
+  // 已移除调试功能入口
   
   return baseNavigation;
 };
 
 interface AppSidebarProps {
   className?: string;
-  currentPage: 'search' | 'favorites' | 'review' | 'profile' | 'debug';
-  onPageChange: (page: 'search' | 'favorites' | 'review' | 'profile' | 'debug') => void;
+  currentPage: 'search' | 'favorites' | 'review' | 'profile';
+  onPageChange: (page: 'search' | 'favorites' | 'review' | 'profile') => void;
 }
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({ 
@@ -61,7 +54,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   const { user } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   
-  const isActive = (key: 'search' | 'favorites' | 'review' | 'profile' | 'debug') => currentPage === key;
+  const isActive = (key: 'search' | 'favorites' | 'review' | 'profile') => currentPage === key;
 
   return (
     <>
