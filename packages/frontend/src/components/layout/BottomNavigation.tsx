@@ -18,10 +18,6 @@ const navigation = [{
   name: '我的',
   key: 'profile' as const,
   icon: User
-}, {
-  name: '调试',
-  key: 'debug' as const,
-  icon: Bug
 }];
 
 interface BottomNavigationProps {
