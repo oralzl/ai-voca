@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Star, BookOpen, User } from 'lucide-react';
+import { Search, Star, BookOpen, User, Bug } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 const navigation = [{
