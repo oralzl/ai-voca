@@ -5,8 +5,8 @@ import { BottomNavigation } from './BottomNavigation';
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  currentPage: 'search' | 'favorites' | 'review' | 'profile' | 'debug';
-  onPageChange: (page: 'search' | 'favorites' | 'review' | 'profile' | 'debug') => void;
+  currentPage: 'search' | 'favorites' | 'review' | 'profile';
+  onPageChange: (page: 'search' | 'favorites' | 'review' | 'profile') => void;
   hideBottomNavigation?: boolean; // 新增属性，用于控制底部导航显示
 }
 

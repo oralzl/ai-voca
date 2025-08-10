@@ -11,7 +11,7 @@ import { FavoritesList } from './components/FavoritesList';
 import { UserProfile } from './components/UserProfile';
 import { WordResultPage } from './pages/WordResultPage';
 import { ReviewPage } from './pages/ReviewPage';
-// import { DebugPage } from './pages/DebugPage';
+// 已移除调试页面入口
 import { useWordQuery } from './hooks/useWordQuery';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AppLayout } from './components/layout/AppLayout';

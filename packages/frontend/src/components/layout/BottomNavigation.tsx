@@ -22,8 +22,8 @@ const navigation = [{
 
 interface BottomNavigationProps {
   className?: string;
-  currentPage: 'search' | 'favorites' | 'review' | 'profile' | 'debug';
-  onPageChange: (page: 'search' | 'favorites' | 'review' | 'profile' | 'debug') => void;
+  currentPage: 'search' | 'favorites' | 'review' | 'profile';
+  onPageChange: (page: 'search' | 'favorites' | 'review' | 'profile') => void;
 }
 
 export const BottomNavigation: React.FC<BottomNavigationProps> = ({ 
@@ -31,7 +31,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   currentPage, 
   onPageChange 
 }) => {
-  const isActive = (key: 'search' | 'favorites' | 'review' | 'profile' | 'debug') => currentPage === key;
+  const isActive = (key: 'search' | 'favorites' | 'review' | 'profile') => currentPage === key;
 
   return (
     <nav className={cn(
