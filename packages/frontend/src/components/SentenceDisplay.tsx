@@ -4,7 +4,7 @@
  * @description 显示生成的句子，支持目标词高亮和新词汇提示
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
@@ -124,6 +124,11 @@ export function SentenceDisplay({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
   const hasNewTerms = item.self_eval.new_terms && item.self_eval.new_terms.length > 0;
+
+  // 当句子切换时，重置翻译为隐藏，避免延续上一个句子的显示状态
+  useEffect(() => {
+    setShowTranslation(false);
+  }, [item?.sid]);
 
   return (
     <Card className={`${className}`}>
